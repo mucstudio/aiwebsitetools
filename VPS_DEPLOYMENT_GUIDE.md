@@ -357,10 +357,10 @@ pnpm prisma generate
 pnpm prisma migrate deploy
 
 # 构建应用（Standalone 模式）
-pnpm build
+npm run build
 
 # 测试运行
-pnpm start
+npm run start
 # 访问 http://localhost:3000 测试
 ```
 

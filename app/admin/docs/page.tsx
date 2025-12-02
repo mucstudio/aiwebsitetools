@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getCurrentSession } from "@/lib/auth-utils"
 import { redirect } from "next/navigation"
-import { FileText, Book, Code, Zap } from "lucide-react"
+import { FileText, Book, Code, Zap, Layers } from "lucide-react"
 
 export default async function DocsPage() {
   const session = await getCurrentSession()
@@ -12,6 +12,19 @@ export default async function DocsPage() {
   }
 
   const docCategories = [
+    {
+      title: "系统集成指南",
+      icon: "🔗",
+      description: "新工具开发时的系统集成完整指南",
+      docs: [
+        {
+          title: "AI模型与使用限制集成",
+          href: "/admin/docs/tool-integration",
+          icon: <Layers className="h-5 w-5" />,
+          description: "添加新工具时如何集成AI模型和使用限制系统的完整指南"
+        }
+      ]
+    },
     {
       title: "小工具添加系统",
       icon: "🛠️",
