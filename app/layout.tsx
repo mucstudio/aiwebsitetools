@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google"
 import { SessionProvider } from "@/components/providers/SessionProvider"
+import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { generateMetadata as generateSiteMetadata } from "@/lib/metadata"
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider"
 import "./globals.css"
@@ -16,10 +17,17 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className} suppressHydrationWarning>
-        <SessionProvider>{children}</SessionProvider>
-        <AnalyticsProvider />
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>{children}</SessionProvider>
+          <AnalyticsProvider />
+        </ThemeProvider>
       </body>
     </html>
   )

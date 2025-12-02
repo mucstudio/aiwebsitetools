@@ -14,6 +14,7 @@ import {
 import { User } from "lucide-react"
 import { useFeature } from "@/hooks/useFeatures"
 import { useState, useEffect } from "react"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export function Header() {
   const { data: session, status } = useSession()
@@ -84,6 +85,7 @@ export function Header() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {status === "loading" ? (
             <div className="h-9 w-20 animate-pulse bg-muted rounded-md" />
           ) : session ? (
