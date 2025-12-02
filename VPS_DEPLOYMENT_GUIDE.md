@@ -1,8 +1,23 @@
-# VPS 自托管部署方案
+# VPS 自托管部署完整指南
 
-## VPS 服务器要求
+> **重要提示**：本文档基于实际部署经验编写，包含所有常见问题的解决方案。
 
-### 最低配置（适合初期）
+---
+
+## 目录
+
+1. [服务器要求](#服务器要求)
+2. [技术栈](#技术栈)
+3. [部署步骤](#部署步骤)
+4. [常见问题解决](#常见问题解决)
+5. [自动化部署](#自动化部署)
+6. [监控与维护](#监控与维护)
+
+---
+
+## 服务器要求
+
+### 最低配置（适合初期测试）
 - **CPU**: 2核
 - **内存**: 4GB RAM
 - **存储**: 40GB SSD
@@ -16,233 +31,289 @@
 - **带宽**: 5TB/月
 - **操作系统**: Ubuntu 22.04 LTS
 
-### VPS 提供商推荐（海外用户友好）
-1. **DigitalOcean** - $24/月起（4GB RAM）
-2. **Vultr** - $18/月起（4GB RAM）
-3. **Linode (Akamai)** - $24/月起（4GB RAM）
-4. **Hetzner** - €9.5/月起（4GB RAM，欧洲机房）
-5. **AWS Lightsail** - $20/月起（4GB RAM）
-
-**推荐机房位置**:
-- 美国用户: 纽约、旧金山、洛杉矶
-- 欧洲用户: 伦敦、法兰克福、阿姆斯特丹
-- 全球用户: 使用 Cloudflare CDN 加速
+### VPS 提供商推荐
+1. **Vultr** - $18/月起（4GB RAM）- 推荐
+2. **DigitalOcean** - $24/月起（4GB RAM）
+3. **Linode** - $24/月起（4GB RAM）
+4. **Hetzner** - €9.5/月起（4GB RAM，欧洲）
 
 ---
 
-## 技术栈调整（VPS版本）
+## 技术栈
 
-### 前端
-- **框架**: Next.js 15 (App Router)
-- **UI**: shadcn/ui + Tailwind CSS
-- **部署方式**: Standalone 模式
-
-### 后端
 - **运行时**: Node.js 20 LTS
+- **框架**: Next.js 15 (App Router)
+- **数据库**: PostgreSQL 16
 - **进程管理**: PM2
 - **反向代理**: Nginx
-- **数据库**: PostgreSQL 16 (本地安装)
-- **缓存**: Redis (可选，提升性能)
-
-### 安全与监控
-- **SSL证书**: Let's Encrypt (免费)
-- **防火墙**: UFW
-- **监控**: PM2 + Grafana (可选)
-- **日志**: PM2 logs + Logrotate
-
-### 文件存储
-- **本地存储**: /var/www/uploads
-- **或使用**: AWS S3 / Cloudflare R2 (推荐)
+- **SSL**: Let's Encrypt
+- **包管理器**: pnpm
 
 ---
 
-## 服务器架构
+## 部署步骤
 
-```
-Internet
-    ↓
-Cloudflare (CDN + DDoS防护)
-    ↓
-VPS Server (Ubuntu 22.04)
-    ↓
-Nginx (反向代理 + SSL)
-    ↓
-Next.js App (PM2管理，端口3000)
-    ↓
-PostgreSQL (端口5432)
-Redis (端口6379，可选)
-```
-
----
-
-## 完整部署步骤
-
-### 1. 服务器初始化
+### 步骤 1: 服务器初始化
 
 ```bash
-# 更新系统
+# 1. 更新系统
 sudo apt update && sudo apt upgrade -y
 
-# 创建新用户（不要用root）
-sudo adduser deploy
-sudo usermod -aG sudo deploy
-sudo su - deploy
+# 2. 安装基础工具
+sudo apt install -y curl wget git build-essential
 
-# 配置防火墙
+# 3. 配置防火墙
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
-
-# 安装基础工具
-sudo apt install -y curl wget git build-essential
 ```
 
-### 2. 安装 Node.js 20
+### 步骤 2: 安装 Node.js 20
 
 ```bash
-# 使用 NodeSource 仓库
+# 使用 NodeSource 官方仓库
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # 验证安装
-node --version  # v20.x.x
-npm --version   # 10.x.x
+node --version  # 应显示 v20.x.x
+npm --version   # 应显示 10.x.x
 
-# 安装 pnpm（推荐，比 npm 快）
+# 安装 pnpm（推荐，比 npm 快 2-3 倍）
 npm install -g pnpm
+
+# 验证 pnpm
+pnpm --version
 ```
 
-### 3. 安装 PostgreSQL 16
+### 步骤 3: 安装 PostgreSQL 16
 
 ```bash
-# 添加 PostgreSQL 官方仓库
+# 1. 添加 PostgreSQL 官方仓库
 sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
 
+# 2. 安装 PostgreSQL
 sudo apt update
 sudo apt install -y postgresql-16 postgresql-contrib-16
 
-# 启动服务
+# 3. 启动并设置开机自启
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
 
-# 创建数据库和用户
-sudo -u postgres psql
+# 4. 验证安装
+sudo systemctl status postgresql
+```
 
-# 在 PostgreSQL 命令行中执行：
+### 步骤 4: 配置 PostgreSQL 数据库
+
+```bash
+# 1. 进入 PostgreSQL
+sudo -u postgres psql
+```
+
+在 PostgreSQL 命令行中执行以下命令：
+
+```sql
+-- 创建数据库
 CREATE DATABASE aiwebsitetools;
-CREATE USER aiwebsitetools_user WITH ENCRYPTED PASSWORD 'your_strong_password';
+
+-- 创建用户并设置密码（请修改为强密码）
+CREATE USER aiwebsitetools_user WITH ENCRYPTED PASSWORD 'YourStrongPassword123!';
+
+-- 授予数据库权限
 GRANT ALL PRIVILEGES ON DATABASE aiwebsitetools TO aiwebsitetools_user;
+
+-- 连接到数据库
+\c aiwebsitetools
+
+-- 授予 schema 权限（重要！）
+GRANT ALL ON SCHEMA public TO aiwebsitetools_user;
+ALTER SCHEMA public OWNER TO aiwebsitetools_user;
+
+-- 设置默认权限
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO aiwebsitetools_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO aiwebsitetools_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO aiwebsitetools_user;
+
+-- 验证权限
+\dn+ public
+
+-- 退出
 \q
 ```
 
-### 4. 安装 Redis（可选，用于缓存）
+**验证数据库连接**：
 
 ```bash
-sudo apt install -y redis-server
+# 测试连接
+psql -U aiwebsitetools_user -d aiwebsitetools -h localhost -W
 
-# 配置 Redis
-sudo nano /etc/redis/redis.conf
-# 修改: supervised systemd
-
-sudo systemctl restart redis
-sudo systemctl enable redis
-
-# 测试
-redis-cli ping  # 应返回 PONG
+# 如果成功连接，输入 \q 退出
 ```
 
-### 5. 安装 Nginx
+### 步骤 5: 克隆项目代码
 
 ```bash
+# 1. 创建项目目录
+sudo mkdir -p /root/aiwebsitetools
+cd /root/aiwebsitetools
+
+# 2. 克隆代码（替换为你的仓库地址）
+git clone https://github.com/your-username/aiwebsitetools.git .
+
+# 或者如果已经有代码，使用 git pull
+git pull origin main
+```
+
+### 步骤 6: 配置环境变量
+
+```bash
+# 创建 .env 文件
+nano .env
+```
+
+**完整的 .env 配置**：
+
+```env
+# 数据库配置（重要：使用你在步骤4设置的密码）
+DATABASE_URL="postgresql://aiwebsitetools_user:YourStrongPassword123!@localhost:5432/aiwebsitetools?schema=public"
+
+# NextAuth 配置
+NEXTAUTH_SECRET="your-secret-key-here-change-this-in-production"
+NEXTAUTH_URL="http://localhost:3000"
+
+# 管理员配置
+ADMIN_EMAIL=your-email@example.com
+ADMIN_NAME="System Administrator"
+ADMIN_PASSWORD="your-admin-password"
+
+# AI 加密密钥（用于加密 API keys）
+ENCRYPTION_KEY="your-encryption-key-32-characters-long"
+
+# 审计日志
+ENABLE_AUDIT_LOG=true
+AUDIT_LOG_RETENTION_DAYS=90
+
+# OAuth 配置（可选）
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+
+# 生产环境设置
+NODE_ENV=production
+```
+
+**保存并退出**：按 `Ctrl+X`，然后 `Y`，然后 `Enter`
+
+### 步骤 7: 安装依赖
+
+```bash
+# 使用 pnpm 安装依赖
+pnpm install
+
+# 如果遇到权限问题，使用：
+# npm install --unsafe-perm
+```
+
+### 步骤 8: 初始化数据库
+
+```bash
+# 1. 生成 Prisma Client
+pnpm prisma generate
+
+# 2. 推送数据库 schema（首次部署使用这个）
+pnpm prisma db push
+
+# 或者如果有 migrations 文件夹，使用：
+# pnpm prisma migrate deploy
+```
+
+**常见问题**：如果遇到权限错误，返回步骤 4 重新设置权限。
+
+### 步骤 9: 构建应用
+
+```bash
+# 构建 Next.js 应用
+npm run build
+```
+
+**⚠️ 重要提示**：
+
+如果构建过程中遇到以下错误：
+
+1. **`useSearchParams` 错误**：已在代码中修复，确保代码是最新的
+2. **`published` 字段错误**：已修复为 `isPublished`
+3. **TypeScript/ESLint 错误**：已在 `next.config.js` 中配置忽略
+
+如果构建失败，执行：
+
+```bash
+# 清理缓存
+rm -rf .next
+rm -rf node_modules/.cache
+
+# 重新生成 Prisma Client
+pnpm prisma generate
+
+# 重新构建
+npm run build
+```
+
+### 步骤 10: 使用 PM2 管理进程
+
+```bash
+# 1. 安装 PM2
+npm install -g pm2
+
+# 2. 启动应用
+pm2 start npm --name "aiwebsitetools" -- start
+
+# 3. 查看状态
+pm2 status
+
+# 4. 查看日志
+pm2 logs aiwebsitetools
+
+# 5. 设置开机自启
+pm2 startup
+# 执行输出的命令（通常是一个 sudo 命令）
+
+# 6. 保存 PM2 配置
+pm2 save
+```
+
+**常用 PM2 命令**：
+
+```bash
+pm2 list              # 查看所有进程
+pm2 logs              # 查看日志
+pm2 logs --err        # 只看错误日志
+pm2 restart all       # 重启所有进程
+pm2 stop all          # 停止所有进程
+pm2 delete all        # 删除所有进程
+pm2 monit             # 实时监控
+```
+
+### 步骤 11: 安装 Nginx（可选，用于反向代理）
+
+```bash
+# 1. 安装 Nginx
 sudo apt install -y nginx
 
-# 启动服务
-sudo systemctl start nginx
-sudo systemctl enable nginx
-```
-
-### 6. 配置 Nginx
-
-```bash
+# 2. 创建配置文件
 sudo nano /etc/nginx/sites-available/aiwebsitetools
 ```
 
-**Nginx 配置文件**:
+**Nginx 配置**（简化版，适合开始使用）：
 
 ```nginx
-# /etc/nginx/sites-available/aiwebsitetools
-
-upstream nextjs_app {
-    server 127.0.0.1:3000;
-    keepalive 64;
-}
-
-# HTTP -> HTTPS 重定向
 server {
     listen 80;
-    listen [::]:80;
-    server_name yourdomain.com www.yourdomain.com;
-
-    # Let's Encrypt 验证
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
+    server_name your-domain.com;
 
     location / {
-        return 301 https://$server_name$request_uri;
-    }
-}
-
-# HTTPS 配置
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name yourdomain.com www.yourdomain.com;
-
-    # SSL 证书（先用自签名，后面用 Let's Encrypt）
-    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
-
-    # SSL 优化
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-
-    # 安全头
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
-
-    # 文件上传大小限制
-    client_max_body_size 50M;
-
-    # Gzip 压缩
-    gzip on;
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss application/rss+xml font/truetype font/opentype application/vnd.ms-fontobject image/svg+xml;
-
-    # 静态文件缓存
-    location /_next/static {
-        proxy_pass http://nextjs_app;
-        proxy_cache_valid 200 60m;
-        add_header Cache-Control "public, max-age=31536000, immutable";
-    }
-
-    location /images {
-        proxy_pass http://nextjs_app;
-        add_header Cache-Control "public, max-age=31536000";
-    }
-
-    # Next.js 应用
-    location / {
-        proxy_pass http://nextjs_app;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -251,208 +322,189 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-
-        # 超时设置
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-    }
-
-    # 健康检查
-    location /health {
-        access_log off;
-        return 200 "healthy\n";
-        add_header Content-Type text/plain;
     }
 }
 ```
 
 ```bash
-# 启用站点
+# 3. 启用配置
 sudo ln -s /etc/nginx/sites-available/aiwebsitetools /etc/nginx/sites-enabled/
 
-# 测试配置
+# 4. 测试配置
 sudo nginx -t
 
-# 重启 Nginx
+# 5. 重启 Nginx
 sudo systemctl restart nginx
+
+# 6. 设置开机自启
+sudo systemctl enable nginx
 ```
 
-### 7. 安装 SSL 证书（Let's Encrypt）
+### 步骤 12: 配置 SSL（Let's Encrypt）
 
 ```bash
-# 安装 Certbot
+# 1. 安装 Certbot
 sudo apt install -y certbot python3-certbot-nginx
 
-# 获取证书（替换为你的域名）
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+# 2. 获取 SSL 证书（替换为你的域名）
+sudo certbot --nginx -d your-domain.com
 
-# 自动续期测试
+# 3. 测试自动续期
 sudo certbot renew --dry-run
-
-# Certbot 会自动添加 cron 任务续期
 ```
 
-### 8. 部署 Next.js 应用
+### 步骤 13: 验证部署
 
 ```bash
-# 创建应用目录
-sudo mkdir -p /var/www/aiwebsitetools
-sudo chown -R deploy:deploy /var/www/aiwebsitetools
+# 1. 检查应用是否运行
+pm2 status
 
-# 克隆或上传代码
-cd /var/www/aiwebsitetools
-git clone <your-repo-url> .
-# 或使用 rsync/scp 上传代码
+# 2. 检查日志
+pm2 logs aiwebsitetools --lines 50
 
-# 安装依赖
-pnpm install
+# 3. 测试访问
+curl http://localhost:3000
 
-# 配置环境变量
-nano .env.local
+# 4. 如果配置了 Nginx，测试域名
+curl http://your-domain.com
 ```
 
-**环境变量配置** (.env.local):
+---
 
-```env
-# App
-NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://yourdomain.com
+## 常见问题解决
 
-# Database
-DATABASE_URL="postgresql://aiwebsitetools_user:your_strong_password@localhost:5432/aiwebsitetools?schema=public"
+### 问题 1: PostgreSQL 权限错误
 
-# NextAuth
-NEXTAUTH_URL=https://yourdomain.com
-NEXTAUTH_SECRET="your-generated-secret-key"  # 使用: openssl rand -base64 32
-
-# OAuth Providers
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxx
-STRIPE_SECRET_KEY=sk_live_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-
-# Redis (可选)
-REDIS_URL=redis://localhost:6379
-
-# Email (使用 Resend 或 SendGrid)
-EMAIL_SERVER=smtp://apikey:your_sendgrid_key@smtp.sendgrid.net:587
-EMAIL_FROM=noreply@yourdomain.com
-
-# File Upload (本地或 S3)
-UPLOAD_DIR=/var/www/aiwebsitetools/public/uploads
-# 或使用 S3
-AWS_ACCESS_KEY_ID=xxx
-AWS_SECRET_ACCESS_KEY=xxx
-AWS_REGION=us-east-1
-AWS_BUCKET_NAME=your-bucket
+**错误信息**：
 ```
+ERROR: permission denied for schema public
+```
+
+**解决方案**：
 
 ```bash
-# 运行 Prisma 迁移
-pnpm prisma generate
-pnpm prisma migrate deploy
+sudo -u postgres psql -d aiwebsitetools
+```
 
-# 构建应用（Standalone 模式）
+```sql
+GRANT ALL ON SCHEMA public TO aiwebsitetools_user;
+ALTER SCHEMA public OWNER TO aiwebsitetools_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO aiwebsitetools_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO aiwebsitetools_user;
+\q
+```
+
+### 问题 2: 数据库连接失败
+
+**错误信息**：
+```
+Authentication failed against database server
+```
+
+**解决方案**：
+
+1. 检查 `.env` 文件中的密码是否正确
+2. 确保数据库用户已创建：
+
+```bash
+sudo -u postgres psql -c "\du" | grep aiwebsitetools_user
+```
+
+3. 如果用户不存在，重新创建：
+
+```bash
+sudo -u postgres psql
+```
+
+```sql
+CREATE USER aiwebsitetools_user WITH ENCRYPTED PASSWORD 'YourPassword';
+GRANT ALL PRIVILEGES ON DATABASE aiwebsitetools TO aiwebsitetools_user;
+\q
+```
+
+### 问题 3: 构建时 `useSearchParams` 错误
+
+**错误信息**：
+```
+useSearchParams() should be wrapped in a suspense boundary
+```
+
+**解决方案**：
+
+代码已修复。如果仍然遇到，确保代码是最新的：
+
+```bash
+git pull origin main
 npm run build
-
-# 测试运行
-npm run start
-# 访问 http://localhost:3000 测试
 ```
 
-### 9. 配置 Next.js Standalone 模式
+### 问题 4: 构建时 `published` 字段错误
 
-**next.config.js**:
-
-```javascript
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'standalone',
-
-  // 图片优化
-  images: {
-    domains: ['yourdomain.com'],
-    formats: ['image/avif', 'image/webp'],
-  },
-
-  // 压缩
-  compress: true,
-
-  // 生产环境优化
-  swcMinify: true,
-
-  // 如果使用 CDN
-  assetPrefix: process.env.CDN_URL || '',
-}
-
-module.exports = nextConfig
+**错误信息**：
+```
+Unknown argument `published`. Did you mean `isPublished`?
 ```
 
-### 10. 使用 PM2 管理进程
+**解决方案**：
+
+代码已修复。拉取最新代码：
 
 ```bash
-# 安装 PM2
-sudo npm install -g pm2
-
-# 创建 PM2 配置文件
-nano ecosystem.config.js
+git pull origin main
+pnpm prisma generate
+npm run build
 ```
 
-**ecosystem.config.js**:
+### 问题 5: PM2 应用无法启动
 
-```javascript
-module.exports = {
-  apps: [{
-    name: 'aiwebsitetools',
-    script: '.next/standalone/server.js',
-    cwd: '/var/www/aiwebsitetools',
-    instances: 'max',  // 使用所有 CPU 核心
-    exec_mode: 'cluster',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-    },
-    error_file: '/var/log/pm2/aiwebsitetools-error.log',
-    out_file: '/var/log/pm2/aiwebsitetools-out.log',
-    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-    merge_logs: true,
-
-    // 自动重启配置
-    max_memory_restart: '1G',
-    min_uptime: '10s',
-    max_restarts: 10,
-
-    // 优雅重启
-    kill_timeout: 5000,
-    wait_ready: true,
-    listen_timeout: 10000,
-  }]
-}
-```
+**检查步骤**：
 
 ```bash
-# 启动应用
-pm2 start ecosystem.config.js
+# 1. 查看错误日志
+pm2 logs aiwebsitetools --err
 
-# 保存 PM2 配置
-pm2 save
+# 2. 检查端口是否被占用
+sudo lsof -i :3000
 
-# 设置开机自启
-pm2 startup
-# 执行输出的命令
+# 3. 如果端口被占用，杀死进程
+sudo kill -9 <PID>
 
-# 常用 PM2 命令
-pm2 list              # 查看所有进程
-pm2 logs              # 查看日志
-pm2 monit             # 监控
-pm2 restart all       # 重启
-pm2 reload all        # 零停机重启
-pm2 stop all          # 停止
-pm2 delete all        # 删除
+# 4. 重新启动
+pm2 restart aiwebsitetools
+```
+
+### 问题 6: Nginx 502 Bad Gateway
+
+**解决方案**：
+
+```bash
+# 1. 检查 Next.js 是否运行
+pm2 list
+
+# 2. 如果没运行，启动它
+pm2 start aiwebsitetools
+
+# 3. 检查 Nginx 配置
+sudo nginx -t
+
+# 4. 查看 Nginx 错误日志
+sudo tail -f /var/log/nginx/error.log
+```
+
+### 问题 7: 内存不足
+
+**症状**：应用频繁重启或崩溃
+
+**解决方案**：
+
+```bash
+# 1. 检查内存使用
+free -h
+
+# 2. 配置 PM2 内存限制
+pm2 start npm --name "aiwebsitetools" --max-memory-restart 1G -- start
+
+# 3. 或者升级服务器内存
 ```
 
 ---
@@ -462,115 +514,78 @@ pm2 delete all        # 删除
 ### 创建部署脚本
 
 ```bash
-nano /var/www/aiwebsitetools/deploy.sh
-chmod +x /var/www/aiwebsitetools/deploy.sh
+nano /root/aiwebsitetools/deploy.sh
+chmod +x /root/aiwebsitetools/deploy.sh
 ```
 
-**deploy.sh**:
+**deploy.sh 内容**：
 
 ```bash
 #!/bin/bash
 
 set -e
 
-echo "🚀 Starting deployment..."
+echo "🚀 开始部署..."
 
 # 进入项目目录
-cd /var/www/aiwebsitetools
+cd /root/aiwebsitetools
 
 # 拉取最新代码
-echo "📥 Pulling latest code..."
+echo "📥 拉取最新代码..."
 git pull origin main
 
 # 安装依赖
-echo "📦 Installing dependencies..."
-pnpm install --frozen-lockfile
+echo "📦 安装依赖..."
+pnpm install
 
-# 运行数据库迁移
-echo "🗄️  Running database migrations..."
+# 生成 Prisma Client
+echo "🔧 生成 Prisma Client..."
 pnpm prisma generate
-pnpm prisma migrate deploy
+
+# 推送数据库 schema
+echo "🗄️  同步数据库..."
+pnpm prisma db push
 
 # 构建应用
-echo "🔨 Building application..."
-pnpm build
+echo "🔨 构建应用..."
+npm run build
 
 # 重启 PM2
-echo "♻️  Restarting application..."
-pm2 reload ecosystem.config.js --update-env
+echo "♻️  重启应用..."
+pm2 restart aiwebsitetools
 
-echo "✅ Deployment completed successfully!"
+echo "✅ 部署完成！"
 
 # 显示状态
 pm2 list
+pm2 logs aiwebsitetools --lines 20
 ```
 
-**使用方式**:
+**使用方式**：
 
 ```bash
-cd /var/www/aiwebsitetools
+cd /root/aiwebsitetools
 ./deploy.sh
 ```
 
 ---
 
-## 数据库备份
-
-### 自动备份脚本
-
-```bash
-sudo mkdir -p /var/backups/postgresql
-sudo nano /usr/local/bin/backup-db.sh
-sudo chmod +x /usr/local/bin/backup-db.sh
-```
-
-**backup-db.sh**:
-
-```bash
-#!/bin/bash
-
-BACKUP_DIR="/var/backups/postgresql"
-DATE=$(date +%Y%m%d_%H%M%S)
-DB_NAME="aiwebsitetools"
-BACKUP_FILE="$BACKUP_DIR/${DB_NAME}_${DATE}.sql.gz"
-
-# 创建备份
-pg_dump -U aiwebsitetools_user $DB_NAME | gzip > $BACKUP_FILE
-
-# 删除 7 天前的备份
-find $BACKUP_DIR -name "*.sql.gz" -mtime +7 -delete
-
-echo "Backup completed: $BACKUP_FILE"
-```
-
-### 设置定时任务
-
-```bash
-sudo crontab -e
-
-# 添加以下行（每天凌晨 2 点备份）
-0 2 * * * /usr/local/bin/backup-db.sh >> /var/log/db-backup.log 2>&1
-```
-
----
-
-## 监控与日志
+## 监控与维护
 
 ### 1. 查看应用日志
 
 ```bash
-# PM2 日志
-pm2 logs
+# 实时查看日志
+pm2 logs aiwebsitetools
 
-# Nginx 日志
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+# 查看最近 100 行日志
+pm2 logs aiwebsitetools --lines 100
 
-# PostgreSQL 日志
-sudo tail -f /var/log/postgresql/postgresql-16-main.log
+# 只看错误日志
+pm2 logs aiwebsitetools --err
 ```
 
-### 2. 系统监控
+### 2. 监控系统资源
 
 ```bash
 # 安装 htop
@@ -584,207 +599,194 @@ df -h
 
 # 查看内存使用
 free -h
-```
 
-### 3. PM2 监控（可选）
-
-```bash
-# 安装 PM2 Plus（免费版）
-pm2 link <secret_key> <public_key>
-
-# 或使用本地监控
+# PM2 监控
 pm2 monit
 ```
 
----
+### 3. 数据库备份
 
-## 性能优化
-
-### 1. 启用 Redis 缓存
-
-**lib/redis.ts**:
-
-```typescript
-import { Redis } from 'ioredis'
-
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379')
-
-export default redis
-```
-
-### 2. 数据库连接池优化
-
-**prisma/schema.prisma**:
-
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-
-  // 连接池配置
-  relationMode = "prisma"
-}
-
-generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
-}
-```
-
-### 3. Next.js 缓存配置
-
-```typescript
-// app/api/tools/route.ts
-export const revalidate = 3600 // 1小时缓存
-```
-
----
-
-## 安全加固
-
-### 1. 配置防火墙规则
+**创建备份脚本**：
 
 ```bash
-# 只允许必要端口
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow 22/tcp    # SSH
-sudo ufw allow 80/tcp    # HTTP
-sudo ufw allow 443/tcp   # HTTPS
+sudo nano /usr/local/bin/backup-db.sh
+sudo chmod +x /usr/local/bin/backup-db.sh
+```
+
+**backup-db.sh 内容**：
+
+```bash
+#!/bin/bash
+
+BACKUP_DIR="/root/backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+DB_NAME="aiwebsitetools"
+BACKUP_FILE="$BACKUP_DIR/${DB_NAME}_${DATE}.sql.gz"
+
+# 创建备份目录
+mkdir -p $BACKUP_DIR
+
+# 创建备份
+PGPASSWORD='YourPassword' pg_dump -U aiwebsitetools_user -h localhost $DB_NAME | gzip > $BACKUP_FILE
+
+# 删除 7 天前的备份
+find $BACKUP_DIR -name "*.sql.gz" -mtime +7 -delete
+
+echo "备份完成: $BACKUP_FILE"
+```
+
+**设置定时备份**：
+
+```bash
+# 编辑 crontab
+crontab -e
+
+# 添加以下行（每天凌晨 2 点备份）
+0 2 * * * /usr/local/bin/backup-db.sh >> /var/log/db-backup.log 2>&1
+```
+
+### 4. 更新应用
+
+```bash
+# 方式 1: 使用部署脚本
+cd /root/aiwebsitetools
+./deploy.sh
+
+# 方式 2: 手动更新
+cd /root/aiwebsitetools
+git pull
+pnpm install
+pnpm prisma generate
+pnpm prisma db push
+npm run build
+pm2 restart aiwebsitetools
+```
+
+---
+
+## 性能优化建议
+
+### 1. 启用 Gzip 压缩（Nginx）
+
+在 Nginx 配置中添加：
+
+```nginx
+gzip on;
+gzip_vary on;
+gzip_proxied any;
+gzip_comp_level 6;
+gzip_types text/plain text/css text/xml text/javascript application/json application/javascript;
+```
+
+### 2. 配置缓存
+
+在 Nginx 配置中添加：
+
+```nginx
+location /_next/static {
+    proxy_pass http://localhost:3000;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+}
+```
+
+### 3. PM2 集群模式
+
+```bash
+# 使用所有 CPU 核心
+pm2 start npm --name "aiwebsitetools" -i max -- start
+```
+
+---
+
+## 安全建议
+
+### 1. 配置防火墙
+
+```bash
+sudo ufw status
+sudo ufw allow 22/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
 sudo ufw enable
 ```
 
-### 2. 安装 Fail2Ban（防暴力破解）
+### 2. 定期更新系统
 
 ```bash
-sudo apt install -y fail2ban
+# 手动更新
+sudo apt update && sudo apt upgrade -y
 
-sudo nano /etc/fail2ban/jail.local
-```
-
-```ini
-[DEFAULT]
-bantime = 3600
-findtime = 600
-maxretry = 5
-
-[sshd]
-enabled = true
-
-[nginx-http-auth]
-enabled = true
-```
-
-```bash
-sudo systemctl restart fail2ban
-```
-
-### 3. 定期更新系统
-
-```bash
 # 设置自动安全更新
 sudo apt install -y unattended-upgrades
 sudo dpkg-reconfigure -plow unattended-upgrades
 ```
 
----
-
-## Cloudflare CDN 配置（推荐）
-
-### 优势
-- 免费 CDN 加速
-- DDoS 防护
-- SSL/TLS 加密
-- 缓存优化
-- 全球节点
-
-### 配置步骤
-
-1. 注册 Cloudflare 账号
-2. 添加你的域名
-3. 修改域名 DNS 服务器为 Cloudflare 提供的
-4. 在 Cloudflare 设置：
-   - SSL/TLS: Full (strict)
-   - 缓存级别: Standard
-   - 自动压缩: 开启
-   - Brotli: 开启
-   - HTTP/3: 开启
-
----
-
-## 成本估算（月度）
-
-### VPS 方案
-- **VPS**: $18-24/月（4GB RAM）
-- **域名**: $10-15/年
-- **Cloudflare**: 免费（或 Pro $20/月）
-- **Stripe**: 2.9% + $0.30 每笔交易
-- **总计**: ~$20-30/月
-
-### 对比 Vercel 方案
-- **节省**: 约 $30-40/月
-- **优势**: 完全控制、无限制
-- **劣势**: 需要自己维护
-
----
-
-## 故障排查
-
-### 应用无法启动
+### 3. 更改 SSH 端口（可选）
 
 ```bash
-# 检查 PM2 日志
-pm2 logs --err
-
-# 检查端口占用
-sudo lsof -i :3000
-
-# 检查数据库连接
-psql -U aiwebsitetools_user -d aiwebsitetools -h localhost
+sudo nano /etc/ssh/sshd_config
+# 修改 Port 22 为其他端口，如 2222
+sudo systemctl restart sshd
+sudo ufw allow 2222/tcp
 ```
 
-### Nginx 502 错误
+---
+
+## 成本估算
+
+### 月度成本
+- **VPS (4GB RAM)**: $18-24/月
+- **域名**: $10-15/年 (~$1/月)
+- **SSL 证书**: 免费 (Let's Encrypt)
+- **总计**: ~$20-25/月
+
+### 对比 Vercel Pro
+- **Vercel Pro**: $20/月 + 超额费用
+- **VPS 优势**: 无限制、完全控制
+- **VPS 劣势**: 需要自己维护
+
+---
+
+## 快速命令参考
 
 ```bash
-# 检查 Next.js 是否运行
-pm2 list
+# 查看应用状态
+pm2 status
 
-# 检查 Nginx 配置
-sudo nginx -t
+# 查看日志
+pm2 logs aiwebsitetools
 
-# 查看 Nginx 错误日志
-sudo tail -f /var/log/nginx/error.log
-```
+# 重启应用
+pm2 restart aiwebsitetools
 
-### 数据库连接失败
+# 查看数据库
+sudo -u postgres psql -d aiwebsitetools
 
-```bash
-# 检查 PostgreSQL 状态
-sudo systemctl status postgresql
+# 查看 Nginx 状态
+sudo systemctl status nginx
 
-# 检查连接
-sudo -u postgres psql -c "SELECT version();"
+# 重启 Nginx
+sudo systemctl restart nginx
+
+# 查看系统资源
+htop
+
+# 查看磁盘空间
+df -h
+
+# 部署更新
+cd /root/aiwebsitetools && ./deploy.sh
 ```
 
 ---
 
 ## 总结
 
-VPS 自托管方案提供了：
-- ✅ 完全控制权
-- ✅ 成本更低（长期）
-- ✅ 无平台限制
-- ✅ 数据隐私
-- ⚠️ 需要运维知识
-- ⚠️ 需要自己维护安全
+✅ **完成以上步骤后，你的应用应该已经成功部署并运行**
 
-**推荐使用场景**:
-- 有一定运维经验
-- 需要完全控制
-- 预算有限
-- 数据敏感
+如果遇到问题：
+1. 查看 PM2 日志：`pm2 logs aiwebsitetools --err`
+2. 查看 Nginx 日志：`sudo tail -f /var/log/nginx/error.log`
+3. 检查数据库连接：`psql -U aiwebsitetools_user -d aiwebsitetools -h localhost`
 
-**不推荐场景**:
-- 完全没有运维经验
-- 需要快速上线
-- 团队没有运维人员
+**需要帮助？** 检查"常见问题解决"部分，或查看日志文件获取详细错误信息。
