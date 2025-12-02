@@ -122,11 +122,6 @@ export default async function ToolPage({ params }: ToolPageProps) {
               config={tool.config as any}
             />
           )}
-
-          {/* 使用统计 */}
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p>已被使用 {tool.usageCount.toLocaleString()} 次</p>
-          </div>
         </section>
       </main>
       <Footer />

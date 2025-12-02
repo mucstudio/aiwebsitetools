@@ -288,7 +288,7 @@ User action: ${trimmed}`,
                 <div
                   className="prose prose-invert prose-p:text-xl prose-p:font-light prose-p:leading-relaxed mx-auto"
                   dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(marked.parse(bodyText) as string)
+                    __html: marked.parse(bodyText) as string
                   }}
                 />
 
