@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aura Check - Vibe Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+  <!-- 字体：Playfair Display (优雅衬线) + Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: #f0f0f0; }
+    h1, h2, .serif { font-family: 'Playfair Display', serif; }
+    
+    /* 噪点背景纹理 */
+    .bg-noise {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.07;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* 弥散光斑动画 */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.6;
+      animation: float 10s infinite ease-in-out;
+    }
+    .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #4f46e5; animation-delay: 0s; } /* Indigo */
+    .orb-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: #ec4899; animation-delay: -5s; } /* Pink */
+    .orb-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: #06b6d4; animation-delay: -2s; } /* Cyan */
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -50px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    /* 磨砂玻璃卡片 */
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    /* 渐变文字 */
+    .text-gradient {
+      background: linear-gradient(to right, #c084fc, #f472b6, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    /* 结果数字动画 */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-score {
+      animation: countUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 relative overflow-x-hidden selection:bg-pink-500 selection:text-white">
+
+  <!-- 噪点遮罩 -->
+  <div class="bg-noise"></div>
+
+  <!-- 背景光斑 -->
+  <div class="fixed inset-0 overflow-hidden -z-10">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="max-w-2xl mx-auto relative z-10 pt-10">
+    
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div class="inline-block border border-white/20 px-4 py-1 rounded-full backdrop-blur-md mb-4">
+        <span class="text-xs uppercase tracking-[0.2em] text-gray-300">Vibe Analysis System</span>
+      </div>
+      <h1 class="text-6xl md:text-7xl serif italic mb-2 text-white drop-shadow-lg">
+        Aura Check
+      </h1>
+      <p class="text-lg text-white/60 font-light max-w-md mx-auto">
+        Did you gain aura or lose it? Enter your recent action to calculate your spiritual credit score.
+      </p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="glass rounded-3xl p-8 md:p-10 transition-all duration-500">
+      
+      <!-- 剩余次数 -->
+      <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+        <span class="text-xs font-medium uppercase tracking-wider text-gray-400">Energy Credits</span>
+        <span id="remaining" class="text-sm font-mono text-white bg-white/10 px-2 py-1 rounded">--</span>
+      </div>
+
+      <!-- 输入框 -->
+      <div class="mb-8">
+        <label class="block text-xl serif italic text-white mb-4">"I just..."</label>
+        <textarea
+          id="question"
+          rows="3"
+          placeholder="e.g. tripped in front of my crush but played it off like a dance move"
+          spellcheck="false"
+          class="w-full bg-transparent text-2xl md:text-3xl text-white placeholder-white/20 border-b border-white/20 focus:border-white/60 focus:outline-none resize-none font-light leading-snug transition-colors"
+        ></textarea>
+        <div class="text-right mt-2">
+          <span id="charCount" class="text-xs text-white/30 font-mono">0 chars</span>
+        </div>
+      </div>
+
+      <!-- 错误提示 -->
+      <div id="error" class="hidden mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-200 text-sm text-center">
+        <span id="errorMsg"></span>
+      </div>
+
+      <!-- 按钮 -->
+      <button
+        id="consultBtn"
+        class="w-full py-5 rounded-2xl bg-white text-black font-serif italic text-xl hover:bg-gray-100 transition-transform active:scale-[0.98] shadow-lg flex justify-center items-center gap-3 group"
+      >
+        <span id="btnText" class="group-hover:tracking-widest transition-all duration-300">Calculate Aura</span>
+        <div id="spinner" class="hidden w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+      </button>
+
+      <!-- 输出区域 -->
+      <div id="output" class="hidden mt-12 text-center">
+        <div class="mb-2 text-xs uppercase tracking-[0.3em] text-white/50">Total Impact</div>
+        
+        <!-- 分数显示 -->
+        <div id="scoreDisplay" class="text-6xl md:text-8xl font-serif italic mb-6 animate-score text-gradient drop-shadow-2xl">
+          <!-- JS 填充 -->
+        </div>
+
+        <div class="h-px w-24 bg-white/20 mx-auto mb-6"></div>
+
+        <!-- 评价文本 -->
+        <div id="result" class="prose prose-invert prose-p:text-xl prose-p:font-light prose-p:leading-relaxed mx-auto">
+          <!-- JS 填充 -->
+        </div>
+
+        <div class="mt-8">
+          <button onclick="resetApp()" class="text-xs text-white/40 hover:text-white uppercase tracking-widest border-b border-transparent hover:border-white/40 pb-1 transition-all">
+            Check Another Vibe
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Fingerprint Lib -->
+  <script src="/js/fingerprint.js"></script>
+
+  <script>
+    // Reset function
+    function resetApp() {
+      document.getElementById('question').value = '';
+      document.getElementById('output').classList.add('hidden');
+      document.getElementById('error').classList.add('hidden');
+      document.getElementById('charCount').innerText = '0 chars';
+      
+      const btn = document.getElementById('consultBtn');
+      btn.disabled = false;
+      document.getElementById('btnText').innerText = 'Calculate Aura';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Tool ID Logic
+    function getToolId() {
+      return new Promise((resolve) => {
+        const isInIframe = window.self !== window.top;
+        if (isInIframe) {
+          let received = false;
+          window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'TOOL_ID') {
+              received = true;
+              resolve(e.data.toolId);
+            }
+          });
+          setTimeout(() => { if (!received) resolve(getToolIdFromUrl()); }, 3000);
+        } else {
+          resolve(getToolIdFromUrl());
+        }
+      });
+    }
+
+    function getToolIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('toolId') ? parseInt(params.get('toolId')) : null;
+    }
+
+    // Fingerprint
+    function generateFingerprint() {
+      try {
+        if (typeof FP !== 'undefined') return FP.getDeviceId();
+        throw new Error('FP lib missing');
+      } catch (e) {
+        const key = 'aura_check_fallback';
+        let id = localStorage.getItem(key);
+        if (!id) {
+          id = 'aura-' + Math.random().toString(36).substr(2);
+          try { localStorage.setItem(key, id); } catch(err){}
+        }
+        return id;
+      }
+    }
+
+    // API
+    async function checkUsage(toolId) {
+      try {
+        const fp = generateFingerprint();
+        const res = await fetch(`/api/usage/check?toolId=${toolId}&fingerprint=${fp}`);
+        const data = await res.json();
+        if (!data.allowed) {
+          alert('Your spiritual energy is depleted. Come back tomorrow.');
+          return false;
+        }
+        document.getElementById('remaining').innerText = data.remaining === -1 ? '∞' : data.remaining;
+        return true;
+      } catch (e) {
+        document.getElementById('remaining').innerText = '--';
+        return true;
+      }
+    }
+
+    async function recordUsage(toolId) {
+      const fp = generateFingerprint();
+      await fetch('/api/usage/record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toolId: toolId, fingerprint: fp })
+      });
+    }
+
+    // Content Check
+    function checkContentRelevance(userInput) {
+      const input = userInput.toLowerCase();
+      // 允许大部分日常行为，拦截极端恶行
+      const blackList = ['rape', 'murder', 'kill', 'suicide', 'bomb', 'terrorist', 'abuse', 'pedophile'];
+      
+      for (const word of blackList) {
+        if (input.includes(word)) return { allowed: false, reason: "That's -1,000,000 Aura immediately. We don't do that here." };
+      }
+      if (input.length < 3) return { allowed: false, reason: "The universe needs more context." };
+      return { allowed: true };
+    }
+
+    // Main Logic
+    let TOOL_ID = null;
+    const elements = {
+      btn: document.getElementById('consultBtn'),
+      input: document.getElementById('question'),
+      output: document.getElementById('output'),
+      result: document.getElementById('result'),
+      score: document.getElementById('scoreDisplay'),
+      error: document.getElementById('error'),
+      errorMsg: document.getElementById('errorMsg'),
+      btnText: document.getElementById('btnText'),
+      spinner: document.getElementById('spinner'),
+      charCount: document.getElementById('charCount')
+    };
+
+    elements.input.addEventListener('input', (e) => {
+      elements.charCount.innerText = `${e.target.value.length} chars`;
+    });
+
+    (async () => {
+      TOOL_ID = await getToolId();
+      if (TOOL_ID) await checkUsage(TOOL_ID);
+    })();
+
+    elements.btn.onclick = async () => {
+      const text = elements.input.value.trim();
+      if (!text) {
+        elements.errorMsg.innerText = "Please describe your action first.";
+        elements.error.classList.remove('hidden');
+        return;
+      }
+      
+      const check = checkContentRelevance(text);
+      if (!check.allowed) {
+        elements.errorMsg.innerText = check.reason;
+        elements.error.classList.remove('hidden');
+        return;
+      }
+
+      if (!TOOL_ID) TOOL_ID = await getToolId();
+      if (!TOOL_ID || !(await checkUsage(TOOL_ID))) return;
+
+      // Loading
+      elements.error.classList.add('hidden');
+      elements.btn.disabled = true;
+      elements.btnText.innerText = 'Reading the stars...';
+      elements.spinner.classList.remove('hidden');
+      elements.output.classList.add('hidden');
+
+      // Funny timeout
+      const longWaitTimer = setTimeout(() => {
+        elements.btnText.innerText = 'Consulting the oracle...';
+      }, 4000);
+
+      try {
+        const fp = generateFingerprint();
+        const res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: 'system',
+                content: `You are 'Aura Check', a mystical vibe calculator for Gen Z.
+                
+                Task: Analyze the user's action and calculate their "Aura Points" (Social Credit/Coolness Score).
+                
+                Format:
+                1. First line: The Score (e.g., "+5000 Aura", "-200 Aura", "Infinite Aura").
+                2. Second part: A brief, mystical, or funny explanation of why.
+                
+                Tone: Ethereal, Gen Z slang (but make it sound ancient/mystical), slightly judgmental but funny.
+                
+                Scoring Guide:
+                - Cool/Confident/Kind = Positive Aura (+)
+                - Cringe/Embarrassing/Mean = Negative Aura (-)
+                - Extremely cool = Infinite Aura`
+              },
+              { role: 'user', content: text }
+            ],
+            temperature: 0.9,
+            maxTokens: 1500,
+            fingerprint: fp
+          })
+        });
+
+        if (!res.ok) throw new Error('The spirits are silent. Try again.');
+        const data = await res.json();
+        
+        // Parse Result manually to separate Score and Text
+        const fullContent = data.content;
+        const splitIndex = fullContent.indexOf('\n'); // Split by first newline
+        
+        let scoreText = "";
+        let bodyText = "";
+        
+        if (splitIndex !== -1) {
+            scoreText = fullContent.substring(0, splitIndex).trim();
+            bodyText = fullContent.substring(splitIndex).trim();
+        } else {
+            scoreText = "??? Aura";
+            bodyText = fullContent;
+        }
+
+        // Clean up score formatting just in case
+        scoreText = scoreText.replace(/\*\*/g, '').replace(/#/g, '');
+
+        // Color coding for score
+        if (scoreText.includes('-')) {
+            elements.score.className = "text-6xl md:text-8xl font-serif italic mb-6 animate-score text-red-400 drop-shadow-2xl";
+        } else {
+            elements.score.className = "text-6xl md:text-8xl font-serif italic mb-6 animate-score text-gradient drop-shadow-2xl";
+        }
+
+        elements.score.innerText = scoreText;
+        elements.result.innerHTML = DOMPurify.sanitize(marked.parse(bodyText));
+        
+        elements.output.classList.remove('hidden');
+        elements.output.scrollIntoView({ behavior: 'smooth' });
+        
+        await recordUsage(TOOL_ID);
+        await checkUsage(TOOL_ID);
+
+      } catch (e) {
+        elements.errorMsg.innerText = e.message;
+        elements.error.classList.remove('hidden');
+      } finally {
+        clearTimeout(longWaitTimer);
+        elements.btn.disabled = false;
+        elements.btnText.innerText = 'Calculate Aura';
+        elements.spinner.classList.add('hidden');
+      }
+    };
+  </script>
+</body>
+</html>
