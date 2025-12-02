@@ -1,0 +1,474 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+
+  accounts      Account[]
+  sessions      Session[]
+  subscription  Subscription?
+  usageRecords  UsageRecord[]
+  favorites     Favorite[]
+  settings      UserSettings?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Subscription models
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  planId            String
+  plan              Plan     @relation(fields: [planId], references: [id])
+
+  stripeCustomerId      String?  @unique
+  stripeSubscriptionId  String?  @unique
+  stripePriceId         String?
+
+  status            SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean @default(false)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([planId])
+  @@index([status])
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+  INCOMPLETE
+}
+
+model Plan {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?  @db.Text
+  price         Float
+  interval      String   // month, year
+  stripePriceId String?
+
+  features      Json     // ["feature1", "feature2"]
+  limits        Json     // {"dailyUsage": 100, "toolAccess": "all"}
+
+  isActive      Boolean  @default(true)
+  order         Int      @default(0)
+
+  subscriptions Subscription[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+// Tool models
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  icon        String?
+  order       Int      @default(0)
+
+  tools       Tool[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+}
+
+model Tool {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String   @db.Text
+  icon        String?
+
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  componentType String  // 工具组件类型
+  config        Json?   // 工具配置
+
+  isPremium     Boolean @default(false)
+  isPublished   Boolean @default(false)
+
+  // 使用限制配置
+  usageLimits   Json?   // 工具特定的使用限制
+  requiresAI    Boolean @default(false) // 是否需要 AI
+  aiModelId     String? // 指定使用的 AI 模型（可选）
+
+  seoTitle      String?
+  seoDescription String? @db.Text
+  tags          String[] // 标签数组
+
+  usageCount    Int     @default(0)
+
+  usageRecords  UsageRecord[]
+  favorites     Favorite[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isPublished])
+  @@index([isPremium])
+}
+
+model UsageRecord {
+  id        String   @id @default(cuid())
+  userId    String?  // 可为空（游客）
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toolId    String
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  // 游客和限制相关字段
+  sessionId String?  // 游客会话 ID
+  ipAddress String?  // IP 地址（用于游客限制）
+  userAgent String?  // 用户代理
+
+  // AI 使用相关
+  usedAI    Boolean  @default(false) // 是否使用了 AI
+  aiTokens  Int?     // AI token 消耗
+  aiCost    Float?   // AI 成本
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([toolId])
+  @@index([sessionId, createdAt]) // 游客查询索引
+  @@index([ipAddress, createdAt]) // IP 限制索引
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toolId    String
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, toolId])
+  @@index([userId])
+}
+
+// Site settings
+model SiteSettings {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+
+  updatedAt   DateTime @updatedAt
+}
+
+// Payment records
+model Payment {
+  id                    String   @id @default(cuid())
+  userId                String
+  amount                Float
+  currency              String   @default("usd")
+  status                String
+  stripePaymentIntentId String?  @unique
+
+  metadata              Json?
+
+  createdAt             DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+// Audit Log - 审计日志
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?  // 操作用户ID，可为空（系统操作）
+  userEmail   String?  // 用户邮箱
+  action      String   // 操作类型：LOGIN, LOGOUT, CREATE, UPDATE, DELETE, etc.
+  resource    String   // 资源类型：USER, TOOL, CATEGORY, PLAN, etc.
+  resourceId  String?  // 资源ID
+  details     Json?    // 详细信息
+  ipAddress   String?  // IP地址
+  userAgent   String?  // 用户代理
+  status      String   @default("SUCCESS") // SUCCESS, FAILED
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+// Permission - 权限系统
+model Permission {
+  id          String   @id @default(cuid())
+  name        String   @unique // 权限名称：users.view, users.create, tools.edit, etc.
+  description String?
+  category    String   // 权限分类：users, tools, categories, plans, settings
+
+  rolePermissions RolePermission[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+}
+
+// RolePermission - 角色权限关联
+model RolePermission {
+  id           String     @id @default(cuid())
+  role         Role       // USER, ADMIN
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime   @default(now())
+
+  @@unique([role, permissionId])
+  @@index([role])
+  @@index([permissionId])
+}
+
+// EmailVerification - 邮箱验证令牌
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  type      String   @default("email_verification") // email_verification, password_reset
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// LoginAttempt - 登录尝试记录
+model LoginAttempt {
+  id          String    @id @default(cuid())
+  email       String
+  ipAddress   String
+  success     Boolean
+  lockedUntil DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@index([lockedUntil])
+}
+
+// UserSettings - 用户设置
+model UserSettings {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  twoFactorEnabled    Boolean  @default(false)
+  emailNotifications  Boolean  @default(true)
+  loginAlerts         Boolean  @default(true)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// AI Models - AI 模型系统
+model AIProvider {
+  id          String   @id @default(cuid())
+  name        String   // OpenAI, Anthropic, Google, Custom
+  slug        String   @unique
+  type        String   // openai, anthropic, google, custom
+  apiEndpoint String   // API 端点
+  apiKey      String   @db.Text // 加密存储的 API Key
+
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+
+  // 配置信息
+  config      Json?    // 额外配置，如超时时间、重试次数等
+
+  models      AIModel[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([type])
+}
+
+model AIModel {
+  id           String   @id @default(cuid())
+  providerId   String
+  provider     AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  name         String   // GPT-4, Claude 3.5 Sonnet, Gemini Pro
+  modelId      String   // gpt-4, claude-3-5-sonnet-20241022, gemini-pro
+  description  String?  @db.Text
+
+  // 定价信息（每百万 token）
+  inputPrice   Float    @default(0)
+  outputPrice  Float    @default(0)
+
+  // 能力限制
+  maxTokens    Int      @default(4096)
+  contextWindow Int     @default(4096)
+  supportVision Boolean @default(false)
+  supportTools Boolean  @default(false)
+  supportStreaming Boolean @default(true)
+
+  // 状态
+  isActive     Boolean  @default(true)
+  isManual     Boolean  @default(false) // 是否手动添加
+
+  // 使用统计
+  totalCalls   Int      @default(0)
+  successCalls Int      @default(0)
+  failedCalls  Int      @default(0)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([providerId, modelId])
+  @@index([providerId])
+  @@index([isActive])
+  @@index([modelId])
+}
+
+model AIConfig {
+  id              String   @id @default(cuid())
+
+  // 主模型和备用模型
+  primaryModelId  String?  // 主模型 ID
+  fallback1ModelId String? // 备用模型 1
+  fallback2ModelId String? // 备用模型 2
+
+  // 故障转移配置
+  retryAttempts   Int      @default(3)
+  timeoutSeconds  Int      @default(30)
+  enableFallback  Boolean  @default(true)
+
+  // 全局配置
+  config          Json?    // 其他配置项
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AIUsageLog {
+  id          String   @id @default(cuid())
+
+  providerId  String
+  modelId     String
+
+  userId      String?  // 可为空（系统调用）
+  toolId      String?  // 关联的工具
+
+  // 请求信息
+  prompt      String   @db.Text
+  response    String?  @db.Text
+
+  // Token 使用
+  inputTokens  Int     @default(0)
+  outputTokens Int     @default(0)
+  totalTokens  Int     @default(0)
+
+  // 成本
+  cost        Float    @default(0)
+
+  // 性能
+  latencyMs   Int?     // 响应时间（毫秒）
+
+  // 状态
+  status      String   // success, failed, timeout
+  errorMessage String? @db.Text
+
+  // 是否使用了备用模型
+  usedFallback Boolean @default(false)
+  fallbackLevel Int    @default(0) // 0=主模型, 1=备用1, 2=备用2
+
+  createdAt   DateTime @default(now())
+
+  @@index([providerId])
+  @@index([modelId])
+  @@index([userId])
+  @@index([toolId])
+  @@index([status])
+  @@index([createdAt])
+}
