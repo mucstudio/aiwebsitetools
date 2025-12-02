@@ -257,6 +257,43 @@ async function callAIProvider(
       outputTokens: data.usageMetadata?.candidatesTokenCount
     }
   }
+  else if (provider.type === "custom") {
+    // 自定义 API 调用（兼容 OpenAI 格式）
+    const response = await fetch(`${apiEndpoint}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.9,
+        max_tokens: 1500
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      let errorMessage = "Custom API call failed"
+      try {
+        const error = JSON.parse(errorText)
+        errorMessage = error.error?.message || error.message || errorMessage
+      } catch {
+        errorMessage = errorText || errorMessage
+      }
+      throw new Error(errorMessage)
+    }
+
+    const data = await response.json()
+    return {
+      content: data.choices[0].message.content,
+      inputTokens: data.usage?.prompt_tokens,
+      outputTokens: data.usage?.completion_tokens
+    }
+  }
   else {
     throw new Error(`Unsupported provider type: ${provider.type}`)
   }

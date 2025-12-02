@@ -19,7 +19,8 @@
       "Bash(taskkill:*)",
       "Bash(npx tsx:*)",
       "Bash(curl:*)",
-      "Bash(node check-tool.mjs:*)"
+      "Bash(node check-tool.mjs:*)",
+      "Bash(node check-ai-config.mjs:*)"
     ],
     "deny": [],
     "ask": []
