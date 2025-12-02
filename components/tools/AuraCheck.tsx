@@ -211,19 +211,19 @@ User action: ${trimmed}`,
         }
       `}</style>
 
-      <div className="aura-body min-h-screen p-4 sm:p-8 relative overflow-x-hidden selection:bg-pink-500 selection:text-white">
+      <div className="aura-body min-h-screen w-full p-4 sm:p-8 relative overflow-x-hidden selection:bg-pink-500 selection:text-white -mx-[50vw] left-1/2 right-1/2 w-screen">
 
         {/* 噪点遮罩 */}
         <div className="bg-noise"></div>
 
         {/* 背景光斑 */}
-        <div className="fixed inset-0 overflow-hidden -z-10">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
           <div className="orb orb-1"></div>
           <div className="orb orb-2"></div>
           <div className="orb orb-3"></div>
         </div>
 
-        <div className="max-w-2xl mx-auto relative z-10 pt-10">
+        <div className="max-w-2xl mx-auto relative pt-10" style={{ zIndex: 1 }}>
 
           <div className="text-center mb-12">
             <div className="inline-block border border-white/20 px-4 py-1 rounded-full backdrop-blur-md mb-4">
