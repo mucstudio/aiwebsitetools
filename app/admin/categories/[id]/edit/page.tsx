@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { EmojiPicker } from "@/components/ui/emoji-picker"
 import { Loader2 } from "lucide-react"
 
 export default function EditCategoryPage() {
@@ -163,14 +164,11 @@ export default function EditCategoryPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="icon">图标 (Emoji)</Label>
-                <Input
-                  id="icon"
+                <EmojiPicker
                   value={formData.icon}
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="例如: 📝"
-                  maxLength={2}
+                  onChange={(emoji) => setFormData({ ...formData, icon: emoji })}
                 />
-                <p className="text-xs text-muted-foreground">输入一个 emoji 图标</p>
+                <p className="text-xs text-muted-foreground">选择一个 emoji 图标</p>
               </div>
 
               <div className="space-y-2">

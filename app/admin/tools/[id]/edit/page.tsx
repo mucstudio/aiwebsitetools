@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { EmojiPicker } from "@/components/ui/emoji-picker"
 import { Loader2, X } from "lucide-react"
 
 export default function EditToolPage() {
@@ -191,20 +192,18 @@ export default function EditToolPage() {
                   <option value="">选择分类</option>
                   {categories
                     .filter((cat) => !cat.parentId)
-                    .map((parentCategory) => (
-                      <>
-                        <option key={parentCategory.id} value={parentCategory.id}>
-                          {parentCategory.name}
-                        </option>
-                        {categories
-                          .filter((cat) => cat.parentId === parentCategory.id)
-                          .map((childCategory) => (
-                            <option key={childCategory.id} value={childCategory.id}>
-                              &nbsp;&nbsp;└─ {childCategory.name}
-                            </option>
-                          ))}
-                      </>
-                    ))}
+                    .map((parentCategory) => [
+                      <option key={parentCategory.id} value={parentCategory.id}>
+                        {parentCategory.name}
+                      </option>,
+                      ...categories
+                        .filter((cat) => cat.parentId === parentCategory.id)
+                        .map((childCategory) => (
+                          <option key={childCategory.id} value={childCategory.id}>
+                            &nbsp;&nbsp;└─ {childCategory.name}
+                          </option>
+                        ))
+                    ])}
                 </select>
               </div>
 
@@ -223,12 +222,9 @@ export default function EditToolPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="icon">图标 (Emoji)</Label>
-                <Input
-                  id="icon"
+                <EmojiPicker
                   value={formData.icon}
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="例如: 📝"
-                  maxLength={2}
+                  onChange={(emoji) => setFormData({ ...formData, icon: emoji })}
                 />
               </div>
             </CardContent>
