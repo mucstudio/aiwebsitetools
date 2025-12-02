@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { decryptApiKey } from "@/lib/ai/encryption"
+import { checkUsageLimit } from "@/lib/usage-limits/service"
+import { getCurrentSession } from "@/lib/auth-utils"
+import { getClientIP } from "@/lib/usage-limits/session"
 
 export async function POST(request: NextRequest) {
   try {
@@ -120,28 +123,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 检查剩余使用次数
-    let remaining = -1
-    if (fingerprint) {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
+    // 检查剩余使用次数（使用统一的使用限制服务）
+    const session = await getCurrentSession()
+    const ipAddress = getClientIP(request)
 
-      const usageCount = await prisma.usageRecord.count({
-        where: {
-          sessionId: fingerprint,
-          createdAt: { gte: today }
-        }
-      })
-
-      // 假设每日限制为 10 次（可以从配置中读取）
-      const dailyLimit = 10
-      remaining = Math.max(0, dailyLimit - usageCount)
-    }
+    const usageCheck = await checkUsageLimit({
+      userId: session?.user?.id,
+      sessionId: fingerprint || undefined,
+      ipAddress,
+      deviceFingerprint: fingerprint || undefined
+    })
 
     return NextResponse.json({
       response,
       usage: {
-        remaining,
+        remaining: usageCheck.remaining,
         inputTokens,
         outputTokens,
         cost
