@@ -231,6 +231,59 @@ pnpm prisma db push
 
 **常见问题**：如果遇到权限错误，返回步骤 4 重新设置权限。
 
+### 步骤 8.5: 创建管理员账号和初始数据 ⭐ 重要！
+
+```bash
+# 运行 seed 脚本创建管理员账号
+pnpm prisma db seed
+
+# 或者使用 npm
+npm run seed
+```
+
+**你会看到类似输出**：
+
+```
+🌱 Starting database seed...
+👤 Creating admin user...
+✅ Admin user created: your-email@example.com
+📧 Email: your-email@example.com
+🔑 Password: your-admin-password
+📦 Creating plans...
+✅ Created plan: Free (free)
+✅ Created plan: Pro (pro)
+✅ Created plan: Enterprise (enterprise)
+📦 Creating categories...
+✅ Created category: Text Tools (text)
+...
+✨ Database seed completed successfully!
+```
+
+**⚠️ 重要**：记下输出的管理员邮箱和密码，你需要用它们登录后台！
+
+**如果 seed 命令不存在**，手动添加到 `package.json`：
+
+```bash
+nano package.json
+```
+
+在 `scripts` 部分添加：
+
+```json
+{
+  "scripts": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
+```
+
+然后安装 tsx：
+
+```bash
+pnpm add -D tsx
+pnpm prisma db seed
+```
+
 ### 步骤 9: 构建应用
 
 ```bash
