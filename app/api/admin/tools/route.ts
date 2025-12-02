@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     if (process.env.NODE_ENV === 'production' && process.env.AUTO_REBUILD === 'true') {
       try {
         const { exec } = require('child_process')
-        exec('npm run build && pm2 restart all', (error: any) => {
+        exec('npm run build && pm2 restart aiwebsitetools', (error: any) => {
           if (error) {
             console.error('Auto rebuild failed:', error)
           } else {

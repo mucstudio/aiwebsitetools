@@ -20,7 +20,11 @@
       "Bash(npx tsx:*)",
       "Bash(curl:*)",
       "Bash(node check-tool.mjs:*)",
-      "Bash(node check-ai-config.mjs:*)"
+      "Bash(node check-ai-config.mjs:*)",
+      "Bash(node test-ai-call.mjs:*)",
+      "Bash(node test-ai-local.mjs:*)",
+      "Bash(node test-ai-debug.mjs:*)",
+      "Bash(node check-production-error.mjs:*)"
     ],
     "deny": [],
     "ask": []

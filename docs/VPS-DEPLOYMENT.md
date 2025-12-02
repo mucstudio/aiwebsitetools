@@ -101,6 +101,12 @@ sudo -u postgres psql
 CREATE DATABASE aiwebsitetools;
 CREATE USER aiuser WITH ENCRYPTED PASSWORD 'your_secure_password';
 GRANT ALL PRIVILEGES ON DATABASE aiwebsitetools TO aiuser;
+\c aiwebsitetools
+GRANT ALL ON SCHEMA public TO aiuser;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO aiuser;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO aiuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO aiuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO aiuser;
 \q
 ```
 
@@ -185,9 +191,8 @@ GITHUB_ID=your_github_client_id
 GITHUB_SECRET=your_github_client_secret
 
 # AI API 配置
-OPENAI_API_KEY=your_openai_api_key
-# 或使用其他 AI 服务
-# ANTHROPIC_API_KEY=your_anthropic_api_key
+# 注意：AI 提供商和模型配置在管理后台的 AI 设置中管理
+# 不需要在这里配置 API 密钥
 
 # 自动重建配置（可选）
 AUTO_REBUILD=false  # 设置为 true 启用自动重建
@@ -260,7 +265,7 @@ nano ecosystem.config.js
 module.exports = {
   apps: [{
     name: 'aiwebsitetools',
-    script: 'npm',
+    script: 'node_modules/next/dist/bin/next',
     args: 'start',
     cwd: '/var/www/aiwebsitetools',
     instances: 1,
@@ -328,6 +333,9 @@ sudo nano /etc/nginx/sites-available/aiwebsitetools
 ```
 
 ```nginx
+# 定义缓存区域（在 http 块中，server 块外）
+proxy_cache_path /var/cache/nginx/nextjs levels=1:2 keys_zone=nextjs_cache:10m max_size=1g inactive=60m;
+
 server {
     listen 80;
     server_name yourdomain.com www.yourdomain.com;
@@ -342,13 +350,27 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # 禁用 HTML 缓存
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
     }
 
-    # 静态文件缓存
+    # 静态文件缓存（带版本哈希的文件）
     location /_next/static {
         proxy_pass http://localhost:3000;
-        proxy_cache_valid 200 60m;
-        add_header Cache-Control "public, immutable";
+        proxy_cache nextjs_cache;
+        proxy_cache_valid 200 365d;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Cache-Status $upstream_cache_status;
+    }
+
+    # 动态生成的页面数据
+    location /_next/data {
+        proxy_pass http://localhost:3000;
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
+        add_header Cache-Control "private, no-cache, no-store, must-revalidate";
     }
 
     # 图片缓存
@@ -394,6 +416,73 @@ Certbot 会自动修改 Nginx 配置，添加 SSL 支持。
 
 ---
 
+## 首次部署后的初始化
+
+### 1. 创建管理员账户
+
+首次部署后，需要创建管理员账户：
+
+```bash
+# 方法 1：通过注册页面
+# 访问 https://yourdomain.com/register 注册第一个账户
+# 然后通过数据库将其设置为管理员
+
+# 使用 Prisma Studio（推荐）
+npx prisma studio
+# 在浏览器中打开，找到 User 表，将对应用户的 role 改为 ADMIN
+
+# 或使用 SQL 命令
+psql -U aiuser -d aiwebsitetools
+UPDATE "User" SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+\q
+```
+
+### 2. 配置 AI 提供商
+
+登录管理后台后，需要配置 AI 提供商才能使用 AI 功能：
+
+**步骤**：
+1. 登录管理后台：`https://yourdomain.com/admin`
+2. 进入 **设置 > AI 配置**
+3. 点击 **添加 AI 提供商**
+4. 填写提供商信息：
+   - **名称**：例如 "OpenAI"
+   - **类型**：选择 `openai`/`anthropic`/`google`/`custom`
+   - **API 密钥**：输入你的有效 API 密钥（⚠️ 确保密钥有效且未过期）
+   - **API 端点**：
+     - OpenAI: `https://api.openai.com/v1`
+     - Anthropic: `https://api.anthropic.com/v1`
+     - Google: `https://generativelanguage.googleapis.com/v1beta/models`
+     - Custom: 你的自定义 API 端点
+   - **状态**：激活
+5. 点击 **添加 AI 模型**
+6. 填写模型信息：
+   - **名称**：例如 "GPT-4"
+   - **模型 ID**：例如 "gpt-4"
+   - **提供商**：选择刚创建的提供商
+   - **输入价格**：每百万 token 的价格
+   - **输出价格**：每百万 token 的价格
+   - **状态**：激活
+7. 在 **AI 配置** 中设置 **主模型**
+8. 保存配置
+
+**支持的 AI 提供商类型**：
+
+| 类型 | 说明 | API 端点示例 |
+|------|------|-------------|
+| `openai` | OpenAI (GPT-3.5, GPT-4) | `https://api.openai.com/v1` |
+| `anthropic` | Anthropic (Claude) | `https://api.anthropic.com/v1` |
+| `google` | Google (Gemini) | `https://generativelanguage.googleapis.com/v1beta/models` |
+| `custom` | 自定义 API（兼容 OpenAI 格式） | 你的自定义端点 |
+
+### 3. 创建分类和工具
+
+1. 在管理后台创建工具分类
+2. 添加工具并编写组件代码
+3. 发布工具
+
+---
+
 ## 添加工具后的重建流程
 
 ### ⚠️ 重要说明
@@ -407,8 +496,8 @@ Certbot 会自动修改 Nginx 配置，添加 SSL 支持。
 ```bash
 cd /var/www/aiwebsitetools
 
-# 拉取最新代码（如果使用 Git）
-git pull
+# 注意：新添加的工具组件已保存在本地文件系统，无需 git pull
+# 如果是通过 Git 提交的代码更新，才需要执行 git pull
 
 # 重新构建
 npm run build
@@ -428,9 +517,9 @@ AUTO_REBUILD=true
 ```
 
 **工作原理**:
-- 添加新工具时，系统会自动触发 `npm run build && pm2 restart all`
+- 添加新工具时，系统会自动触发 `npm run build && pm2 restart aiwebsitetools`
 - 构建过程在后台进行
-- 完成后自动重启应用
+- 完成后自动重启应用（仅重启本项目，不影响其他应用）
 
 **注意事项**:
 - ⚠️ 会导致 1-2 分钟的服务中断
@@ -471,7 +560,49 @@ jobs:
 
 ## 常见问题
 
-### 1. 添加工具后显示 404
+### 1. 构建后出现 ChunkLoadError 或 400 错误
+
+**错误信息**:
+```
+Application error: a client-side exception has occurred
+ChunkLoadError: Loading chunk failed
+Failed to load resource: the server responded with a status of 400
+```
+
+**原因**: 构建后的文件哈希值变化，但浏览器或 Nginx 缓存了旧的文件引用。
+
+**解决方法**:
+
+```bash
+# 在服务器上执行以下命令
+
+# 1. 删除旧的构建文件
+cd /var/www/aiwebsitetools
+rm -rf .next
+
+# 2. 清除 npm 缓存
+npm cache clean --force
+
+# 3. 重新构建
+npm run build
+
+# 4. 重启应用
+pm2 restart aiwebsitetools
+
+# 5. 清除 Nginx 缓存
+sudo rm -rf /var/cache/nginx/*
+sudo systemctl reload nginx
+```
+
+**浏览器端**:
+- 按 `Ctrl + Shift + Delete` 清除浏览器缓存
+- 或按 `Ctrl + F5` 强制刷新页面
+
+**预防措施**:
+- 确保 Nginx 配置中禁用了 HTML 页面缓存（见上面的 Nginx 配置）
+- 每次构建后清除 Nginx 缓存
+
+### 2. 添加工具后显示 404
 
 **原因**: 新组件文件未被构建到生产代码中。
 
@@ -532,7 +663,36 @@ netstat -tlnp | grep 3000
 sudo tail -f /var/log/nginx/error.log
 ```
 
-### 6. 删除工具后组件文件未删除
+### 6. AI 调用失败：401 Unauthorized
+
+**错误信息**:
+```
+Failed to load resource: the server responded with a status of 500
+无效的令牌 / Invalid API key
+```
+
+**原因**: API 密钥无效、过期或未正确配置。
+
+**解决方法**:
+
+1. **检查 API 密钥是否有效**：
+   ```bash
+   # 运行测试脚本
+   node test-ai-call.mjs
+   ```
+
+2. **更新 API 密钥**：
+   - 登录管理后台：`/admin`
+   - 进入 **设置 > AI 配置**
+   - 编辑对应的 AI 提供商
+   - 更新 API 密钥为有效密钥
+   - 保存并测试
+
+3. **验证 API 端点**：
+   - 确保 API 端点 URL 正确
+   - 对于自定义提供商，确保端点兼容 OpenAI 格式
+
+### 7. 删除工具后组件文件未删除
 
 **说明**: 已在最新版本中修复，删除工具时会自动删除对应的组件文件。
 
@@ -601,20 +761,44 @@ nano /home/deploy/backup.sh
 
 ```bash
 #!/bin/bash
+set -e  # 遇到错误立即退出
+
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="/home/deploy/backups"
 
+# 创建备份目录
+mkdir -p $BACKUP_DIR
+
 # 备份数据库
+echo "开始备份数据库..."
 pg_dump aiwebsitetools > $BACKUP_DIR/db_$DATE.sql
 
+if [ $? -eq 0 ]; then
+    echo "数据库备份成功: db_$DATE.sql"
+else
+    echo "数据库备份失败!" >&2
+    exit 1
+fi
+
 # 备份上传文件
-tar -czf $BACKUP_DIR/uploads_$DATE.tar.gz /var/www/aiwebsitetools/public/uploads
+if [ -d "/var/www/aiwebsitetools/public/uploads" ]; then
+    echo "开始备份上传文件..."
+    tar -czf $BACKUP_DIR/uploads_$DATE.tar.gz /var/www/aiwebsitetools/public/uploads
+    echo "上传文件备份成功: uploads_$DATE.tar.gz"
+fi
 
 # 删除 30 天前的备份
 find $BACKUP_DIR -type f -mtime +30 -delete
+echo "清理完成，已删除 30 天前的备份"
 ```
 
 ```bash
+# 添加执行权限
+chmod +x /home/deploy/backup.sh
+
+# 测试备份脚本
+/home/deploy/backup.sh
+
 # 设置定时任务
 crontab -e
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { decryptApiKey } from "@/lib/ai/encryption"
 
 export async function POST(request: NextRequest) {
   try {
@@ -163,7 +164,8 @@ async function callAIProvider(
   prompt: string
 ): Promise<{ content: string; inputTokens?: number; outputTokens?: number }> {
 
-  const apiKey = provider.apiKey
+  // 解密 API Key
+  const apiKey = decryptApiKey(provider.apiKey)
   const apiEndpoint = provider.apiEndpoint
 
   if (provider.type === "openai") {
