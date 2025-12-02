@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { generateDeviceFingerprint } from '@/lib/usage-limits/fingerprint'
-import DOMPurify from 'dompurify'
 import { marked } from 'marked'
 
 export default function AuraCheck() {
@@ -17,7 +16,30 @@ export default function AuraCheck() {
   const [btnText, setBtnText] = useState('Calculate Aura')
 
   useEffect(() => {
-    generateDeviceFingerprint().then(setFp)
+    const init = async () => {
+      const fingerprint = await generateDeviceFingerprint()
+      setFp(fingerprint)
+
+      // 检查使用次数
+      try {
+        const res = await fetch('/api/usage/check', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Device-Fingerprint': fingerprint
+          },
+          body: JSON.stringify({})
+        })
+        const data = await res.json()
+        console.log('Usage check response:', data)
+        if (data.remaining !== undefined) {
+          setRemaining(data.remaining === -1 ? '∞' : data.remaining.toString())
+        }
+      } catch (e) {
+        console.error('Failed to check usage:', e)
+      }
+    }
+    init()
   }, [])
 
   const checkContentRelevance = (input: string) => {

@@ -59,6 +59,7 @@
     "resend": "^6.5.2",
     "stripe": "^17.3.1",
     "tailwind-merge": "^2.5.4",
+    "uuid": "^13.0.0",
     "zod": "^3.23.8",
     "zustand": "^4.5.5"
   },
@@ -68,6 +69,7 @@
     "@types/node": "^22.9.0",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.14.0",
     "eslint-config-next": "^15.0.3",
