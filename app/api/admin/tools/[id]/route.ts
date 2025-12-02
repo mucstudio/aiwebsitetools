@@ -202,6 +202,22 @@ export async function DELETE(
       )
     }
 
+    // Delete component file
+    const componentPath = path.join(process.cwd(), 'components', 'tools', `${existingTool.componentType}.tsx`)
+
+    try {
+      await fs.unlink(componentPath)
+      console.log(`Deleted component file: ${componentPath}`)
+    } catch (fileError: any) {
+      // 如果文件不存在，只记录警告，不阻止删除操作
+      if (fileError.code !== 'ENOENT') {
+        console.error("Failed to delete component file:", fileError)
+        // 继续删除数据库记录，即使文件删除失败
+      } else {
+        console.log(`Component file not found: ${componentPath}`)
+      }
+    }
+
     // Delete tool (cascade will handle related records)
     await prisma.tool.delete({
       where: { id: params.id },

@@ -74,10 +74,28 @@ export async function POST(request: NextRequest) {
       data: toolData,
     })
 
+    // 在生产环境触发重新构建（可选）
+    // 注意：这会导致短暂的服务中断
+    if (process.env.NODE_ENV === 'production' && process.env.AUTO_REBUILD === 'true') {
+      try {
+        const { exec } = require('child_process')
+        exec('npm run build && pm2 restart all', (error: any) => {
+          if (error) {
+            console.error('Auto rebuild failed:', error)
+          } else {
+            console.log('Auto rebuild completed')
+          }
+        })
+      } catch (error) {
+        console.error('Failed to trigger rebuild:', error)
+      }
+    }
+
     return NextResponse.json({
       message: "Tool created successfully",
       tool,
       componentPath: componentPath,
+      needsRebuild: process.env.NODE_ENV === 'production',
     })
   } catch (error) {
     console.error("Tool creation error:", error)

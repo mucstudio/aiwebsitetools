@@ -18,7 +18,8 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(npx tsx:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(node check-tool.mjs:*)"
     ],
     "deny": [],
     "ask": []
