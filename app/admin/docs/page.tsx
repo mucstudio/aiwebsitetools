@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getCurrentSession } from "@/lib/auth-utils"
 import { redirect } from "next/navigation"
-import { FileText, Book, Code, Zap, Layers } from "lucide-react"
+import { FileText, Book, Code, Zap, Layers, Rocket, Zap as Lightning } from "lucide-react"
 
 export default async function DocsPage() {
   const session = await getCurrentSession()
@@ -12,6 +12,19 @@ export default async function DocsPage() {
   }
 
   const docCategories = [
+    {
+      title: "快速开始",
+      icon: "⚡",
+      description: "直接可用的代码调用示例",
+      docs: [
+        {
+          title: "快速参考手册",
+          href: "/admin/docs/quick-reference",
+          icon: <Lightning className="h-5 w-5" />,
+          description: "两个模板：用AI的 + 不用AI的，复制粘贴就能用"
+        }
+      ]
+    },
     {
       title: "系统集成指南",
       icon: "🔗",

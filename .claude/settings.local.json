@@ -16,7 +16,8 @@
       "Bash(npm run db:seed:*)",
       "Bash(tasklist:*)",
       "Bash(findstr:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []

@@ -57,6 +57,14 @@ const menuItems = [
     defaultCollapsed: true,
     children: [
       {
+        title: "快速参考手册",
+        href: "/admin/docs/quick-reference",
+      },
+      {
+        title: "工具集成指南",
+        href: "/admin/docs/tool-integration",
+      },
+      {
         title: "小工具添加系统",
         href: "/admin/docs/tool-creation",
       },

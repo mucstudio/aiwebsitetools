@@ -180,9 +180,10 @@ nano .env
 # 数据库配置（重要：使用你在步骤4设置的密码）
 DATABASE_URL="postgresql://aiwebsitetools_user:YourStrongPassword123!@localhost:5432/aiwebsitetools?schema=public"
 
-# NextAuth 配置
+# NextAuth 配置（⭐ 重要！）
 NEXTAUTH_SECRET="your-secret-key-here-change-this-in-production"
-NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_URL="https://your-domain.com"
+AUTH_TRUST_HOST=true
 
 # 管理员配置
 ADMIN_EMAIL=your-email@example.com
@@ -203,6 +204,11 @@ GOOGLE_CLIENT_SECRET=""
 # 生产环境设置
 NODE_ENV=production
 ```
+
+**⚠️ 重要说明**：
+- `NEXTAUTH_URL` 必须是你的实际域名（包含 https:// 或 http://）
+- `AUTH_TRUST_HOST=true` 是生产环境必须的配置
+- `NEXTAUTH_SECRET` 建议使用 `openssl rand -base64 32` 生成
 
 **保存并退出**：按 `Ctrl+X`，然后 `Y`，然后 `Enter`
 
