@@ -189,11 +189,22 @@ export default function EditToolPage() {
                   required
                 >
                   <option value="">选择分类</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
+                  {categories
+                    .filter((cat) => !cat.parentId)
+                    .map((parentCategory) => (
+                      <>
+                        <option key={parentCategory.id} value={parentCategory.id}>
+                          {parentCategory.name}
+                        </option>
+                        {categories
+                          .filter((cat) => cat.parentId === parentCategory.id)
+                          .map((childCategory) => (
+                            <option key={childCategory.id} value={childCategory.id}>
+                              &nbsp;&nbsp;└─ {childCategory.name}
+                            </option>
+                          ))}
+                      </>
+                    ))}
                 </select>
               </div>
 

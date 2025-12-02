@@ -58,7 +58,7 @@ export default function EditCategoryPage() {
           description: category.description || "",
           icon: category.icon || "",
           order: category.order.toString(),
-          parentId: category.parentId || "",
+          parentId: category.parentId || "none",
         })
       } catch (err) {
         setError("加载分类失败")
@@ -87,7 +87,7 @@ export default function EditCategoryPage() {
           description: formData.description || undefined,
           icon: formData.icon || undefined,
           order: parseInt(formData.order),
-          parentId: formData.parentId || undefined,
+          parentId: formData.parentId && formData.parentId !== "none" ? formData.parentId : undefined,
         }),
       })
 
@@ -184,7 +184,7 @@ export default function EditCategoryPage() {
                     <SelectValue placeholder="选择父分类（留空为一级分类）" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">无（一级分类）</SelectItem>
+                    <SelectItem value="none">无（一级分类）</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}

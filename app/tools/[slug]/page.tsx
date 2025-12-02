@@ -14,8 +14,9 @@ interface ToolPageProps {
 }
 
 export async function generateMetadata({ params }: ToolPageProps) {
+  const { slug } = await params
   const tool = await prisma.tool.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
   })
 
   if (!tool) {
@@ -33,9 +34,10 @@ export async function generateMetadata({ params }: ToolPageProps) {
 
 export default async function ToolPage({ params }: ToolPageProps) {
   const session = await getCurrentSession()
+  const { slug } = await params
 
   const tool = await prisma.tool.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       category: true,
     },

@@ -22,7 +22,7 @@ export default function NewCategoryPage() {
     description: "",
     icon: "",
     order: "0",
-    parentId: "",
+    parentId: "none",
   })
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function NewCategoryPage() {
           description: formData.description || undefined,
           icon: formData.icon || undefined,
           order: parseInt(formData.order),
-          parentId: formData.parentId || undefined,
+          parentId: formData.parentId && formData.parentId !== "none" ? formData.parentId : undefined,
         }),
       })
 
@@ -150,7 +150,7 @@ export default function NewCategoryPage() {
                     <SelectValue placeholder="选择父分类（留空为一级分类）" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">无（一级分类）</SelectItem>
+                    <SelectItem value="none">无（一级分类）</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}

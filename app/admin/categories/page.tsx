@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import { CategoryCard } from "@/components/admin/CategoryCard"
+import { CategoryRow } from "@/components/admin/CategoryRow"
 
 export default async function AdminCategoriesPage() {
   // Get all categories from database with tool count
@@ -24,7 +24,6 @@ export default async function AdminCategoriesPage() {
 
   // Separate parent categories and child categories
   const parentCategories = categories.filter(cat => !cat.parentId)
-  const childCategories = categories.filter(cat => cat.parentId)
 
   return (
     <div>
@@ -48,29 +47,22 @@ export default async function AdminCategoriesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
-          {/* Parent Categories */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">一级分类</h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {parentCategories.map((category) => (
-                <CategoryCard key={category.id} category={category} />
+        <Card>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {parentCategories.map((parentCategory) => (
+                <div key={parentCategory.id}>
+                  <CategoryRow category={parentCategory} level={0} />
+                  {categories
+                    .filter((cat) => cat.parentId === parentCategory.id)
+                    .map((childCategory) => (
+                      <CategoryRow key={childCategory.id} category={childCategory} level={1} />
+                    ))}
+                </div>
               ))}
             </div>
-          </div>
-
-          {/* Child Categories */}
-          {childCategories.length > 0 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">二级分类</h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {childCategories.map((category) => (
-                  <CategoryCard key={category.id} category={category} />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )
