@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { Loader2, X } from "lucide-react"
+import { Loader2, X, BookOpen, Code2, Lightbulb } from "lucide-react"
+import Link from "next/link"
 
 export default function NewToolPage() {
   const router = useRouter()
@@ -156,8 +157,10 @@ export default function MyTool({ toolId, config }: ToolProps) {
         <p className="text-muted-foreground">添加新的在线工具</p>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid gap-6 max-w-2xl">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* 左侧表单 */}
+        <form onSubmit={handleSubmit} className="lg:col-span-2">
+          <div className="grid gap-6">
           <Card>
             <CardHeader>
               <CardTitle>基本信息</CardTitle>
@@ -386,8 +389,170 @@ export default function MyTool({ toolId, config }: ToolProps) {
               取消
             </Button>
           </div>
+          </div>
+        </form>
+
+        {/* 右侧教程侧边栏 */}
+        <div className="space-y-6">
+          <Card className="sticky top-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                快速指南
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* 步骤指南 */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm">1</span>
+                  填写基本信息
+                </h3>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-8">
+                  <li>• 工具名称和描述</li>
+                  <li>• URL 标识（slug）</li>
+                  <li>• 选择分类</li>
+                  <li>• 添加图标（可选）</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm">2</span>
+                  编写组件代码
+                </h3>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-8">
+                  <li>• 使用提供的模板</li>
+                  <li>• 实现工具逻辑</li>
+                  <li>• 使用 UI 组件</li>
+                  <li>• 导出为 default</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm">3</span>
+                  配置 SEO
+                </h3>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-8">
+                  <li>• SEO 标题和描述</li>
+                  <li>• 添加相关标签</li>
+                  <li>• 优化搜索排名</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-sm">4</span>
+                  发布设置
+                </h3>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-8">
+                  <li>• 选择是否付费</li>
+                  <li>• 决定是否立即发布</li>
+                  <li>• 提交创建</li>
+                </ul>
+              </div>
+
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-yellow-500" />
+                  重要提示
+                </h3>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p className="bg-yellow-50 border border-yellow-200 rounded p-2">
+                    <strong className="text-yellow-800">组件类型</strong>必须与文件名一致，例如：<code className="text-xs bg-white px-1 py-0.5 rounded">word-counter</code>
+                  </p>
+                  <p className="bg-blue-50 border border-blue-200 rounded p-2">
+                    组件代码会自动保存到 <code className="text-xs bg-white px-1 py-0.5 rounded">components/tools/</code> 目录
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Code2 className="h-4 w-4" />
+                  可用组件库
+                </h3>
+                <div className="text-xs space-y-2">
+                  <div>
+                    <p className="font-medium text-foreground mb-1">UI 组件：</p>
+                    <div className="text-muted-foreground space-y-0.5">
+                      <p>• @/components/ui/card</p>
+                      <p>• @/components/ui/button</p>
+                      <p>• @/components/ui/input</p>
+                      <p>• @/components/ui/textarea</p>
+                      <p>• @/components/ui/label</p>
+                      <p>• @/components/ui/switch</p>
+                      <p>• @/components/ui/tabs</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground mb-1">图标库：</p>
+                    <p className="text-muted-foreground">• lucide-react</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground mb-1">图表库：</p>
+                    <div className="text-muted-foreground space-y-0.5">
+                      <p>• recharts (推荐)</p>
+                      <p>• chart.js + react-chartjs-2</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground mb-1">功能库：</p>
+                    <div className="text-muted-foreground space-y-0.5">
+                      <p>• react-datepicker (日期选择)</p>
+                      <p>• @uiw/react-md-editor (Markdown)</p>
+                      <p>• prismjs (代码高亮)</p>
+                      <p>• qrcode.react (二维码)</p>
+                      <p>• html2canvas (截图)</p>
+                      <p>• jspdf (PDF生成)</p>
+                      <p>• @dnd-kit (拖拽)</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground mb-1">工具库：</p>
+                    <div className="text-muted-foreground space-y-0.5">
+                      <p>• date-fns (日期处理)</p>
+                      <p>• zod (数据验证)</p>
+                      <p>• clsx (类名合并)</p>
+                    </div>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded p-2 mt-2">
+                    <p className="text-green-800 font-medium">✅ 所有库已安装</p>
+                    <p className="text-green-700 mt-1 text-xs">
+                      可以直接在组件代码中使用以上所有库
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <h3 className="font-semibold mb-3">学习资源</h3>
+                <div className="space-y-2 text-sm">
+                  <Link
+                    href="/admin/docs/tool-creation"
+                    className="block text-blue-600 hover:underline"
+                  >
+                    📚 完整开发指南
+                  </Link>
+                  <Link
+                    href="/admin/docs/tool-examples"
+                    className="block text-blue-600 hover:underline"
+                  >
+                    💻 代码示例
+                  </Link>
+                  <Link
+                    href="/admin/tools"
+                    className="block text-blue-600 hover:underline"
+                  >
+                    🔧 查看现有工具
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </form>
+      </div>
     </div>
   )
 }

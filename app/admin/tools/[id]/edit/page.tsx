@@ -33,6 +33,7 @@ export default function EditToolPage() {
     seoTitle: "",
     seoDescription: "",
     tags: [] as string[],
+    componentCode: "",
   })
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function EditToolPage() {
           seoTitle: tool.seoTitle || "",
           seoDescription: tool.seoDescription || "",
           tags: tool.tags || [],
+          componentCode: tool.componentCode || "",
         })
       } catch (err) {
         setError("加载工具失败")
@@ -203,8 +205,9 @@ export default function EditToolPage() {
                   onChange={(e) => setFormData({ ...formData, componentType: e.target.value })}
                   placeholder="例如: word-counter"
                   required
+                  disabled
                 />
-                <p className="text-xs text-muted-foreground">用于加载对应的工具组件</p>
+                <p className="text-xs text-muted-foreground">组件类型不可修改</p>
               </div>
 
               <div className="space-y-2">
@@ -285,6 +288,30 @@ export default function EditToolPage() {
                     ))}
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>组件代码 *</CardTitle>
+              <CardDescription>编辑 React 组件代码，保存后会自动更新文件</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="componentCode">React 组件代码</Label>
+                <Textarea
+                  id="componentCode"
+                  value={formData.componentCode}
+                  onChange={(e) => setFormData({ ...formData, componentCode: e.target.value })}
+                  placeholder="输入 React 组件代码..."
+                  rows={20}
+                  className="font-mono text-sm"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  💡 提示：修改代码后点击保存，系统会自动更新 components/tools/{formData.componentType}.tsx 文件
+                </p>
               </div>
             </CardContent>
           </Card>
