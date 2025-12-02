@@ -211,7 +211,7 @@ User action: ${trimmed}`,
         }
       `}</style>
 
-      <div className="aura-body min-h-screen p-4 sm:p-8 relative overflow-x-hidden">
+      <div className="aura-body min-h-screen p-4 sm:p-8 relative overflow-x-hidden -mx-[50vw] -my-12 left-1/2 right-1/2 w-screen">
         <div className="bg-noise"></div>
 
         <div className="fixed inset-0 overflow-hidden -z-10">
