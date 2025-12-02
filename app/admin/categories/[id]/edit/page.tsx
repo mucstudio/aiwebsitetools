@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 
 export default function EditCategoryPage() {
@@ -16,6 +17,8 @@ export default function EditCategoryPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState("")
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; parentId: string | null }>>([])
+  const [fetchingCategories, setFetchingCategories] = useState(true)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,11 +26,24 @@ export default function EditCategoryPage() {
     description: "",
     icon: "",
     order: "0",
+    parentId: "",
   })
 
   useEffect(() => {
-    const fetchCategory = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch all categories for parent selection
+        const categoriesResponse = await fetch("/api/admin/categories")
+        if (categoriesResponse.ok) {
+          const categoriesData = await categoriesResponse.json()
+          // Filter out current category and its children from parent options
+          setCategories(categoriesData.categories.filter((cat: any) =>
+            !cat.parentId && cat.id !== categoryId
+          ))
+        }
+        setFetchingCategories(false)
+
+        // Fetch current category
         const response = await fetch(`/api/admin/categories/${categoryId}`)
         if (!response.ok) {
           throw new Error("Failed to fetch category")
@@ -42,6 +58,7 @@ export default function EditCategoryPage() {
           description: category.description || "",
           icon: category.icon || "",
           order: category.order.toString(),
+          parentId: category.parentId || "",
         })
       } catch (err) {
         setError("加载分类失败")
@@ -50,7 +67,7 @@ export default function EditCategoryPage() {
       }
     }
 
-    fetchCategory()
+    fetchData()
   }, [categoryId])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,6 +87,7 @@ export default function EditCategoryPage() {
           description: formData.description || undefined,
           icon: formData.icon || undefined,
           order: parseInt(formData.order),
+          parentId: formData.parentId || undefined,
         }),
       })
 
@@ -153,6 +171,28 @@ export default function EditCategoryPage() {
                   maxLength={2}
                 />
                 <p className="text-xs text-muted-foreground">输入一个 emoji 图标</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="parentId">父分类（可选）</Label>
+                <Select
+                  value={formData.parentId}
+                  onValueChange={(value) => setFormData({ ...formData, parentId: value })}
+                  disabled={fetchingCategories}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择父分类（留空为一级分类）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">无（一级分类）</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">选择父分类后，此分类将成为二级分类</p>
               </div>
 
               <div className="space-y-2">

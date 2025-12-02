@@ -14,9 +14,22 @@ interface CategoryCardProps {
     description: string | null
     icon: string | null
     order: number
+    parentId?: string | null
+    parent?: {
+      id: string
+      name: string
+      slug: string
+    } | null
     _count: {
       tools: number
+      children: number
     }
+    children?: Array<{
+      id: string
+      name: string
+      slug: string
+      order: number
+    }>
   }
 }
 
@@ -60,7 +73,11 @@ export function CategoryCard({ category }: CategoryCardProps) {
             </div>
             <CardDescription>{category.description}</CardDescription>
             <div className="mt-3 text-sm text-muted-foreground">
+              {category.parent && (
+                <p>父分类: {category.parent.name}</p>
+              )}
               <p>工具数量: {category._count.tools}</p>
+              <p>子分类数量: {category._count.children}</p>
               <p>URL 标识: {category.slug}</p>
               <p>排序: {category.order}</p>
             </div>
@@ -77,14 +94,18 @@ export function CategoryCard({ category }: CategoryCardProps) {
             variant="destructive"
             size="sm"
             className="flex-1"
-            disabled={category._count.tools > 0 || deleting}
+            disabled={category._count.tools > 0 || category._count.children > 0 || deleting}
           >
             {deleting ? '删除中...' : '删除'}
           </Button>
         </div>
-        {category._count.tools > 0 && (
+        {(category._count.tools > 0 || category._count.children > 0) && (
           <p className="text-xs text-muted-foreground mt-2">
-            * 有工具的分类无法删除
+            * {category._count.tools > 0 && category._count.children > 0
+              ? '有工具或子分类的分类无法删除'
+              : category._count.tools > 0
+              ? '有工具的分类无法删除'
+              : '有子分类的分类无法删除'}
           </p>
         )}
       </CardContent>

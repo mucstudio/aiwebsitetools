@@ -141,12 +141,18 @@ model Category {
   icon        String?
   order       Int      @default(0)
 
+  // 父子分类关系
+  parentId    String?
+  parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Category[] @relation("CategoryToCategory")
+
   tools       Tool[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([slug])
+  @@index([parentId])
 }
 
 model Tool {

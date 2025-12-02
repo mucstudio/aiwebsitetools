@@ -9,6 +9,7 @@ const categorySchema = z.object({
   description: z.string().optional(),
   icon: z.string().optional(),
   order: z.number().default(0),
+  parentId: z.string().optional().nullable(),
 })
 
 export async function GET(
@@ -30,7 +31,14 @@ export async function GET(
       where: { id: params.id },
       include: {
         _count: {
-          select: { tools: true },
+          select: { tools: true, children: true },
+        },
+        parent: {
+          select: { id: true, name: true, slug: true },
+        },
+        children: {
+          select: { id: true, name: true, slug: true, order: true },
+          orderBy: { order: "asc" },
         },
       },
     })

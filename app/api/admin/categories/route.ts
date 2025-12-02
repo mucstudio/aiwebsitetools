@@ -9,6 +9,7 @@ const categorySchema = z.object({
   description: z.string().optional(),
   icon: z.string().optional(),
   order: z.number().default(0),
+  parentId: z.string().optional().nullable(),
 })
 
 export async function POST(request: NextRequest) {
@@ -79,7 +80,14 @@ export async function GET(request: NextRequest) {
     const categories = await prisma.category.findMany({
       include: {
         _count: {
-          select: { tools: true },
+          select: { tools: true, children: true },
+        },
+        parent: {
+          select: { id: true, name: true, slug: true },
+        },
+        children: {
+          select: { id: true, name: true, slug: true, order: true },
+          orderBy: { order: "asc" },
         },
       },
       orderBy: { order: "asc" },

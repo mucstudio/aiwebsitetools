@@ -1,17 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 
 export default function NewCategoryPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; parentId: string | null }>>([])
+  const [fetchingCategories, setFetchingCategories] = useState(true)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -19,7 +22,27 @@ export default function NewCategoryPage() {
     description: "",
     icon: "",
     order: "0",
+    parentId: "",
   })
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/admin/categories")
+        if (response.ok) {
+          const data = await response.json()
+          // Only show parent categories (level 1) as options for parent selection
+          setCategories(data.categories.filter((cat: any) => !cat.parentId))
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories:", err)
+      } finally {
+        setFetchingCategories(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +61,7 @@ export default function NewCategoryPage() {
           description: formData.description || undefined,
           icon: formData.icon || undefined,
           order: parseInt(formData.order),
+          parentId: formData.parentId || undefined,
         }),
       })
 
@@ -113,6 +137,28 @@ export default function NewCategoryPage() {
                   maxLength={2}
                 />
                 <p className="text-xs text-muted-foreground">输入一个 emoji 图标</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="parentId">父分类（可选）</Label>
+                <Select
+                  value={formData.parentId}
+                  onValueChange={(value) => setFormData({ ...formData, parentId: value })}
+                  disabled={fetchingCategories}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择父分类（留空为一级分类）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">无（一级分类）</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">选择父分类后，此分类将成为二级分类</p>
               </div>
 
               <div className="space-y-2">
