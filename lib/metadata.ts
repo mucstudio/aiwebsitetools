@@ -81,17 +81,27 @@ export async function generateMetadata(options?: {
  * 生成 robots.txt 内容
  */
 export async function generateRobotsTxt(): Promise<string> {
-  const settings = await getSEOSettings()
-  const siteInfo = await getSiteInfo()
+  try {
+    const settings = await getSEOSettings()
+    const siteInfo = await getSiteInfo()
 
-  // 如果有自定义的 robots.txt，使用自定义的
-  if (settings.robotsTxt) {
-    return settings.robotsTxt
-  }
+    // 如果有自定义的 robots.txt，使用自定义的
+    if (settings?.robotsTxt) {
+      return settings.robotsTxt
+    }
 
-  // 否则使用默认的
-  return `User-agent: *
+    // 否则使用默认的
+    const siteUrl = siteInfo?.siteUrl || 'http://localhost:3000'
+    return `User-agent: *
 Allow: /
 
-Sitemap: ${siteInfo.siteUrl}/sitemap.xml`
+Sitemap: ${siteUrl}/sitemap.xml`
+  } catch (error) {
+    console.error('Failed to generate robots.txt:', error)
+    // 返回默认的 robots.txt
+    return `User-agent: *
+Allow: /
+
+Sitemap: http://localhost:3000/sitemap.xml`
+  }
 }

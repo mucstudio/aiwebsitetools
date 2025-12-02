@@ -38,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const tools = await prisma.tool.findMany({
       where: {
-        published: true,
+        isPublished: true,
       },
       select: {
         slug: true,
