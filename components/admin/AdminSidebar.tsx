@@ -54,26 +54,26 @@ const menuItems = [
   {
     title: "系统文档",
     icon: "📚",
-    defaultCollapsed: true,
+    defaultCollapsed: false,
     children: [
       {
-        title: "快速参考手册",
-        href: "/admin/docs/quick-reference",
+        title: "🏭 工厂模式指南",
+        href: "/admin/docs/factory-pattern",
       },
       {
-        title: "工具集成指南",
-        href: "/admin/docs/tool-integration",
+        title: "🚀 快速启动",
+        href: "/admin/docs/factory-quickstart",
       },
       {
-        title: "小工具添加系统",
-        href: "/admin/docs/tool-creation",
+        title: "✨ 增强功能",
+        href: "/admin/docs/factory-enhanced",
       },
       {
-        title: "AI 模型系统",
+        title: "🤖 AI 模型系统",
         href: "/admin/docs/ai-models",
       },
       {
-        title: "使用限制系统",
+        title: "⏱️ 使用限制系统",
         href: "/admin/docs/usage-limits",
       },
     ],

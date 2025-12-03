@@ -749,22 +749,46 @@ ${formData.componentCode}
                 <h3 className="font-semibold mb-3">学习资源</h3>
                 <div className="space-y-2 text-sm">
                   <Link
-                    href="/admin/docs/tool-creation"
+                    href="/admin/docs/factory-pattern"
                     className="block text-blue-600 hover:underline"
                   >
-                    📚 完整开发指南
+                    🏭 工厂模式指南（AI 工具）
                   </Link>
                   <Link
-                    href="/admin/docs/tool-examples"
+                    href="/admin/docs/factory-quickstart"
                     className="block text-blue-600 hover:underline"
                   >
-                    💻 代码示例
+                    🚀 快速启动（AI 工具）
                   </Link>
                   <Link
                     href="/admin/tools"
                     className="block text-blue-600 hover:underline"
                   >
                     🔧 查看现有工具
+                  </Link>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                  <h3 className="font-semibold mb-2 text-yellow-900 flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4" />
+                    需要 AI 功能？
+                  </h3>
+                  <p className="text-sm text-yellow-800 mb-2">
+                    如果你的工具需要调用 AI（如文本生成、分析、翻译等），请使用<strong>工厂模式</strong>：
+                  </p>
+                  <ul className="text-xs text-yellow-700 space-y-1 ml-4">
+                    <li>• 自动处理 AI 调用和计费</li>
+                    <li>• 自动处理使用限制</li>
+                    <li>• 自动处理安全审核</li>
+                    <li>• 代码量减少 85%</li>
+                  </ul>
+                  <Link
+                    href="/admin/docs/factory-quickstart"
+                    className="inline-block mt-2 text-sm text-yellow-900 font-medium hover:underline"
+                  >
+                    查看工厂模式指南 →
                   </Link>
                 </div>
               </div>

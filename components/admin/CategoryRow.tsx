@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Copy, Check } from "lucide-react"
 
 interface CategoryRowProps {
   category: {
@@ -26,6 +26,13 @@ interface CategoryRowProps {
 export function CategoryRow({ category, level }: CategoryRowProps) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyId = async () => {
+    await navigator.clipboard.writeText(category.id)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const handleDelete = async () => {
     if (!confirm(`确定要删除分类"${category.name}"吗？`)) {
@@ -66,6 +73,23 @@ export function CategoryRow({ category, level }: CategoryRowProps) {
           <div className="flex items-center gap-3">
             <span className="font-medium">{category.name}</span>
             <span className="text-sm text-muted-foreground">({category.slug})</span>
+            <button
+              onClick={handleCopyId}
+              className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-muted hover:bg-muted/80 rounded transition-colors"
+              title="点击复制分类ID"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3 w-3 text-green-600" />
+                  <span className="text-green-600">已复制</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3 w-3" />
+                  <span className="font-mono">{category.id.slice(0, 8)}...</span>
+                </>
+              )}
+            </button>
           </div>
           {category.description && (
             <p className="text-sm text-muted-foreground mt-0.5">{category.description}</p>
