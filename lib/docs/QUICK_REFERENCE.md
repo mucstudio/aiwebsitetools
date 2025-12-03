@@ -159,10 +159,11 @@ export default function YourTool({ toolId, config }: YourToolProps) {
 ### 关键要点说明
 
 **✅ 使用 AI 的工具特点：**
-1. **自动处理使用限制**：`/api/ai/call` 会自动检查和记录使用次数
-2. **无需手动调用 `/api/usage/record`**：AI API 内部已处理
-3. **返回剩余次数**：响应中包含 `usage.remaining` 字段
+1. **必须手动检查限制**：调用 AI 前先调用 `/api/usage/check` 检查是否允许使用
+2. **必须手动记录使用**：AI 调用成功后调用 `/api/usage/record` 记录使用次数
+3. **返回 token 和成本信息**：响应中包含 `usage.inputTokens`、`usage.outputTokens`、`usage.cost`
 4. **必须传递 `toolId`**：使用组件接收的 `toolId` prop，不要硬编码
+5. **避免失败扣费**：先调用 AI，成功后再记录使用，防止 AI 失败但仍扣除次数
 
 ---
 
