@@ -79,7 +79,7 @@ export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-0" align="start">
+          <PopoverContent className="w-[500px] p-0" align="start">
             <div className="p-3 border-b">
               <Input
                 placeholder="搜索表情..."
@@ -89,22 +89,20 @@ export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
               />
             </div>
             <Tabs defaultValue={Object.keys(EMOJI_CATEGORIES)[0]} className="w-full">
-              <div className="w-full border-b">
-                <ScrollArea className="w-full whitespace-nowrap">
-                  <TabsList className="inline-flex w-max justify-start rounded-none border-0 bg-transparent p-0 h-auto">
-                    {Object.keys(filteredEmojis).map((category) => (
-                      <TabsTrigger
-                        key={category}
-                        value={category}
-                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-2"
-                      >
-                        {category}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </ScrollArea>
+              <div className="w-full border-b overflow-x-auto">
+                <TabsList className="inline-flex justify-start rounded-none border-0 bg-transparent p-0">
+                  {Object.keys(filteredEmojis).map((category) => (
+                    <TabsTrigger
+                      key={category}
+                      value={category}
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-3 py-2 whitespace-nowrap"
+                    >
+                      {category}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
               </div>
-              <ScrollArea className="h-[300px]">
+              <ScrollArea className="h-[350px]">
                 {Object.entries(filteredEmojis).map(([category, emojis]) => (
                   <TabsContent key={category} value={category} className="p-3 m-0">
                     <div className="grid grid-cols-8 gap-2">
