@@ -4,7 +4,7 @@ import { Footer } from "@/components/layout/Footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
-import { ToolRenderer } from "@/components/tools/ToolRenderer"
+import { ResponseRenderer } from "@/components/tools/ResponseRenderer"
 import { getCurrentSession } from "@/lib/auth-utils"
 
 // 页面需要动态渲染以访问数据库
@@ -121,7 +121,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
               </CardContent>
             </Card>
           ) : (
-            <ToolRenderer
+            <ResponseRenderer
               toolId={tool.id}
               componentType={tool.componentType}
               codeMode={tool.codeMode}
