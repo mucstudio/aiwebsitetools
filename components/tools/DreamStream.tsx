@@ -148,7 +148,7 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
         }
       `}</style>
 
-      <div className="dream-body min-h-screen w-full p-4 sm:p-8 relative overflow-x-hidden selection:bg-fuchsia-300 selection:text-purple-900 -mx-[50vw] left-1/2 right-1/2 w-screen">
+      <div className="dream-body w-full p-4 sm:p-8 relative overflow-hidden selection:bg-fuchsia-300 selection:text-purple-900">
 
         {/* 液态背景 */}
         <div className="lava-container">

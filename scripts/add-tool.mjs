@@ -4,11 +4,11 @@ const prisma = new PrismaClient()
 
 // 修改这里的值
 const toolData = {
-  slug: 'corporate-clapback',              // 工具URL名
-  name: 'Corporate Clapback 98',         // 显示名称
-  description: 'Transform your rage into professional emails. Do not get fired. Get promoted.', // 工具描述
+  slug: 'dream-stream',              // 工具URL名
+  name: 'Dream Stream',         // 显示名称
+  description: 'Unlock the secrets of your subconscious mind. Decode your dreams with mystical, psychological, or unhinged interpretations.', // 工具描述
   categoryId: 'cmioem2lf0000d3p42gr64zgj',      // Entertainment 分类ID
-  componentType: 'corporate-clapback',     // 组件名（和slug一样）
+  componentType: 'dream-stream',     // 组件名（和slug一样）
   isPublished: true               // true=上线，false=隐藏
 }
 
