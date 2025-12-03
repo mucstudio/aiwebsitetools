@@ -1,12 +1,10 @@
 import Link from "next/link"
 import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { prisma } from "@/lib/prisma"
-import { ArrowRight, Sparkles, Search } from "lucide-react"
+import { Sparkles, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { ToolCard } from "@/components/tools/ToolCard"
 
 // 页面需要动态渲染以访问数据库
 export const dynamic = 'force-dynamic'
@@ -90,33 +88,7 @@ export default async function ToolsPage() {
                   
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {category.tools.map((tool) => (
-                      <Card key={tool.id} className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm">
-                        <CardHeader>
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="p-2 rounded-md bg-muted group-hover:bg-primary/10 transition-colors text-muted-foreground group-hover:text-primary">
-                              <Sparkles className="h-5 w-5" />
-                            </div>
-                            {tool.isPremium && (
-                              <Badge variant="default" className="bg-gradient-to-r from-primary to-purple-600 border-0">
-                                PRO
-                              </Badge>
-                            )}
-                          </div>
-                          <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                            {tool.name}
-                          </CardTitle>
-                          <CardDescription className="line-clamp-2 mt-2">
-                            {tool.description}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <Link href={`/tools/${tool.slug}`}>
-                            <Button variant="outline" className="w-full group-hover:border-primary/50 group-hover:text-primary transition-all">
-                              Launch Tool <ArrowRight className="ml-2 h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </Button>
-                          </Link>
-                        </CardContent>
-                      </Card>
+                      <ToolCard key={tool.id} tool={tool} />
                     ))}
                   </div>
                 </div>
