@@ -16,28 +16,46 @@ import { useFeature } from "@/hooks/useFeatures"
 import { useState, useEffect } from "react"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
+interface MenuItem {
+  id: string
+  label: string
+  url: string
+  icon?: string
+  openInNewTab: boolean
+  children?: MenuItem[]
+}
+
 export function Header() {
   const { data: session, status } = useSession()
   const blogEnabled = useFeature("enableBlog")
   const docsEnabled = useFeature("enableDocumentation")
   const [siteName, setSiteName] = useState("AI Website Tools")
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
 
-  // 加载网站名称
+  // 加载网站名称和菜单
   useEffect(() => {
-    async function loadSiteName() {
+    async function loadSiteData() {
       try {
-        const response = await fetch("/api/admin/settings")
-        if (response.ok) {
-          const data = await response.json()
+        // 加载网站名称
+        const settingsResponse = await fetch("/api/admin/settings")
+        if (settingsResponse.ok) {
+          const data = await settingsResponse.json()
           const settings = data.settings || {}
           setSiteName(settings.site_name || "AI Website Tools")
         }
+
+        // 加载菜单项
+        const menusResponse = await fetch("/api/menus")
+        if (menusResponse.ok) {
+          const data = await menusResponse.json()
+          setMenuItems(data.menuItems || [])
+        }
       } catch (error) {
-        console.error("Failed to load site name:", error)
+        console.error("Failed to load site data:", error)
       }
     }
 
-    loadSiteName()
+    loadSiteData()
   }, [])
 
   return (
@@ -48,40 +66,18 @@ export function Header() {
             <span className="text-xl font-bold">{siteName}</span>
           </Link>
           <nav className="hidden md:flex gap-6">
-            <Link
-              href="/tools"
-              className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Tools
-            </Link>
-            <Link
-              href="/pricing"
-              className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Pricing
-            </Link>
-            {blogEnabled && (
+            {menuItems.map((item) => (
               <Link
-                href="/blog"
-                className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                key={item.id}
+                href={item.url}
+                target={item.openInNewTab ? "_blank" : undefined}
+                rel={item.openInNewTab ? "noopener noreferrer" : undefined}
+                className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Blog
+                {item.icon && <span>{item.icon}</span>}
+                {item.label}
               </Link>
-            )}
-            {docsEnabled && (
-              <Link
-                href="/docs"
-                className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Docs
-              </Link>
-            )}
-            <Link
-              href="/about"
-              className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              About
-            </Link>
+            ))}
           </nav>
         </div>
         <div className="flex items-center gap-4">

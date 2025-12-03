@@ -242,6 +242,29 @@ model SiteSettings {
   updatedAt   DateTime @updatedAt
 }
 
+// Menu Item - 自定义菜单
+model MenuItem {
+  id          String   @id @default(cuid())
+  label       String   // 菜单标签
+  url         String   // 菜单链接
+  icon        String?  // 图标（可选）
+  order       Int      @default(0) // 排序
+  isActive    Boolean  @default(true) // 是否启用
+  openInNewTab Boolean @default(false) // 是否新标签页打开
+
+  // 父子菜单关系（支持下拉菜单）
+  parentId    String?
+  parent      MenuItem?  @relation("MenuItemToMenuItem", fields: [parentId], references: [id], onDelete: Cascade)
+  children    MenuItem[] @relation("MenuItemToMenuItem")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([order])
+  @@index([isActive])
+  @@index([parentId])
+}
+
 // Payment records
 model Payment {
   id                    String   @id @default(cuid())

@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
-import { Menu } from "lucide-react"
 
 interface GeneralSettings {
   site_name: string
@@ -118,6 +116,13 @@ export default function GeneralSettingsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">基本设置</h1>
+        <p className="text-muted-foreground mt-2">
+          配置网站的基本信息和使用限制
+        </p>
+      </div>
+
       {/* 基本信息 */}
       <Card>
         <CardHeader>
@@ -294,29 +299,6 @@ export default function GeneralSettingsPage() {
               <li>• 设置为 <code className="px-1 bg-gray-200 rounded">-1</code> 表示无限制使用</li>
               <li>• 使用次数每天 UTC 0:00 自动重置</li>
             </ul>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 其他设置链接 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>其他设置</CardTitle>
-          <CardDescription>管理网站的其他配置选项</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-            <div>
-              <h4 className="font-medium">菜单管理</h4>
-              <p className="text-sm text-muted-foreground">
-                自定义网站顶部导航菜单，支持新建、编辑、删除和排序
-              </p>
-            </div>
-            <Button asChild variant="outline">
-              <Link href="/admin/settings/menus">
-                管理菜单 →
-              </Link>
-            </Button>
           </div>
         </CardContent>
       </Card>

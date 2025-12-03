@@ -10,6 +10,7 @@ import {
   Mail,
   Shield,
   Zap,
+  Menu,
 } from "lucide-react"
 
 const settingsNav = [
@@ -54,6 +55,12 @@ const settingsNav = [
     href: "/admin/settings/features",
     icon: Zap,
     description: "启用或禁用功能",
+  },
+  {
+    title: "菜单管理",
+    href: "/admin/settings/menus",
+    icon: Menu,
+    description: "自定义导航菜单",
   },
 ]
 
