@@ -62,18 +62,22 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Quicksand:wght@300;500;700&display=swap');
 
-        .dream-body { font-family: 'Quicksand', sans-serif; background-color: #2e0249; color: #f3e8ff; }
+        .dream-body {
+          font-family: 'Quicksand', sans-serif;
+          background: linear-gradient(180deg, #2e0249 0%, #570a57 50%, #a91079 100%);
+          color: #f3e8ff;
+          min-height: 100vh;
+        }
         .dream-font { font-family: 'Dela Gothic One', cursive; }
 
         .lava-container {
-          position: fixed;
+          position: absolute;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
-          z-index: -1;
           overflow: hidden;
-          background: linear-gradient(180deg, #2e0249 0%, #570a57 50%, #a91079 100%);
+          pointer-events: none;
         }
 
         .blob {
@@ -116,6 +120,9 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
           border-color: #f0abfc;
           box-shadow: 0 0 20px rgba(240, 171, 252, 0.2);
         }
+        .dream-input::placeholder {
+          color: rgba(255, 255, 255, 0.3);
+        }
 
         .btn-dream {
           background: linear-gradient(90deg, #a91079, #ff00cc);
@@ -141,6 +148,10 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
           box-shadow: 0 10px 20px rgba(169, 16, 121, 0.4);
         }
 
+        .filter-btn {
+          background: rgba(0, 0, 0, 0.2);
+          color: #f3e8ff;
+        }
         .filter-btn.active {
           background-color: #f0abfc;
           color: #2e0249;
@@ -148,7 +159,7 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
         }
       `}</style>
 
-      <div className="dream-body w-full p-4 sm:p-8 relative overflow-hidden selection:bg-fuchsia-300 selection:text-purple-900">
+      <div className="dream-body w-screen -ml-[50vw] left-1/2 relative p-4 sm:p-8 overflow-hidden selection:bg-fuchsia-300 selection:text-purple-900">
 
         {/* 液态背景 */}
         <div className="lava-container">
