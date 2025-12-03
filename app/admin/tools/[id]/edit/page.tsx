@@ -437,6 +437,54 @@ export default function EditToolPage() {
             </Button>
             <Button
               type="button"
+              variant="secondary"
+              onClick={() => {
+                const previewWindow = window.open('', '_blank', 'width=1200,height=800')
+                if (previewWindow) {
+                  if (codeMode === 'html') {
+                    previewWindow.document.write(formData.htmlCode)
+                    previewWindow.document.close()
+                  } else {
+                    previewWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>预览 - ${formData.name || '工具'}</title>
+                          <style>
+                            body {
+                              margin: 0;
+                              padding: 20px;
+                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            }
+                            .preview-notice {
+                              background: #fef3c7;
+                              border: 1px solid #fbbf24;
+                              padding: 12px;
+                              border-radius: 8px;
+                              margin-bottom: 20px;
+                              text-align: center;
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="preview-notice">
+                            ⚠️ React 组件预览模式：实际效果可能与此不同，建议保存后在前端查看完整效果
+                          </div>
+                          <pre style="background: #f5f5f5; padding: 20px; border-radius: 8px; overflow: auto;">
+${formData.componentCode}
+                          </pre>
+                        </body>
+                      </html>
+                    `)
+                    previewWindow.document.close()
+                  }
+                }
+              }}
+            >
+              预览
+            </Button>
+            <Button
+              type="button"
               variant="outline"
               onClick={() => router.push("/admin/tools")}
             >

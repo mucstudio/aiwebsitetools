@@ -215,15 +215,24 @@ export default function SecurityPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="twoFactor">Two-Factor Authentication</Label>
+              <div className="space-y-0.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="twoFactor">Two-Factor Authentication</Label>
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 border border-blue-200">
+                    即将推出
+                  </span>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Add an extra layer of security to your account
+                </p>
+                <p className="text-xs text-amber-600 mt-1">
+                  完整的双因素认证功能正在开发中，包括 TOTP 验证、二维码扫描和备用恢复代码
                 </p>
               </div>
               <Switch
                 id="twoFactor"
                 checked={securitySettings.twoFactorEnabled}
+                disabled={true}
                 onCheckedChange={(checked) => {
                   setSecuritySettings({ ...securitySettings, twoFactorEnabled: checked })
                 }}
