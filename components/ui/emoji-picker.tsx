@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -29,6 +29,12 @@ interface EmojiPickerProps {
 export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
+  const [customInput, setCustomInput] = useState(value)
+
+  // 同步外部 value 变化
+  useEffect(() => {
+    setCustomInput(value)
+  }, [value])
 
   const filteredEmojis = search
     ? Object.entries(EMOJI_CATEGORIES).reduce((acc, [category, emojis]) => {
@@ -42,65 +48,83 @@ export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
 
   const handleSelect = (emoji: string) => {
     onChange(emoji)
+    setCustomInput(emoji)
     setOpen(false)
   }
 
+  const handleCustomInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    setCustomInput(newValue)
+    onChange(newValue)
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-start text-left font-normal">
-          {value ? (
-            <span className="text-2xl">{value}</span>
-          ) : (
-            <span className="text-muted-foreground">选择表情</span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0" align="start">
-        <div className="p-3 border-b">
-          <Input
-            placeholder="搜索表情..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-9"
-          />
-        </div>
-        <Tabs defaultValue={Object.keys(EMOJI_CATEGORIES)[0]} className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
-            <ScrollArea className="w-full">
-              <div className="flex">
-                {Object.keys(filteredEmojis).map((category) => (
-                  <TabsTrigger
-                    key={category}
-                    value={category}
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-                  >
-                    {category}
-                  </TabsTrigger>
+    <div className="space-y-2">
+      {/* 直接输入框 */}
+      <div className="flex gap-2">
+        <Input
+          value={customInput}
+          onChange={handleCustomInputChange}
+          placeholder="输入或粘贴 emoji..."
+          className="flex-1"
+        />
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="shrink-0">
+              {value ? (
+                <span className="text-2xl">{value}</span>
+              ) : (
+                <span className="text-sm">选择</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[400px] p-0" align="start">
+            <div className="p-3 border-b">
+              <Input
+                placeholder="搜索表情..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <Tabs defaultValue={Object.keys(EMOJI_CATEGORIES)[0]} className="w-full">
+              <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
+                <ScrollArea className="w-full">
+                  <div className="flex">
+                    {Object.keys(filteredEmojis).map((category) => (
+                      <TabsTrigger
+                        key={category}
+                        value={category}
+                        className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                      >
+                        {category}
+                      </TabsTrigger>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </TabsList>
+              <ScrollArea className="h-[300px]">
+                {Object.entries(filteredEmojis).map(([category, emojis]) => (
+                  <TabsContent key={category} value={category} className="p-3 m-0">
+                    <div className="grid grid-cols-8 gap-2">
+                      {emojis.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => handleSelect(emoji)}
+                          className="text-2xl hover:bg-muted rounded p-2 transition-colors"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </TabsContent>
                 ))}
-              </div>
-            </ScrollArea>
-          </TabsList>
-          <ScrollArea className="h-[300px]">
-            {Object.entries(filteredEmojis).map(([category, emojis]) => (
-              <TabsContent key={category} value={category} className="p-3 m-0">
-                <div className="grid grid-cols-8 gap-2">
-                  {emojis.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => handleSelect(emoji)}
-                      className="text-2xl hover:bg-muted rounded p-2 transition-colors"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </ScrollArea>
-        </Tabs>
-      </PopoverContent>
-    </Popover>
+              </ScrollArea>
+            </Tabs>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
   )
 }

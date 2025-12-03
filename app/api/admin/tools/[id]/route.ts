@@ -11,7 +11,9 @@ const toolSchema = z.object({
   description: z.string().min(1, "Description is required"),
   categoryId: z.string().min(1, "Category is required"),
   componentType: z.string().min(1, "Component type is required"),
+  codeMode: z.enum(['react', 'html']).default('react'),
   componentCode: z.string().optional(),
+  htmlCode: z.string().optional(),
   icon: z.string().optional(),
   config: z.any().optional(),
   isPremium: z.boolean().default(false),
@@ -53,22 +55,35 @@ export async function GET(
       )
     }
 
-    // 读取组件代码
-    const componentPath = path.join(process.cwd(), 'components', 'tools', `${tool.componentType}.tsx`)
+    // 根据代码模式读取对应的代码文件
     let componentCode = ""
+    let htmlCode = ""
 
-    try {
-      componentCode = await fs.readFile(componentPath, 'utf-8')
-    } catch (fileError) {
-      console.error("Failed to read component file:", fileError)
-      // 如果文件不存在，返回空字符串
-      componentCode = ""
+    if (tool.codeMode === 'html') {
+      // 读取 HTML 文件
+      const htmlPath = path.join(process.cwd(), 'public', 'tools', `${tool.componentType}.html`)
+      try {
+        htmlCode = await fs.readFile(htmlPath, 'utf-8')
+      } catch (fileError) {
+        console.error("Failed to read HTML file:", fileError)
+        htmlCode = ""
+      }
+    } else {
+      // 读取 React 组件文件
+      const componentPath = path.join(process.cwd(), 'components', 'tools', `${tool.componentType}.tsx`)
+      try {
+        componentCode = await fs.readFile(componentPath, 'utf-8')
+      } catch (fileError) {
+        console.error("Failed to read component file:", fileError)
+        componentCode = ""
+      }
     }
 
     return NextResponse.json({
       tool: {
         ...tool,
-        componentCode
+        componentCode,
+        htmlCode
       }
     })
   } catch (error) {
@@ -125,8 +140,27 @@ export async function PUT(
       }
     }
 
-    // 如果提供了组件代码，保存到文件系统
-    if (validatedData.componentCode) {
+    // 根据代码模式保存对应的文件
+    if (validatedData.codeMode === 'html' && validatedData.htmlCode) {
+      // 保存 HTML 文件
+      const htmlPath = path.join(process.cwd(), 'public', 'tools', `${validatedData.componentType}.html`)
+
+      try {
+        // 确保目录存在
+        const htmlDir = path.dirname(htmlPath)
+        await fs.mkdir(htmlDir, { recursive: true })
+
+        // 写入 HTML 代码
+        await fs.writeFile(htmlPath, validatedData.htmlCode, 'utf-8')
+      } catch (fileError) {
+        console.error("Failed to save HTML file:", fileError)
+        return NextResponse.json(
+          { error: "Failed to save HTML file" },
+          { status: 500 }
+        )
+      }
+    } else if (validatedData.componentCode) {
+      // 保存 React 组件文件
       const componentPath = path.join(process.cwd(), 'components', 'tools', `${validatedData.componentType}.tsx`)
 
       try {
@@ -145,8 +179,8 @@ export async function PUT(
       }
     }
 
-    // 从数据中移除 componentCode，因为数据库不需要存储它
-    const { componentCode, ...toolData } = validatedData
+    // 从数据中移除代码字段，因为数据库不需要存储它们
+    const { componentCode, htmlCode, ...toolData } = validatedData
 
     // Update tool
     const tool = await prisma.tool.update({

@@ -166,6 +166,7 @@ model Tool {
   category    Category @relation(fields: [categoryId], references: [id])
 
   componentType String  // 工具组件类型
+  codeMode      String  @default("react") // 代码模式：react 或 html
   config        Json?   // 工具配置
 
   isPremium     Boolean @default(false)

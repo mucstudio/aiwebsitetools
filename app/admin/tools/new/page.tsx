@@ -78,6 +78,105 @@ export default function MyTool({ toolId, config }: ToolProps) {
   )
 }`
 
+  const defaultHtmlCode = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin-bottom: 1rem;
+      color: #333;
+    }
+    .input-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #0051cc;
+    }
+    .result {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>我的工具</h1>
+
+    <div class="input-group">
+      <label for="input">输入内容：</label>
+      <input type="text" id="input" placeholder="输入内容...">
+    </div>
+
+    <button onclick="handleProcess()">处理</button>
+
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    function handleProcess() {
+      const input = document.getElementById('input').value;
+      const resultDiv = document.getElementById('result');
+
+      if (!input.trim()) {
+        alert('请输入内容');
+        return;
+      }
+
+      // 在这里实现你的工具逻辑
+      const result = input;
+
+      resultDiv.textContent = '结果: ' + result;
+      resultDiv.style.display = 'block';
+    }
+  </script>
+</body>
+</html>`
+
+  const [codeMode, setCodeMode] = useState<'react' | 'html'>('react')
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -90,7 +189,9 @@ export default function MyTool({ toolId, config }: ToolProps) {
     seoTitle: "",
     seoDescription: "",
     tags: [] as string[],
+    codeMode: 'react' as 'react' | 'html',
     componentCode: defaultComponentCode,
+    htmlCode: defaultHtmlCode,
   })
 
   useEffect(() => {
@@ -323,25 +424,88 @@ export default function MyTool({ toolId, config }: ToolProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle>组件代码 *</CardTitle>
-              <CardDescription>直接在这里编写 React 组件代码，系统会自动保存到文件</CardDescription>
+              <CardTitle>工具代码 *</CardTitle>
+              <CardDescription>选择代码模式并编写工具代码，系统会自动保存到文件</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="componentCode">React 组件代码</Label>
-                <Textarea
-                  id="componentCode"
-                  value={formData.componentCode}
-                  onChange={(e) => setFormData({ ...formData, componentCode: e.target.value })}
-                  placeholder="输入 React 组件代码..."
-                  rows={20}
-                  className="font-mono text-sm"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  💡 提示：组件必须导出为 default，接收 toolId 和 config 参数。已提供默认模板，可以直接修改使用。
-                </p>
+              {/* 代码模式切换标签页 */}
+              <div className="flex gap-2 border-b">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeMode('react')
+                    setFormData({ ...formData, codeMode: 'react' })
+                  }}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    codeMode === 'react'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  React 组件模式
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeMode('html')
+                    setFormData({ ...formData, codeMode: 'html' })
+                  }}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    codeMode === 'html'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  HTML 模式
+                </button>
               </div>
+
+              {/* React 组件模式 */}
+              {codeMode === 'react' && (
+                <div className="space-y-2">
+                  <Label htmlFor="componentCode">React 组件代码</Label>
+                  <Textarea
+                    id="componentCode"
+                    value={formData.componentCode}
+                    onChange={(e) => setFormData({ ...formData, componentCode: e.target.value })}
+                    placeholder="输入 React 组件代码..."
+                    rows={20}
+                    className="font-mono text-sm"
+                    required={codeMode === 'react'}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    💡 提示：组件必须导出为 default，接收 toolId 和 config 参数。已提供默认模板，可以直接修改使用。
+                  </p>
+                </div>
+              )}
+
+              {/* HTML 模式 */}
+              {codeMode === 'html' && (
+                <div className="space-y-2">
+                  <Label htmlFor="htmlCode">HTML 代码</Label>
+                  <Textarea
+                    id="htmlCode"
+                    value={formData.htmlCode}
+                    onChange={(e) => setFormData({ ...formData, htmlCode: e.target.value })}
+                    placeholder="输入完整的 HTML 代码..."
+                    rows={20}
+                    className="font-mono text-sm"
+                    required={codeMode === 'html'}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    💡 提示：输入完整的 HTML 文档，包括 &lt;html&gt;、&lt;head&gt;、&lt;body&gt; 标签。支持内联 CSS 和 JavaScript。
+                  </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
+                    <p className="font-medium text-blue-900 mb-1">HTML 模式特点：</p>
+                    <ul className="text-blue-800 space-y-1 ml-4">
+                      <li>• 适合简单的工具，无需 React 框架</li>
+                      <li>• 代码会保存为 .html 文件</li>
+                      <li>• 通过 iframe 隔离渲染，保证安全</li>
+                      <li>• 支持所有原生 HTML/CSS/JavaScript 功能</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -387,6 +551,54 @@ export default function MyTool({ toolId, config }: ToolProps) {
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               创建工具
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                const previewWindow = window.open('', '_blank', 'width=1200,height=800')
+                if (previewWindow) {
+                  if (codeMode === 'html') {
+                    previewWindow.document.write(formData.htmlCode)
+                    previewWindow.document.close()
+                  } else {
+                    previewWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>预览 - ${formData.name || '工具'}</title>
+                          <style>
+                            body {
+                              margin: 0;
+                              padding: 20px;
+                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            }
+                            .preview-notice {
+                              background: #fef3c7;
+                              border: 1px solid #fbbf24;
+                              padding: 12px;
+                              border-radius: 8px;
+                              margin-bottom: 20px;
+                              text-align: center;
+                            }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="preview-notice">
+                            ⚠️ React 组件预览模式：实际效果可能与此不同，建议创建后在前端查看完整效果
+                          </div>
+                          <pre style="background: #f5f5f5; padding: 20px; border-radius: 8px; overflow: auto;">
+${formData.componentCode}
+                          </pre>
+                        </body>
+                      </html>
+                    `)
+                    previewWindow.document.close()
+                  }
+                }
+              }}
+            >
+              预览
             </Button>
             <Button
               type="button"

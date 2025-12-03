@@ -22,6 +22,7 @@ export default function EditToolPage() {
   const [categories, setCategories] = useState<any[]>([])
   const [tagInput, setTagInput] = useState("")
 
+  const [codeMode, setCodeMode] = useState<'react' | 'html'>('react')
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -34,7 +35,9 @@ export default function EditToolPage() {
     seoTitle: "",
     seoDescription: "",
     tags: [] as string[],
+    codeMode: 'react' as 'react' | 'html',
     componentCode: "",
+    htmlCode: "",
   })
 
   useEffect(() => {
@@ -68,8 +71,11 @@ export default function EditToolPage() {
           seoTitle: tool.seoTitle || "",
           seoDescription: tool.seoDescription || "",
           tags: tool.tags || [],
+          codeMode: tool.codeMode || 'react',
           componentCode: tool.componentCode || "",
+          htmlCode: tool.htmlCode || "",
         })
+        setCodeMode(tool.codeMode || 'react')
       } catch (err) {
         setError("加载工具失败")
       } finally {
@@ -301,25 +307,88 @@ export default function EditToolPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>组件代码 *</CardTitle>
-              <CardDescription>编辑 React 组件代码，保存后会自动更新文件</CardDescription>
+              <CardTitle>工具代码 *</CardTitle>
+              <CardDescription>编辑工具代码，保存后会自动更新文件</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="componentCode">React 组件代码</Label>
-                <Textarea
-                  id="componentCode"
-                  value={formData.componentCode}
-                  onChange={(e) => setFormData({ ...formData, componentCode: e.target.value })}
-                  placeholder="输入 React 组件代码..."
-                  rows={20}
-                  className="font-mono text-sm"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  💡 提示：修改代码后点击保存，系统会自动更新 components/tools/{formData.componentType}.tsx 文件
-                </p>
+              {/* 代码模式切换标签页 */}
+              <div className="flex gap-2 border-b">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeMode('react')
+                    setFormData({ ...formData, codeMode: 'react' })
+                  }}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    codeMode === 'react'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  React 组件模式
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeMode('html')
+                    setFormData({ ...formData, codeMode: 'html' })
+                  }}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    codeMode === 'html'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  HTML 模式
+                </button>
               </div>
+
+              {/* React 组件模式 */}
+              {codeMode === 'react' && (
+                <div className="space-y-2">
+                  <Label htmlFor="componentCode">React 组件代码</Label>
+                  <Textarea
+                    id="componentCode"
+                    value={formData.componentCode}
+                    onChange={(e) => setFormData({ ...formData, componentCode: e.target.value })}
+                    placeholder="输入 React 组件代码..."
+                    rows={20}
+                    className="font-mono text-sm"
+                    required={codeMode === 'react'}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    💡 提示：修改代码后点击保存，系统会自动更新 components/tools/{formData.componentType}.tsx 文件
+                  </p>
+                </div>
+              )}
+
+              {/* HTML 模式 */}
+              {codeMode === 'html' && (
+                <div className="space-y-2">
+                  <Label htmlFor="htmlCode">HTML 代码</Label>
+                  <Textarea
+                    id="htmlCode"
+                    value={formData.htmlCode}
+                    onChange={(e) => setFormData({ ...formData, htmlCode: e.target.value })}
+                    placeholder="输入完整的 HTML 代码..."
+                    rows={20}
+                    className="font-mono text-sm"
+                    required={codeMode === 'html'}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    💡 提示：修改代码后点击保存，系统会自动更新 public/tools/{formData.componentType}.html 文件
+                  </p>
+                  <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
+                    <p className="font-medium text-blue-900 mb-1">HTML 模式特点：</p>
+                    <ul className="text-blue-800 space-y-1 ml-4">
+                      <li>• 适合简单的工具，无需 React 框架</li>
+                      <li>• 代码会保存为 .html 文件</li>
+                      <li>• 通过 iframe 隔离渲染，保证安全</li>
+                      <li>• 支持所有原生 HTML/CSS/JavaScript 功能</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

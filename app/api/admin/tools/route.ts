@@ -11,7 +11,9 @@ const toolSchema = z.object({
   description: z.string().min(1, "Description is required"),
   categoryId: z.string().min(1, "Category is required"),
   componentType: z.string().min(1, "Component type is required"),
-  componentCode: z.string().min(1, "Component code is required"),
+  codeMode: z.enum(['react', 'html']).default('react'),
+  componentCode: z.string().optional(),
+  htmlCode: z.string().optional(),
   icon: z.string().optional(),
   config: z.any().optional(),
   isPremium: z.boolean().default(false),
@@ -36,6 +38,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = toolSchema.parse(body)
 
+    // 验证代码模式对应的代码字段
+    if (validatedData.codeMode === 'react' && !validatedData.componentCode) {
+      return NextResponse.json(
+        { error: "React component code is required" },
+        { status: 400 }
+      )
+    }
+    if (validatedData.codeMode === 'html' && !validatedData.htmlCode) {
+      return NextResponse.json(
+        { error: "HTML code is required" },
+        { status: 400 }
+      )
+    }
+
     // Check if slug already exists
     const existingTool = await prisma.tool.findUnique({
       where: { slug: validatedData.slug },
@@ -48,26 +64,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 保存组件代码到文件系统
-    const componentPath = path.join(process.cwd(), 'components', 'tools', `${validatedData.componentType}.tsx`)
+    // 根据代码模式保存文件
+    let filePath: string
+    let fileExtension: string
+    let codeContent: string
+
+    if (validatedData.codeMode === 'react') {
+      fileExtension = '.tsx'
+      codeContent = validatedData.componentCode!
+      filePath = path.join(process.cwd(), 'components', 'tools', `${validatedData.componentType}${fileExtension}`)
+    } else {
+      fileExtension = '.html'
+      codeContent = validatedData.htmlCode!
+      filePath = path.join(process.cwd(), 'public', 'tools', `${validatedData.componentType}${fileExtension}`)
+    }
 
     try {
       // 确保目录存在
-      const componentDir = path.dirname(componentPath)
-      await fs.mkdir(componentDir, { recursive: true })
+      const fileDir = path.dirname(filePath)
+      await fs.mkdir(fileDir, { recursive: true })
 
-      // 写入组件代码
-      await fs.writeFile(componentPath, validatedData.componentCode, 'utf-8')
+      // 写入代码文件
+      await fs.writeFile(filePath, codeContent, 'utf-8')
     } catch (fileError) {
-      console.error("Failed to save component file:", fileError)
+      console.error("Failed to save file:", fileError)
       return NextResponse.json(
-        { error: "Failed to save component file" },
+        { error: "Failed to save file" },
         { status: 500 }
       )
     }
 
-    // 从数据中移除 componentCode，因为数据库不需要存储它
-    const { componentCode, ...toolData } = validatedData
+    // 从数据中移除代码字段，因为数据库不需要存储它们
+    const { componentCode, htmlCode, ...toolData } = validatedData
 
     // Create tool
     const tool = await prisma.tool.create({
@@ -94,8 +122,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: "Tool created successfully",
       tool,
-      componentPath: componentPath,
-      needsRebuild: process.env.NODE_ENV === 'production',
+      filePath: filePath,
+      codeMode: validatedData.codeMode,
+      needsRebuild: validatedData.codeMode === 'react' && process.env.NODE_ENV === 'production',
     })
   } catch (error) {
     console.error("Tool creation error:", error)

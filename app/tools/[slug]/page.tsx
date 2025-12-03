@@ -121,6 +121,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
             <ToolRenderer
               toolId={tool.id}
               componentType={tool.componentType}
+              codeMode={tool.codeMode}
               config={tool.config as any}
             />
           )}
