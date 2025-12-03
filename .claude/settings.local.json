@@ -26,7 +26,10 @@
       "Bash(node test-ai-debug.mjs:*)",
       "Bash(node check-production-error.mjs:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(node check-tool-detailed.mjs:*)",
+      "Bash(echo:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

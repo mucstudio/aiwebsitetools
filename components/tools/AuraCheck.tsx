@@ -4,7 +4,12 @@ import { useState, useEffect } from 'react'
 import { generateDeviceFingerprint } from '@/lib/usage-limits/fingerprint'
 import { marked } from 'marked'
 
-export default function AuraCheck() {
+interface AuraCheckProps {
+  toolId: string
+  config?: any
+}
+
+export default function AuraCheck({ toolId }: AuraCheckProps) {
   const [fp, setFp] = useState<string>()
   const [text, setText] = useState('')
   const [remaining, setRemaining] = useState('--')
@@ -17,8 +22,11 @@ export default function AuraCheck() {
 
   useEffect(() => {
     const init = async () => {
+      // 每次都生成设备指纹（不存储到浏览器）
+      // 指纹基于硬件特征，即使不存储也会生成相同的值
       const fingerprint = await generateDeviceFingerprint()
       setFp(fingerprint)
+      console.log('Generated device fingerprint:', fingerprint)
 
       // 检查使用次数
       try {
@@ -80,6 +88,23 @@ export default function AuraCheck() {
     }, 4000)
 
     try {
+      // 步骤 1: 检查使用限制
+      const checkRes = await fetch('/api/usage/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Fingerprint': fp || ''
+        },
+        body: JSON.stringify({})
+      })
+      const checkData = await checkRes.json()
+
+      if (!checkData.allowed) {
+        setError(checkData.reason || 'Daily usage limit reached')
+        return
+      }
+
+      // 步骤 2: 调用 AI
       const res = await fetch('/api/ai/call', {
         method: 'POST',
         headers: {
@@ -103,13 +128,44 @@ Scoring Guide:
 - Extremely cool = Infinite Aura
 
 User action: ${trimmed}`,
-          toolId: 'aura-check'
+          toolId: toolId
         })
       })
 
       if (!res.ok) throw new Error('The spirits are silent. Try again.')
       const data = await res.json()
 
+      // 步骤 3: 记录使用
+      await fetch('/api/usage/record', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Fingerprint': fp || ''
+        },
+        body: JSON.stringify({
+          toolId: toolId,
+          usedAI: true,
+          aiTokens: (data.usage?.inputTokens || 0) + (data.usage?.outputTokens || 0),
+          aiCost: data.usage?.cost || 0
+        })
+      })
+
+      // 步骤 4: 更新剩余次数
+      const newCheckRes = await fetch('/api/usage/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Fingerprint': fp || ''
+        },
+        body: JSON.stringify({})
+      })
+      const newCheckData = await newCheckRes.json()
+
+      if (newCheckData.remaining !== undefined) {
+        setRemaining(newCheckData.remaining === -1 ? '∞' : newCheckData.remaining.toString())
+      }
+
+      // 处理 AI 响应
       const fullContent = data.response
       const splitIndex = fullContent.indexOf('\n')
 
@@ -129,10 +185,6 @@ User action: ${trimmed}`,
       setScoreText(score)
       setBodyText(body)
       setShowOutput(true)
-
-      if (data.usage) {
-        setRemaining(data.usage.remaining === -1 ? '∞' : data.usage.remaining.toString())
-      }
 
     } catch (e: any) {
       setError(e.message)

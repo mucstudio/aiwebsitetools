@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { decryptApiKey } from "@/lib/ai/encryption"
-import { checkUsageLimit } from "@/lib/usage-limits/service"
-import { getCurrentSession } from "@/lib/auth-utils"
-import { getClientIP } from "@/lib/usage-limits/session"
+
+// 注意：这里 AI 模型不做使用限制检查，由前端在调用 AI 前先调用 /api/usage/check
+// AI 调用成功后，前端需要调用 /api/usage/record 记录使用
+// 这样可以避免 AI 调用失败但仍然扣除次数的问题
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { prompt, toolId: toolIdOrSlug } = body
-    const fingerprint = request.headers.get("X-Device-Fingerprint")
 
     if (!prompt) {
       return NextResponse.json(
@@ -110,48 +110,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 记录使用情况
-    if (actualToolId) {
-      try {
-        await prisma.usageRecord.create({
-          data: {
-            toolId: actualToolId,
-            sessionId: fingerprint || undefined,
-            ipAddress: request.headers.get("x-forwarded-for") ||
-                      request.headers.get("x-real-ip") ||
-                      undefined,
-            userAgent: request.headers.get("user-agent") || undefined,
-            usedAI: true,
-            aiTokens: inputTokens + outputTokens,
-            aiCost: cost,
-          }
-        })
-
-        // 更新工具使用计数
-        await prisma.tool.update({
-          where: { id: actualToolId },
-          data: { usageCount: { increment: 1 } }
-        })
-      } catch (recordError) {
-        console.error("Failed to record usage:", recordError)
-      }
-    }
-
-    // 检查剩余使用次数（使用统一的使用限制服务）
-    const session = await getCurrentSession()
-    const ipAddress = getClientIP(request)
-
-    const usageCheck = await checkUsageLimit({
-      userId: session?.user?.id,
-      sessionId: fingerprint || undefined,
-      ipAddress,
-      deviceFingerprint: fingerprint || undefined
-    })
+    // 注意：不在这里记录使用，由前端在 AI 调用成功后调用 /api/usage/record
+    // 这样可以确保只有成功的调用才会被记录
 
     return NextResponse.json({
       response,
+      toolId: actualToolId, // 返回 toolId 供前端记录使用
       usage: {
-        remaining: usageCheck.remaining,
         inputTokens,
         outputTokens,
         cost

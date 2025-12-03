@@ -92,25 +92,56 @@ export async function checkUsageLimit(params: {
 
   if (userType === UserType.GUEST) {
     // 游客：基于 IP + 设备指纹 双重验证（防止更换浏览器/清除 Cookie 绕过）
-    // 优先使用设备指纹，如果没有则使用 IP 地址
-    if (deviceFingerprint) {
-      // 使用设备指纹（最可靠，硬件级别识别）
-      usageCount = await prisma.usageRecord.count({
+    if (deviceFingerprint && ipAddress) {
+      // 步骤 1: 查询当前指纹的使用次数
+      const fingerprintUsageCount = await prisma.usageRecord.count({
         where: {
           sessionId: deviceFingerprint, // 复用 sessionId 字段存储设备指纹
           userId: null,
           createdAt: { gte: todayStart }
         }
       })
-    } else {
-      // 降级到 IP 地址（可能被 VPN/代理绕过）
-      usageCount = await prisma.usageRecord.count({
+
+      // 步骤 2: 查询该 IP 下所有指纹的总使用次数（防止更换浏览器绕过）
+      const ipUsageCount = await prisma.usageRecord.count({
         where: {
-          ipAddress: ipAddress || '',
+          ipAddress: ipAddress,
           userId: null,
           createdAt: { gte: todayStart }
         }
       })
+
+      // 步骤 3: 取两者的较大值（关键防绕过机制）
+      // 如果用户更换浏览器，新指纹使用次数为 0，但 IP 总使用次数不变
+      usageCount = Math.max(fingerprintUsageCount, ipUsageCount)
+    } else if (deviceFingerprint) {
+      // 只有指纹，没有 IP（降级方案）
+      usageCount = await prisma.usageRecord.count({
+        where: {
+          sessionId: deviceFingerprint,
+          userId: null,
+          createdAt: { gte: todayStart }
+        }
+      })
+    } else if (ipAddress) {
+      // 只有 IP，没有指纹（降级方案）
+      usageCount = await prisma.usageRecord.count({
+        where: {
+          ipAddress: ipAddress,
+          userId: null,
+          createdAt: { gte: todayStart }
+        }
+      })
+    } else {
+      // 既没有指纹也没有 IP，拒绝访问
+      return {
+        allowed: false,
+        remaining: 0,
+        limit: dailyLimit,
+        userType,
+        reason: '无法识别设备，请启用 JavaScript 和 Cookie',
+        requiresLogin: true
+      }
     }
   } else {
     // 注册用户/订阅用户：基于 userId
