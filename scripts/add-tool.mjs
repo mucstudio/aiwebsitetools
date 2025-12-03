@@ -4,12 +4,19 @@ const prisma = new PrismaClient()
 
 // 修改这里的值
 const toolData = {
-  slug: 'dream-stream',              // 工具URL名
-  name: 'Dream Stream',         // 显示名称
-  description: 'Unlock the secrets of your subconscious mind. Decode your dreams with mystical, psychological, or unhinged interpretations.', // 工具描述
-  categoryId: 'cmioem2lf0000d3p42gr64zgj',      // Entertainment 分类ID
-  componentType: 'dream-stream',     // 组件名（和slug一样）
-  isPublished: true               // true=上线，false=隐藏
+  slug: 'dream-stream',
+  name: 'Dream Stream',
+  description: 'Unlock the secrets of your subconscious mind. Decode your dreams with mystical, psychological, or unhinged interpretations.',
+  icon: '🌙',
+  categoryId: 'cmioem2lf0000d3p42gr64zgj',
+  componentType: 'dream-stream',
+  codeMode: 'react',
+  isPremium: false,
+  isPublished: true,
+  requiresAI: true,
+  tags: ['dream', 'psychology', 'mystical', 'interpretation', 'subconscious'],
+  seoTitle: 'Dream Stream - AI Dream Interpreter | Decode Your Dreams',
+  seoDescription: 'Unlock the secrets of your subconscious mind with AI-powered dream interpretation. Choose from mystical, psychological, or unhinged analysis styles.'
 }
 
 try {

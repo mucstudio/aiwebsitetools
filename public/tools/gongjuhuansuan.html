@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Universal Unit Converter (Ultimate)</title>
+<style>
+  :root {
+    --primary: #6366f1;
+    --text: #1f2937;
+    --text-sec: #6b7280;
+    --border: rgba(229, 231, 235, 0.5);
+    --highlight: #e0e7ff;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --text: #f3f4f6;
+      --text-sec: #9ca3af;
+      --border: rgba(63, 63, 70, 0.5);
+      --highlight: #312e81;
+      --glass-bg: rgba(24, 24, 27, 0.85);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body { 
+    font-family: system-ui, -apple-system, sans-serif; 
+    padding: 40px 20px; 
+    color: var(--text); 
+    line-height: 1.5;
+    /* Beautiful Gradient Background */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+    min-height: 100vh;
+    background-attachment: fixed;
+  }
+
+  /* Dark mode background adjustment */
+  @media (prefers-color-scheme: dark) {
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    }
+  }
+  
+  .container { max-width: 1400px; margin: 0 auto; }
+  
+  h2 { 
+    text-align: center; 
+    margin-bottom: 40px; 
+    color: #fff; 
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    font-size: 2.5rem;
+  }
+  
+  .grid-container { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+    gap: 25px; 
+  }
+
+  .card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: var(--glass-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2); 
+  }
+
+  .card-header {
+    display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem;
+    border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 20px;
+  }
+  
+  .icon-box {
+    width: 36px; height: 36px; background: var(--highlight); color: var(--primary);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+
+  .exchange-row { display: flex; flex-direction: column; gap: 12px; position: relative; }
+  .field-group { display: flex; gap: 10px; }
+  
+  input[type="number"] {
+    width: 35%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: rgba(0,0,0,0.02); color: var(--text); outline: none; font-size: 16px; font-family: monospace;
+    transition: border-color 0.2s;
+  }
+  input[type="number"]:focus { border-color: var(--primary); background: transparent; }
+
+  select {
+    flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px;
+    background: transparent; color: var(--text); outline: none; cursor: pointer;
+    font-size: 14px;
+  }
+  
+  /* Custom Scrollbar for Select */
+  select option { background: var(--glass-bg); color: var(--text); }
+
+  .swap-btn {
+    align-self: center; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--highlight); border: 1px solid var(--border); color: var(--primary);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    margin: -6px 0; z-index: 2; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 18px;
+  }
+  .swap-btn:hover { transform: rotate(180deg) scale(1.1); background: var(--primary); color: #fff; }
+
+  .result-display {
+    margin-top: 20px; background: rgba(0,0,0,0.03); border-radius: 10px; padding: 12px;
+    text-align: center; border: 1px solid var(--border);
+  }
+  .res-val { font-size: 22px; font-weight: 800; color: var(--primary); word-break: break-all; }
+  .res-eq { font-size: 12px; color: var(--text-sec); margin-top: 6px; font-family: monospace; opacity: 0.8; }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Universal Converter <small style="font-size:0.4em; opacity:0.8; font-weight:300; display:block; margin-top:5px; color:rgba(255,255,255,0.8)">v2.2 Ultimate Edition</small></h2>
+  <div id="app" class="grid-container"></div>
+</div>
+
+<script>
+/**
+ * === Core Configuration ===
+ * Text has been translated to English
+ */
+const UNIT_DATA = {
+  // 1. Length
+  length: {
+    title: "Length", icon: "📏",
+    defaultFrom: "in", defaultTo: "cm",
+    units: {
+      in: { name: "Inch", rate: 0.0254 },
+      cm: { name: "Centimeter", rate: 0.01 },
+      mm: { name: "Millimeter", rate: 0.001 },
+      m:  { name: "Meter", rate: 1 },
+      ft: { name: "Foot", rate: 0.3048 },
+      yd: { name: "Yard", rate: 0.9144 },
+      km: { name: "Kilometer", rate: 1000 },
+      mi: { name: "Mile", rate: 1609.344 },
+      nmi: { name: "Nautical Mile", rate: 1852 }
+    }
+  },
+  // 2. Weight
+  weight: {
+    title: "Weight", icon: "⚖️",
+    defaultFrom: "lb", defaultTo: "kg",
+    units: {
+      lb: { name: "Pound (lb)", rate: 453.592 },
+      kg: { name: "Kilogram (kg)", rate: 1000 },
+      oz: { name: "Ounce (oz)", rate: 28.3495 },
+      g:  { name: "Gram (g)", rate: 1 },
+      mg: { name: "Milligram (mg)", rate: 0.001 },
+      t:  { name: "Metric Ton", rate: 1000000 },
+      ct: { name: "Carat", rate: 0.2 }
+    }
+  },
+  // 3. Area
+  area: {
+    title: "Area", icon: "⬛",
+    defaultFrom: "ft2", defaultTo: "m2",
+    units: {
+      ft2: { name: "Square Foot", rate: 0.092903 },
+      m2:  { name: "Square Meter", rate: 1 },
+      cm2: { name: "Square Centimeter", rate: 0.0001 },
+      ha:  { name: "Hectare", rate: 10000 },
+      ac:  { name: "Acre", rate: 4046.86 },
+      mu:  { name: "Mu (CN)", rate: 666.667 }
+    }
+  },
+  // 4. Volume
+  volume: {
+    title: "Volume", icon: "🧊",
+    defaultFrom: "gal", defaultTo: "l",
+    units: {
+      gal: { name: "Gallon (US)", rate: 3.78541 },
+      l:   { name: "Liter", rate: 1 },
+      ml:  { name: "Milliliter", rate: 0.001 },
+      m3:  { name: "Cubic Meter", rate: 1000 },
+      pt:  { name: "Pint (US)", rate: 0.473176 },
+      oz_fl: { name: "Fluid Ounce (US)", rate: 0.0295735 }
+    }
+  },
+  // 5. Temperature
+  temp: {
+    title: "Temperature", icon: "🌡️",
+    defaultFrom: "f", defaultTo: "c",
+    units: {
+      f: { name: "Fahrenheit (°F)", toBase: v=>(v-32)*5/9, fromBase: v=>v*9/5+32 },
+      c: { name: "Celsius (°C)", toBase: v=>v, fromBase: v=>v },
+      k: { name: "Kelvin (K)", toBase: v=>v-273.15, fromBase: v=>v+273.15 }
+    }
+  },
+  // 6. Speed
+  speed: {
+    title: "Speed", icon: "🚀",
+    defaultFrom: "mph", defaultTo: "kmh",
+    units: {
+      kmh: { name: "km/h", rate: 0.277778 },
+      mph: { name: "mph", rate: 0.44704 },
+      ms:  { name: "m/s", rate: 1 },
+      kn:  { name: "Knot", rate: 0.514444 },
+      mach:{ name: "Mach (Sea Level)", rate: 340.3 }
+    }
+  },
+  // 7. Data Storage
+  data: {
+    title: "Data Storage", icon: "💾",
+    defaultFrom: "mb", defaultTo: "gb",
+    units: {
+      b:  { name: "Byte", rate: 1 },
+      kb: { name: "KB", rate: 1024 },
+      mb: { name: "MB", rate: 1048576 },
+      gb: { name: "GB", rate: 1073741824 },
+      tb: { name: "TB", rate: 1099511627776 }
+    }
+  },
+  // 8. Pressure
+  pressure: {
+    title: "Pressure", icon: "🎈",
+    defaultFrom: "psi", defaultTo: "bar",
+    units: {
+      bar: { name: "Bar", rate: 100000 },
+      psi: { name: "PSI", rate: 6894.76 },
+      pa:  { name: "Pascal (Pa)", rate: 1 },
+      kpa: { name: "Kilopascal (kPa)", rate: 1000 },
+      atm: { name: "Atmosphere (atm)", rate: 101325 },
+      mmhg:{ name: "mmHg", rate: 133.322 }
+    }
+  },
+  // 9. Power
+  power: {
+    title: "Power", icon: "⚡",
+    defaultFrom: "hp", defaultTo: "kw",
+    units: {
+      w:  { name: "Watt (W)", rate: 1 },
+      kw: { name: "Kilowatt (kW)", rate: 1000 },
+      hp: { name: "Horsepower (hp)", rate: 745.7 },
+      ps: { name: "Metric HP (ps)", rate: 735.5 }
+    }
+  },
+  // 10. Time
+  time: {
+    title: "Time", icon: "⏳",
+    defaultFrom: "min", defaultTo: "s",
+    units: {
+      s:   { name: "Second", rate: 1 },
+      min: { name: "Minute", rate: 60 },
+      h:   { name: "Hour", rate: 3600 },
+      d:   { name: "Day", rate: 86400 },
+      wk:  { name: "Week", rate: 604800 },
+      y:   { name: "Year (365d)", rate: 31536000 }
+    }
+  }
+};
+
+// =========================================
+//  Main Application Logic
+// =========================================
+
+function init() {
+  const container = document.getElementById('app');
+  for (const [key, data] of Object.entries(UNIT_DATA)) {
+    const card = createCard(key, data);
+    container.appendChild(card);
+    calc(key); 
+  }
+}
+
+function createCard(key, data) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  
+  const unitKeys = Object.keys(data.units);
+  const defaultFrom = data.defaultFrom || unitKeys[0];
+  const defaultTo = data.defaultTo || unitKeys[1] || unitKeys[0];
+
+  div.innerHTML = `
+    <div class="card-header">
+      <div class="icon-box">${data.icon}</div>
+      <span>${data.title}</span>
+    </div>
+    <div class="exchange-row">
+      <div class="field-group">
+        <input type="number" id="${key}-val" value="1" oninput="calc('${key}')" placeholder="0">
+        <select id="${key}-from" onchange="calc('${key}')">
+          ${generateOptions(data.units, defaultFrom)}
+        </select>
+      </div>
+      <div class="swap-btn" onclick="swap('${key}')" title="Swap Units">⇵</div>
+      <div class="field-group">
+        <input type="number" id="${key}-res-val" readonly style="background: rgba(0,0,0,0.05); color: var(--text-sec); cursor: default;">
+        <select id="${key}-to" onchange="calc('${key}')">
+          ${generateOptions(data.units, defaultTo)}
+        </select>
+      </div>
+    </div>
+    <div class="result-display">
+      <div class="res-val" id="${key}-result">...</div>
+      <div class="res-eq" id="${key}-formula">...</div>
+    </div>
+  `;
+  return div;
+}
+
+function generateOptions(units, selectedKey) {
+  return Object.entries(units).map(([k, v]) => 
+    `<option value="${k}" ${k === selectedKey ? 'selected' : ''}>${v.name}</option>`
+  ).join('');
+}
+
+window.calc = function(catKey) {
+  const data = UNIT_DATA[catKey];
+  const valInput = document.getElementById(`${catKey}-val`);
+  const fromSelect = document.getElementById(`${catKey}-from`);
+  const toSelect = document.getElementById(`${catKey}-to`);
+  const resDisplay = document.getElementById(`${catKey}-result`);
+  const resFormula = document.getElementById(`${catKey}-formula`);
+  const resInput = document.getElementById(`${catKey}-res-val`);
+
+  const val = parseFloat(valInput.value);
+  if (isNaN(val)) {
+    resDisplay.innerText = '---';
+    resInput.value = '';
+    resFormula.innerText = 'Waiting for input...';
+    return;
+  }
+
+  const uFrom = data.units[fromSelect.value];
+  const uTo = data.units[toSelect.value];
+
+  let result;
+  // Linear conversion (Ratio) vs Function conversion (Temperature)
+  if (uFrom.rate !== undefined) {
+    // Logic: (Input * FromRate) / ToRate
+    result = (val * uFrom.rate) / uTo.rate;
+  } else {
+    // Logic: Input -> Base -> Target
+    result = uTo.fromBase(uFrom.toBase(val));
+  }
+
+  const fmtResult = formatNum(result);
+  resDisplay.innerText = fmtResult;
+  resInput.value = fmtResult;
+  
+  // Generate Formula
+  if(uFrom.rate !== undefined) {
+     const oneUnit = formatNum(1 * uFrom.rate / uTo.rate);
+     resFormula.innerText = `1 ${uFrom.name} ≈ ${oneUnit} ${uTo.name}`; 
+  } else {
+     resFormula.innerText = `${val} ${uFrom.name} = ${fmtResult} ${uTo.name}`;
+  }
+}
+
+window.swap = function(catKey) {
+  const fromSelect = document.getElementById(`${catKey}-from`);
+  const toSelect = document.getElementById(`${catKey}-to`);
+  [fromSelect.value, toSelect.value] = [toSelect.value, fromSelect.value];
+  calc(catKey);
+}
+
+function formatNum(num) {
+  // Use scientific notation for very small numbers to avoid 0.00000001
+  if (Math.abs(num) < 0.000001 && num !== 0) return num.toExponential(4);
+  // Keep 6 decimal places, remove trailing zeros
+  return parseFloat(num.toFixed(6));
+}
+
+// Start App
+init();
+</script>
+</body>
+</html>
