@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { prisma } from "@/lib/prisma"
 
+// 页面需要动态渲染以访问数据库
+export const dynamic = 'force-dynamic'
+
 export default async function PricingPage() {
   // Get all active plans from database
   const plans = await prisma.plan.findMany({

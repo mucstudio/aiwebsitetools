@@ -1,59 +1,23 @@
-"use client"
-
 import Link from "next/link"
-import { useState, useEffect } from "react"
-import { useFeature } from "@/hooks/useFeatures"
-import { Button } from "@/components/ui/button"
+import { prisma } from "@/lib/prisma"
+import { NewsletterForm } from "./NewsletterForm"
 
-export function Footer() {
-  const [siteInfo, setSiteInfo] = useState({
-    companyName: "AI Website Tools Inc.",
-    contactEmail: "hello@aiwebsitetools.com",
-  })
-  const [newsletterEmail, setNewsletterEmail] = useState("")
-  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+export async function Footer() {
+  // 服务器端并行获取数据
+  const [companyNameSetting, contactEmailSetting, blogFeature, docsFeature, newsletterFeature] = await Promise.all([
+    prisma.siteSettings.findUnique({ where: { key: 'company_name' } }),
+    prisma.siteSettings.findUnique({ where: { key: 'contact_email' } }),
+    prisma.siteSettings.findUnique({ where: { key: 'enableBlog' } }),
+    prisma.siteSettings.findUnique({ where: { key: 'enableDocumentation' } }),
+    prisma.siteSettings.findUnique({ where: { key: 'enableNewsletter' } }),
+  ])
 
-  const blogEnabled = useFeature("enableBlog")
-  const docsEnabled = useFeature("enableDocumentation")
-  const newsletterEnabled = useFeature("enableNewsletter")
+  const companyName = (companyNameSetting?.value as string) || 'AI Website Tools Inc.'
+  const contactEmail = (contactEmailSetting?.value as string) || 'hello@aiwebsitetools.com'
 
-  // 加载网站信息
-  useEffect(() => {
-    async function loadSiteInfo() {
-      try {
-        const response = await fetch("/api/admin/settings")
-        if (response.ok) {
-          const data = await response.json()
-          const settings = data.settings || {}
-
-          setSiteInfo({
-            companyName: settings.company_name || "AI Website Tools Inc.",
-            contactEmail: settings.contact_email || "hello@aiwebsitetools.com",
-          })
-        }
-      } catch (error) {
-        console.error("Failed to load site info:", error)
-      }
-    }
-
-    loadSiteInfo()
-  }, [])
-
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setNewsletterStatus("loading")
-
-    try {
-      // TODO: 实现邮件订阅 API
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setNewsletterStatus("success")
-      setNewsletterEmail("")
-      setTimeout(() => setNewsletterStatus("idle"), 3000)
-    } catch (error) {
-      setNewsletterStatus("error")
-      setTimeout(() => setNewsletterStatus("idle"), 3000)
-    }
-  }
+  const blogEnabled = (blogFeature?.value as boolean) ?? false
+  const docsEnabled = (docsFeature?.value as boolean) ?? false
+  const newsletterEnabled = (newsletterFeature?.value as boolean) ?? false
 
   return (
     <footer className="border-t bg-background">
@@ -137,54 +101,22 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href={`mailto:${siteInfo.contactEmail}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <a href={`mailto:${contactEmail}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Email Us
                 </a>
               </li>
             </ul>
           </div>
 
-          {newsletterEnabled && (
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Subscribe to get updates and news
-              </p>
-              <form onSubmit={handleNewsletterSubmit} className="space-y-2">
-                <input
-                  type="email"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full px-3 py-2 text-sm border rounded-md"
-                  required
-                  disabled={newsletterStatus === "loading"}
-                />
-                <Button
-                  type="submit"
-                  size="sm"
-                  className="w-full"
-                  disabled={newsletterStatus === "loading"}
-                >
-                  {newsletterStatus === "loading" ? "Subscribing..." : "Subscribe"}
-                </Button>
-                {newsletterStatus === "success" && (
-                  <p className="text-xs text-green-600">Successfully subscribed!</p>
-                )}
-                {newsletterStatus === "error" && (
-                  <p className="text-xs text-red-600">Failed to subscribe. Please try again.</p>
-                )}
-              </form>
-            </div>
-          )}
+          {newsletterEnabled && <NewsletterForm />}
         </div>
         <div className="mt-12 border-t pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {siteInfo.companyName}. All rights reserved.
+              © {new Date().getFullYear()} {companyName}. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground">
-              Contact: <a href={`mailto:${siteInfo.contactEmail}`} className="hover:text-foreground transition-colors">{siteInfo.contactEmail}</a>
+              Contact: <a href={`mailto:${contactEmail}`} className="hover:text-foreground transition-colors">{contactEmail}</a>
             </p>
           </div>
         </div>

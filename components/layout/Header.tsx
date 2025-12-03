@@ -1,19 +1,7 @@
-"use client"
-
 import Link from "next/link"
-import { useSession, signOut } from "next-auth/react"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { User } from "lucide-react"
-import { useFeature } from "@/hooks/useFeatures"
-import { useState, useEffect } from "react"
+import { prisma } from "@/lib/prisma"
+import { getCurrentSession } from "@/lib/auth-utils"
+import { UserMenu } from "./UserMenu"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 interface MenuItem {
@@ -22,46 +10,36 @@ interface MenuItem {
   url: string
   icon?: string
   openInNewTab: boolean
-  children?: MenuItem[]
 }
 
-export function Header() {
-  const { data: session, status } = useSession()
-  const blogEnabled = useFeature("enableBlog")
-  const docsEnabled = useFeature("enableDocumentation")
-  const [siteName, setSiteName] = useState("AI Website Tools")
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  // 加载网站名称和菜单
-  useEffect(() => {
-    async function loadSiteData() {
-      try {
-        // 并行加载网站名称和菜单
-        const [settingsResponse, menusResponse] = await Promise.all([
-          fetch("/api/admin/settings"),
-          fetch("/api/menus")
-        ])
-
-        if (settingsResponse.ok) {
-          const data = await settingsResponse.json()
-          const settings = data.settings || {}
-          setSiteName(settings.site_name || "AI Website Tools")
-        }
-
-        if (menusResponse.ok) {
-          const data = await menusResponse.json()
-          setMenuItems(data.menuItems || [])
-        }
-      } catch (error) {
-        console.error("Failed to load site data:", error)
-      } finally {
-        setIsLoading(false)
+export async function Header() {
+  // 服务器端并行获取数据
+  const [siteSettings, menuItems, session] = await Promise.all([
+    prisma.siteSettings.findUnique({
+      where: {
+        key: 'site_name'
       }
-    }
+    }),
+    prisma.menuItem.findMany({
+      where: {
+        isActive: true,
+        parentId: null, // 只获取顶级菜单
+      },
+      orderBy: {
+        order: 'asc'
+      },
+      select: {
+        id: true,
+        label: true,
+        url: true,
+        icon: true,
+        openInNewTab: true,
+      }
+    }),
+    getCurrentSession()
+  ])
 
-    loadSiteData()
-  }, [])
+  const siteName = (siteSettings?.value as string) || 'AI Website Tools'
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -87,47 +65,7 @@ export function Header() {
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          {status === "loading" ? (
-            <div className="h-9 w-20 animate-pulse bg-muted rounded-md" />
-          ) : session ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span className="hidden md:inline">{session.user?.name || session.user?.email}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard">Dashboard</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/favorites">Favorites</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/subscription">Subscription</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-red-600 cursor-pointer"
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                >
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link href="/signup">
-                <Button>Get Started</Button>
-              </Link>
-            </>
-          )}
+          <UserMenu session={session} />
         </div>
       </div>
     </header>

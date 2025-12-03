@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 
+// 由于 Header 和 Footer 需要访问数据库，页面需要动态渲染
+export const dynamic = 'force-dynamic'
+
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">

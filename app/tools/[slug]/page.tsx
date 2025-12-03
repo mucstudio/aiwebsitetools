@@ -7,6 +7,9 @@ import { prisma } from "@/lib/prisma"
 import { ToolRenderer } from "@/components/tools/ToolRenderer"
 import { getCurrentSession } from "@/lib/auth-utils"
 
+// 页面需要动态渲染以访问数据库
+export const dynamic = 'force-dynamic'
+
 interface ToolPageProps {
   params: {
     slug: string
