@@ -20,6 +20,11 @@ const CorporateClapback = dynamic(() => import('./CorporateClapback').then(mod =
   ssr: false
 })
 
+const DreamStream = dynamic(() => import('./DreamStream'), {
+  loading: () => <LoadingState />,
+  ssr: false
+})
+
 // ============================================
 // 类型定义
 // ============================================
@@ -48,6 +53,9 @@ export function ToolRenderer({
 
     case 'corporate-clapback':
       return <CorporateClapback />
+
+    case 'dream-stream':
+      return <DreamStream toolId={toolId} config={config} />
 
     default:
       return (

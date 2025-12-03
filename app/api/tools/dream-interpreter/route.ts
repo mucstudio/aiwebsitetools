@@ -1,59 +1,50 @@
 /**
- * 🌙 梦境解析工具
+ * 🌙 Dream Stream - Subconscious Decoder
  *
- * 特点：
- * - 治愈系风格
- * - 返回结构化 JSON
- * - 包含多个维度的分析
+ * 使用工厂模式处理梦境解析
  */
 
 import { createToolHandler, callAI } from '@/lib/create-tool-handler'
 
-const dreamInterpreterProcessor = async (input: string) => {
-  const prompt = `你是一位温柔的梦境解析师，擅长用心理学和象征主义解读梦境。
+// ============================================
+// 核心业务逻辑
+// ============================================
 
-用户的梦境描述：
-${input}
+const dreamInterpreterProcessor = async (input: { dream: string; mode: string }) => {
+  const { dream, mode } = input
 
-请以 JSON 格式返回分析结果，包含以下字段：
-{
-  "theme": "梦境的核心主题（如：焦虑、期待、回忆）",
-  "symbols": [
-    {"symbol": "梦中出现的象征物", "meaning": "象征意义"}
-  ],
-  "emotion": "梦境的主要情绪基调",
-  "interpretation": "详细的梦境解析（100-200字）",
-  "advice": "给梦者的温柔建议",
-  "luckyColor": "今日幸运色",
-  "mood": "情绪指数（0-100）"
-}
-
-注意：只返回 JSON，不要有其他文字。语气要温柔、治愈。`
-
-  const aiResult = await callAI(prompt, 'dream-interpreter')
-
-  // 解析 JSON 响应
-  let dreamData
-  try {
-    let cleanContent = aiResult.content.trim()
-    if (cleanContent.startsWith('```json')) {
-      cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/```\n?/g, '')
-    }
-    dreamData = JSON.parse(cleanContent)
-  } catch (error) {
-    dreamData = {
-      theme: "神秘梦境",
-      symbols: [],
-      emotion: "未知",
-      interpretation: "这个梦境太过神秘，需要更多细节才能解读。",
-      advice: "记录下更多梦境细节，有助于更好地理解自己。",
-      luckyColor: "#E6E6FA",
-      mood: 50
-    }
+  // 根据模式设置不同的风格
+  let promptStyle = ""
+  if (mode === 'mystical') {
+    promptStyle = "Mystical, spiritual, astrology-vibe. Focus on omens, future predictions, and cosmic energy."
+  } else if (mode === 'psych') {
+    promptStyle = "Psychological, Freudian, Jungian. Focus on subconscious desires, repressed fears, and childhood trauma (but keep it light)."
+  } else {
+    promptStyle = "Unhinged, Gen Z meme style. Treat the dream as a chaotic brainrot episode. Use slang like 'fever dream', 'core core'."
   }
 
+  const prompt = `You are 'Dream Stream', a dream interpreter.
+
+Task: Interpret the user's dream based on the selected style: ${mode}.
+Style Guide: ${promptStyle}
+
+Output Format:
+1. **The Meaning**: A paragraph interpreting the dream.
+2. **The Vibe**: A 1-sentence summary of the dream's energy.
+
+Keep it entertaining, roughly 100-150 words. Do NOT be overly medical or serious.
+
+User's dream: ${dream}`
+
+  // 调用 AI（自动处理 token 统计和成本计算）
+  const aiResult = await callAI(prompt, 'dream-interpreter', {
+    temperature: 0.9,
+    maxTokens: 2000
+  })
+
+  // 返回结构化结果
   return {
-    content: dreamData,
+    content: aiResult.content,
     metadata: {
       aiTokens: aiResult.tokens,
       aiCost: aiResult.cost
@@ -61,19 +52,44 @@ ${input}
   }
 }
 
+// ============================================
+// 输入验证
+// ============================================
+
+const validateDreamInput = (input: any) => {
+  if (!input || typeof input !== 'object') {
+    return { valid: false, error: 'Invalid input format' }
+  }
+
+  const { dream, mode } = input
+
+  if (!dream || typeof dream !== 'string') {
+    return { valid: false, error: 'Dream description is required' }
+  }
+
+  const trimmed = dream.trim()
+
+  if (trimmed.length < 5) {
+    return { valid: false, error: 'The dream is too foggy. Describe more details.' }
+  }
+
+  if (trimmed.length > 1000) {
+    return { valid: false, error: 'Dream too long (max 1000 characters)' }
+  }
+
+  if (mode && !['mystical', 'psych', 'unhinged'].includes(mode)) {
+    return { valid: false, error: 'Invalid interpretation mode' }
+  }
+
+  return { valid: true }
+}
+
+// ============================================
+// 导出工具处理器
+// ============================================
+
 export const POST = createToolHandler({
   toolId: 'dream-interpreter',
   processor: dreamInterpreterProcessor,
-  validateInput: (input) => {
-    if (typeof input !== 'string') {
-      return { valid: false, error: 'Input must be a string' }
-    }
-    if (input.trim().length < 10) {
-      return { valid: false, error: '请描述更多梦境细节（至少 10 个字符）' }
-    }
-    if (input.length > 1500) {
-      return { valid: false, error: '梦境描述过长（最多 1500 字符）' }
-    }
-    return { valid: true }
-  }
+  validateInput: validateDreamInput,
 })
