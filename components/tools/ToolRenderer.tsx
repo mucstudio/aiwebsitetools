@@ -7,6 +7,7 @@
  */
 
 import dynamic from 'next/dynamic'
+import { useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 
 // 动态导入工具组件
@@ -46,7 +47,54 @@ export function ToolRenderer({
   codeMode,
   config
 }: ToolRendererProps) {
-  // 根据 componentType 渲染对应的组件
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  useEffect(() => {
+    if (codeMode === 'html' && iframeRef.current) {
+      const iframe = iframeRef.current
+
+      const resizeIframe = () => {
+        try {
+          if (iframe.contentWindow) {
+            const height = iframe.contentWindow.document.body.scrollHeight
+            iframe.style.height = height + 'px'
+          }
+        } catch (e) {
+          // 跨域限制，使用默认高度
+          iframe.style.height = '100vh'
+        }
+      }
+
+      iframe.addEventListener('load', resizeIframe)
+
+      return () => {
+        iframe.removeEventListener('load', resizeIframe)
+      }
+    }
+  }, [codeMode])
+
+  // 如果是 HTML 模式，使用 iframe 渲染
+  if (codeMode === 'html') {
+    const htmlPath = config?.htmlPath || `/tools/${componentType}.html`
+    return (
+      <div className="w-screen -ml-[50vw] left-1/2 relative">
+        <iframe
+          ref={iframeRef}
+          src={htmlPath}
+          className="w-full border-0"
+          style={{
+            width: '100vw',
+            minHeight: '600px',
+            border: 'none',
+            display: 'block'
+          }}
+          title={componentType}
+        />
+      </div>
+    )
+  }
+
+  // React 组件模式
   switch (componentType) {
     case 'aura-check':
       return <AuraCheck toolId={toolId} config={config} />
@@ -64,6 +112,7 @@ export function ToolRenderer({
             <div className="text-center text-muted-foreground">
               <p className="text-lg mb-2">工具组件未找到</p>
               <p className="text-sm">Component type: {componentType}</p>
+              <p className="text-xs mt-2">Code mode: {codeMode || 'react'}</p>
             </div>
           </CardContent>
         </Card>
