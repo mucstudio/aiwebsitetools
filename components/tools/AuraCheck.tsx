@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { generateDeviceFingerprint } from '@/lib/usage-limits/fingerprint'
+import { useState } from 'react'
+import { useToolAction } from '@/hooks/useToolAction'
 import { marked } from 'marked'
 
 interface AuraCheckProps {
@@ -9,77 +9,26 @@ interface AuraCheckProps {
   config?: any
 }
 
+interface AuraCheckResult {
+  score: string
+  body: string
+  fullText: string
+}
+
 export default function AuraCheck({ toolId }: AuraCheckProps) {
-  const [fp, setFp] = useState<string>()
   const [text, setText] = useState('')
-  const [remaining, setRemaining] = useState('--')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [showOutput, setShowOutput] = useState(false)
-  const [scoreText, setScoreText] = useState('')
-  const [bodyText, setBodyText] = useState('')
   const [btnText, setBtnText] = useState('Calculate Aura')
 
-  useEffect(() => {
-    const init = async () => {
-      // 每次都生成设备指纹（不存储到浏览器）
-      // 指纹基于硬件特征，即使不存储也会生成相同的值
-      const fingerprint = await generateDeviceFingerprint()
-      setFp(fingerprint)
-      console.log('Generated device fingerprint:', fingerprint)
-
-      // 检查使用次数
-      try {
-        const res = await fetch('/api/usage/check', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Device-Fingerprint': fingerprint
-          },
-          body: JSON.stringify({})
-        })
-        const data = await res.json()
-        console.log('Usage check response:', data)
-        if (data.remaining !== undefined) {
-          setRemaining(data.remaining === -1 ? '∞' : data.remaining.toString())
-        }
-      } catch (e) {
-        console.error('Failed to check usage:', e)
-      }
-    }
-    init()
-  }, [])
-
-  const checkContentRelevance = (input: string) => {
-    const lower = input.toLowerCase()
-    const blackList = ['rape', 'murder', 'kill', 'suicide', 'bomb', 'terrorist', 'abuse', 'pedophile']
-
-    for (const word of blackList) {
-      if (lower.includes(word)) {
-        return { allowed: false, reason: "That's -1,000,000 Aura immediately. We don't do that here." }
-      }
-    }
-    if (input.length < 3) {
-      return { allowed: false, reason: "The universe needs more context." }
-    }
-    return { allowed: true }
-  }
+  // 使用通用 Hook
+  const { execute, result, loading, error, remaining } = useToolAction<AuraCheckResult>('aura-check')
 
   const handleSubmit = async () => {
     const trimmed = text.trim()
     if (!trimmed) {
-      setError("Please describe your action first.")
       return
     }
 
-    const check = checkContentRelevance(trimmed)
-    if (!check.allowed) {
-      setError(check.reason)
-      return
-    }
-
-    setError('')
-    setLoading(true)
     setBtnText('Reading the stars...')
     setShowOutput(false)
 
@@ -88,109 +37,10 @@ export default function AuraCheck({ toolId }: AuraCheckProps) {
     }, 4000)
 
     try {
-      // 步骤 1: 检查使用限制
-      const checkRes = await fetch('/api/usage/check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Fingerprint': fp || ''
-        },
-        body: JSON.stringify({})
-      })
-      const checkData = await checkRes.json()
-
-      if (!checkData.allowed) {
-        setError(checkData.reason || 'Daily usage limit reached')
-        return
-      }
-
-      // 步骤 2: 调用 AI
-      const res = await fetch('/api/ai/call', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Fingerprint': fp || ''
-        },
-        body: JSON.stringify({
-          prompt: `You are 'Aura Check', a mystical vibe calculator for Gen Z.
-
-Task: Analyze the user's action and calculate their "Aura Points" (Social Credit/Coolness Score).
-
-Format:
-1. First line: The Score (e.g., "+5000 Aura", "-200 Aura", "Infinite Aura").
-2. Second part: A brief, mystical, or funny explanation of why.
-
-Tone: Ethereal, Gen Z slang (but make it sound ancient/mystical), slightly judgmental but funny.
-
-Scoring Guide:
-- Cool/Confident/Kind = Positive Aura (+)
-- Cringe/Embarrassing/Mean = Negative Aura (-)
-- Extremely cool = Infinite Aura
-
-User action: ${trimmed}`,
-          toolId: toolId
-        })
-      })
-
-      if (!res.ok) throw new Error('The spirits are silent. Try again.')
-      const data = await res.json()
-
-      // 步骤 3: 记录使用
-      await fetch('/api/usage/record', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Fingerprint': fp || ''
-        },
-        body: JSON.stringify({
-          toolId: toolId,
-          usedAI: true,
-          aiTokens: (data.usage?.inputTokens || 0) + (data.usage?.outputTokens || 0),
-          aiCost: data.usage?.cost || 0
-        })
-      })
-
-      // 步骤 4: 更新剩余次数
-      const newCheckRes = await fetch('/api/usage/check', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Fingerprint': fp || ''
-        },
-        body: JSON.stringify({})
-      })
-      const newCheckData = await newCheckRes.json()
-
-      if (newCheckData.remaining !== undefined) {
-        setRemaining(newCheckData.remaining === -1 ? '∞' : newCheckData.remaining.toString())
-      }
-
-      // 处理 AI 响应
-      const fullContent = data.response
-      const splitIndex = fullContent.indexOf('\n')
-
-      let score = ""
-      let body = ""
-
-      if (splitIndex !== -1) {
-        score = fullContent.substring(0, splitIndex).trim()
-        body = fullContent.substring(splitIndex).trim()
-      } else {
-        score = "??? Aura"
-        body = fullContent
-      }
-
-      score = score.replace(/\*\*/g, '').replace(/#/g, '')
-
-      setScoreText(score)
-      setBodyText(body)
+      await execute(trimmed)
       setShowOutput(true)
-
-    } catch (e: any) {
-      setError(e.message)
     } finally {
       clearTimeout(longWaitTimer)
-      setLoading(false)
       setBtnText('Calculate Aura')
     }
   }
@@ -198,7 +48,6 @@ User action: ${trimmed}`,
   const reset = () => {
     setText('')
     setShowOutput(false)
-    setError('')
     setBtnText('Calculate Aura')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -328,14 +177,14 @@ User action: ${trimmed}`,
               )}
             </button>
 
-            {showOutput && (
+            {showOutput && result && (
               <div className="mt-12 text-center">
                 <div className="mb-2 text-xs uppercase tracking-[0.3em] text-white/50">Total Impact</div>
 
                 <div className={`text-6xl md:text-8xl aura-serif italic mb-6 animate-score drop-shadow-2xl ${
-                  scoreText.includes('-') ? 'text-red-400' : 'text-gradient'
+                  result.score.includes('-') ? 'text-red-400' : 'text-gradient'
                 }`}>
-                  {scoreText}
+                  {result.score}
                 </div>
 
                 <div className="h-px w-24 bg-white/20 mx-auto mb-6"></div>
@@ -343,7 +192,7 @@ User action: ${trimmed}`,
                 <div
                   className="prose prose-invert prose-p:text-xl prose-p:font-light prose-p:leading-relaxed mx-auto"
                   dangerouslySetInnerHTML={{
-                    __html: marked.parse(bodyText) as string
+                    __html: marked.parse(result.body) as string
                   }}
                 />
 

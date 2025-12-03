@@ -4,11 +4,11 @@ const prisma = new PrismaClient()
 
 // 修改这里的值
 const toolData = {
-  slug: 'your-tool',              // 工具URL名
-  name: 'Your Tool Name',         // 显示名称
-  description: 'Tool description', // 工具描述
-  categoryId: 'category-id',      // 分类ID（先运行 node scripts/list-categories.mjs 查看）
-  componentType: 'your-tool',     // 组件名（和slug一样）
+  slug: 'corporate-clapback',              // 工具URL名
+  name: 'Corporate Clapback 98',         // 显示名称
+  description: 'Transform your rage into professional emails. Don\'t get fired. Get promoted.', // 工具描述
+  categoryId: 'cmioem2lf0000d3p42gr64zgj',      // Entertainment 分类ID
+  componentType: 'corporate-clapback',     // 组件名（和slug一样）
   isPublished: true               // true=上线，false=隐藏
 }
 

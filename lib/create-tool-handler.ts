@@ -232,7 +232,7 @@ export function createToolHandler(options: ToolHandlerOptions) {
       // ============================================
       if (!skipUsageCheck) {
         // 判断是否使用了 AI（如果结果包含 metadata）
-        const usedAI = typeof result === 'object' && 'metadata' in result && result.metadata?.aiTokens
+        const usedAI = !!(typeof result === 'object' && 'metadata' in result && result.metadata?.aiTokens)
         const aiTokens = usedAI ? result.metadata.aiTokens : undefined
         const aiCost = usedAI ? result.metadata.aiCost : undefined
 
@@ -412,8 +412,15 @@ export async function callAI(
   })
 
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'AI call failed')
+    let errorMessage = 'AI call failed'
+    try {
+      const error = await response.json()
+      errorMessage = error.error || errorMessage
+    } catch (e) {
+      // 如果响应不是 JSON，使用状态文本
+      errorMessage = `AI call failed: ${response.status} ${response.statusText}`
+    }
+    throw new Error(errorMessage)
   }
 
   const data = await response.json()

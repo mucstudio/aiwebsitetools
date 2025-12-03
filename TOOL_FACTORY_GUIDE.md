@@ -17,10 +17,16 @@
 
 ```
 工具工厂架构
-├── lib/create-tool-handler.ts          # 通用工具处理器工厂
-├── hooks/useToolAction.ts              # 前端通用 Hook
-├── app/api/tools/[toolId]/route.ts     # 工具 API 路由
-└── app/tools/[toolId]/page.tsx         # 工具前端页面
+├── lib/create-tool-handler.ts          # 通用后端业务逻辑工厂
+├── hooks/useToolAction.ts              # 通用前端交互 Hook
+├── app/api/tools/[toolId]/route.ts     # 每个工具独立的 API 定义
+│
+├── 页面渲染模式 (二选一):
+│   ├── 模式 A (通用): app/tools/[slug]/page.tsx       # 统一渲染入口 (基于数据库配置)
+│   └── 模式 B (定制): app/tools/your-tool/page.tsx    # 独立页面入口 (适合强交互/特殊UI)
+│
+└── 组件复用:
+    └── components/tools/              # 工具的具体 UI 组件 (被上述页面引用)
 ```
 
 ### 数据流
@@ -85,48 +91,50 @@ export const POST = createToolHandler({
 })
 ```
 
-### 第二步：创建前端页面
+### 第二步：选择前端页面模式
+
+#### 模式 A：通用页面 (推荐)
+如果你的工具不需要特殊的整页布局（如全屏游戏、特殊背景），可以直接复用通用模板。
+
+1. **创建组件**：`components/tools/YourTool.tsx`
+2. **注册组件**：在 `components/tools/ToolRenderer.tsx` 中导入并注册。
+3. **数据库配置**：确保数据库中的 `componentType` 与注册的名称一致。
+4. **无需创建页面文件**：`app/tools/[slug]/page.tsx` 会自动处理。
+
+#### 模式 B：独立定制页面
+如果需要像 "Corporate Clapback" 那样完全自定义的页面结构（包含 Header/Footer 但内容区完全自定义）：
 
 创建文件：`app/tools/your-tool/page.tsx`
 
 ```typescript
-'use client'
+import { notFound } from "next/navigation"
+import { prisma } from "@/lib/prisma" // 引入数据库客户端
+import { Header } from "@/components/layout/Header"
+import { Footer } from "@/components/layout/Footer"
+import { YourToolComponent } from "@/components/tools/YourToolComponent" // 你的客户端组件
 
-import { useState } from 'react'
-import { useToolAction } from '@/hooks/useToolAction'
+export default async function YourToolPage() {
+  // 1. 动态获取工具数据 (替换硬编码)
+  const tool = await prisma.tool.findUnique({
+    where: { slug: 'your-tool' }, // 确保 slug 与数据库一致
+    include: { category: true }
+  })
 
-export default function YourToolPage() {
-  const [input, setInput] = useState('')
-  const { execute, result, loading, error, remaining } = useToolAction('your-tool')
-
-  const handleSubmit = async () => {
-    await execute(input)
-  }
+  if (!tool) return notFound()
 
   return (
-    <div className="container py-12">
-      <h1>Your Tool</h1>
-
-      {/* 输入区域 */}
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="输入内容..."
-      />
-
-      {/* 提交按钮 */}
-      <button onClick={handleSubmit} disabled={loading}>
-        {loading ? '处理中...' : '提交'}
-      </button>
-
-      {/* 错误提示 */}
-      {error && <div className="error">{error}</div>}
-
-      {/* 结果展示 */}
-      {result && <div className="result">{result}</div>}
-
-      {/* 剩余次数 */}
-      <div>剩余次数：{remaining}</div>
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <main className="flex-1 flex flex-col">
+        {/* 动态面包屑和标题区域 */}
+         <div className="container py-8 pb-4">
+          {/* ...使用 tool.name, tool.description 等变量... */}
+        </div>
+        
+        {/* 你的客户端交互组件 */}
+        <YourToolComponent />
+      </main>
+      <Footer />
     </div>
   )
 }
@@ -149,64 +157,37 @@ node scripts/list-categories.mjs
 
 ```javascript
 import { PrismaClient } from '@prisma/client'
+
 const prisma = new PrismaClient()
 
-await prisma.tool.create({
-  data: {
-    // 这些值必须和你创建的文件夹/文件名一致！
-    slug: 'your-tool',              // ← 必须和 URL 路径一致
-    componentType: 'your-tool',     // ← 必须和 slug 一致
+// 修改这里的值
+const toolData = {
+  slug: 'your-tool',              // 工具URL名（必须和文件夹名一致）
+  name: 'Your Tool Name',         // 显示名称
+  description: 'Tool description', // 工具描述
+  categoryId: 'clxxx123',         // 从第一步获取的分类ID
+  componentType: 'your-tool',     // 组件名（通常和slug一样）
+  isPublished: true               // true=上线，false=隐藏
+}
 
-    // 这些是显示信息，可以自定义
-    name: 'Your Tool Name',         // 显示在页面上的名称
-    description: 'Tool description', // 工具描述
-    categoryId: 'clxxx123',         // 从第一步获取的分类ID
-    isPublished: true               // true=立即上线
-  }
-})
+try {
+  const tool = await prisma.tool.create({
+    data: toolData
+  })
 
-console.log('✅ 工具添加成功')
-await prisma.$disconnect()
+  console.log('✅ 工具添加成功！')
+  console.log('ID:', tool.id)
+  console.log('URL:', `/tools/${tool.slug}`)
+} catch (error) {
+  console.error('❌ 添加失败:', error.message)
+} finally {
+  await prisma.$disconnect()
+}
 ```
 
 **第三步：运行**
 ```bash
 node scripts/add-tool.mjs
-```
-
-#### 字段关联说明
-
-```
-关键关联（必须匹配）：
-├─ slug: 'your-tool'
-│  └─ 对应 URL: /tools/your-tool
-│  └─ 对应 API: /api/tools/your-tool/route.ts
-│  └─ 对应页面: /app/tools/your-tool/page.tsx
-│
-├─ componentType: 'your-tool'
-│  └─ 必须和 slug 一致
-│  └─ 用于前端路由匹配
-│
-└─ categoryId: 'clxxx123'
-   └─ 从 /admin/categories 复制
-
-显示信息（可自定义）：
-├─ name: 工具显示名称
-├─ description: 工具描述
-└─ isPublished: 是否上线
-```
-
-**示例：创建 Aura Check 工具**
-
-```
-文件结构：
-app/api/tools/aura-check/route.ts  ← API路由
-app/tools/aura-check/page.tsx      ← 前端页面
-
-数据库注册：
-slug: 'aura-check'          ← 和文件夹名一致
-componentType: 'aura-check' ← 和 slug 一致
-name: 'Aura Check'          ← 显示名称（可不同）
 ```
 
 ---
@@ -235,93 +216,6 @@ const textProcessor = async (input: string) => {
 **前端展示**：
 ```typescript
 {result && <div className="prose">{result}</div>}
-```
-
----
-
-### 2. JSON 结构化工具
-
-**示例**：MBTI 测试、梦境解析、代码审查
-
-```typescript
-const jsonProcessor = async (input: string) => {
-  const prompt = `请以 JSON 格式返回...
-  {
-    "field1": "value1",
-    "field2": "value2"
-  }`
-
-  const aiResult = await callAI(prompt, 'tool-id')
-
-  // 解析 JSON
-  let data
-  try {
-    let cleanContent = aiResult.content.trim()
-    if (cleanContent.startsWith('```json')) {
-      cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/```\n?/g, '')
-    }
-    data = JSON.parse(cleanContent)
-  } catch (error) {
-    data = { error: 'Failed to parse JSON' }
-  }
-
-  return {
-    content: data,
-    metadata: {
-      aiTokens: aiResult.tokens,
-      aiCost: aiResult.cost
-    }
-  }
-}
-```
-
-**前端展示**：
-```typescript
-{result && (
-  <div>
-    <h2>{result.field1}</h2>
-    <p>{result.field2}</p>
-  </div>
-)}
-```
-
----
-
-### 3. 图片生成工具
-
-**示例**：梦境绘图、Logo 生成
-
-```typescript
-const imageProcessor = async (input: string) => {
-  // 注意：需要配置支持图片生成的 AI 提供商
-  // 例如：OpenAI DALL-E, Stability AI
-
-  const prompt = `图片生成 Prompt: ${input}`
-
-  // 这里需要调用图片生成 API
-  // const imageUrl = await generateImage(prompt)
-
-  return {
-    content: {
-      imageUrl: 'https://example.com/image.png',
-      prompt: prompt
-    },
-    metadata: {
-      aiTokens: 0,
-      aiCost: 0.04  // DALL-E 3 的成本
-    }
-  }
-}
-```
-
-**前端展示**：
-```typescript
-{result && (
-  <div>
-    <img src={result.imageUrl} alt="Generated" />
-    <p>Prompt: {result.prompt}</p>
-  </div>
-)}
 ```
 
 ---
@@ -399,135 +293,12 @@ const {
 
 ---
 
-## 🔧 高级功能
-
-### 1. 自定义内容审核
-
-修改 `lib/create-tool-handler.ts` 中的 `moderateContent` 函数：
-
-```typescript
-function moderateContent(input: string) {
-  // 添加自定义审核逻辑
-  // 或调用第三方 API
-  return { allowed: true }
-}
-```
-
-### 2. 添加速率限制
-
-在工厂函数中添加速率限制逻辑：
-
-```typescript
-// 在 createToolHandler 中添加
-import { Ratelimit } from "@upstash/ratelimit"
-
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, "10 s"),
-})
-
-const { success } = await ratelimit.limit(ipAddress)
-if (!success) {
-  return NextResponse.json({ error: "Too many requests" }, { status: 429 })
-}
-```
-
-### 3. 自定义 AI 参数
-
-```typescript
-const customProcessor = async (input: string) => {
-  // 直接调用 AI API，完全自定义参数
-  const response = await fetch('/api/ai/call', {
-    method: 'POST',
-    body: JSON.stringify({
-      prompt: input,
-      toolId: 'your-tool',
-      // 可以添加自定义参数
-      temperature: 0.9,
-      maxTokens: 2000
-    })
-  })
-
-  const data = await response.json()
-  return { content: data.response }
-}
-```
-
----
-
-## 📊 性能优化建议
-
-### 1. 缓存设备指纹
-
-```typescript
-// 在 useToolAction 中已实现
-// 设备指纹会在组件挂载时生成一次，后续复用
-```
-
-### 2. 减少 API 调用
-
-```typescript
-// 工厂模式已优化：
-// - 使用限制检查：1 次
-// - AI 调用：1 次
-// - 使用记录：1 次（自动）
-// 总计：3 次 API 调用（相比原来的 4 次减少 25%）
-```
-
-### 3. 使用 React.memo 优化渲染
-
-```typescript
-const ResultDisplay = React.memo(({ result }) => {
-  return <div>{result}</div>
-})
-```
-
----
-
-## 🐛 常见问题
-
-### Q: 如何调试工具？
-
-A: 查看浏览器控制台和服务器日志：
-
-```typescript
-// 前端
-console.log('Tool result:', result)
-
-// 后端（工厂函数会自动记录）
-console.error(`Tool ${toolId} error:`, error)
-```
-
-### Q: 如何处理长时间运行的任务？
-
-A: 添加超时控制：
-
-```typescript
-const processor = async (input: string) => {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 30000)
-
-  try {
-    const result = await callAI(prompt, toolId)
-    return { content: result.content }
-  } finally {
-    clearTimeout(timeoutId)
-  }
-}
-```
-
-### Q: 如何支持流式响应？
-
-A: 当前工厂模式不支持流式响应，如需流式响应，需要单独实现 API 路由。
-
----
-
 ## 📝 最佳实践
 
 1. **工具命名**：使用 kebab-case（如 `aura-check`）
 2. **输入验证**：始终验证用户输入
 3. **错误处理**：提供友好的错误提示
-4. **性能优化**：避免在 processor 中执行耗时操作
+4. **动态数据**：即使是自定义页面，也应使用 `prisma` 获取标题、描述等元数据，避免硬编码。
 5. **安全性**：不要在前端暴露敏感信息
 
 ---
@@ -540,6 +311,6 @@ A: 当前工厂模式不支持流式响应，如需流式响应，需要单独�
 4. 部署到生产环境
 
 需要帮助？查看示例工具：
-- `app/api/tools/aura-check/route.ts`
-- `app/api/tools/roast-resume/route.ts`
-- `app/api/tools/dream-interpreter/route.ts`
+- `app/api/tools/aura-check/route.ts` (后端逻辑)
+- `app/tools/corporate-clapback/page.tsx` (自定义页面模式示例)
+- `app/tools/[slug]/page.tsx` (通用页面渲染器)
