@@ -31,27 +31,32 @@ export function Header() {
   const docsEnabled = useFeature("enableDocumentation")
   const [siteName, setSiteName] = useState("AI Website Tools")
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // 加载网站名称和菜单
   useEffect(() => {
     async function loadSiteData() {
       try {
-        // 加载网站名称
-        const settingsResponse = await fetch("/api/admin/settings")
+        // 并行加载网站名称和菜单
+        const [settingsResponse, menusResponse] = await Promise.all([
+          fetch("/api/admin/settings"),
+          fetch("/api/menus")
+        ])
+
         if (settingsResponse.ok) {
           const data = await settingsResponse.json()
           const settings = data.settings || {}
           setSiteName(settings.site_name || "AI Website Tools")
         }
 
-        // 加载菜单项
-        const menusResponse = await fetch("/api/menus")
         if (menusResponse.ok) {
           const data = await menusResponse.json()
           setMenuItems(data.menuItems || [])
         }
       } catch (error) {
         console.error("Failed to load site data:", error)
+      } finally {
+        setIsLoading(false)
       }
     }
 

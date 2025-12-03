@@ -1,7 +1,72 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
+
+interface Payment {
+  id: string
+  userId: string
+  amount: number
+  currency: string
+  status: string
+  stripePaymentIntentId: string | null
+  metadata: any
+  createdAt: string
+}
+
+interface PaymentStats {
+  todayRevenue: number
+  todayCount: number
+  monthRevenue: number
+  monthCount: number
+  totalRevenue: number
+  totalCount: number
+  refundAmount: number
+  refundCount: number
+}
 
 export default function AdminPaymentsPage() {
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [stats, setStats] = useState<PaymentStats>({
+    todayRevenue: 0,
+    todayCount: 0,
+    monthRevenue: 0,
+    monthCount: 0,
+    totalRevenue: 0,
+    totalCount: 0,
+    refundAmount: 0,
+    refundCount: 0,
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadPayments()
+  }, [])
+
+  const loadPayments = async () => {
+    try {
+      const response = await fetch("/api/admin/payments")
+      if (response.ok) {
+        const data = await response.json()
+        setPayments(data.payments || [])
+        setStats(data.stats || stats)
+      }
+    } catch (error) {
+      console.error("Failed to load payments:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -17,40 +82,40 @@ export default function AdminPaymentsPage() {
         <Card>
           <CardHeader className="pb-3">
             <p className="text-sm text-muted-foreground">今日收入</p>
-            <CardTitle className="text-2xl">$234</CardTitle>
+            <CardTitle className="text-2xl">${stats.todayRevenue.toFixed(2)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">12 笔交易</p>
+            <p className="text-xs text-muted-foreground">{stats.todayCount} 笔交易</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
             <p className="text-sm text-muted-foreground">本月收入</p>
-            <CardTitle className="text-2xl">$2,340</CardTitle>
+            <CardTitle className="text-2xl">${stats.monthRevenue.toFixed(2)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">156 笔交易</p>
+            <p className="text-xs text-muted-foreground">{stats.monthCount} 笔交易</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
             <p className="text-sm text-muted-foreground">总收入</p>
-            <CardTitle className="text-2xl">$28,450</CardTitle>
+            <CardTitle className="text-2xl">${stats.totalRevenue.toFixed(2)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">1,234 笔交易</p>
+            <p className="text-xs text-muted-foreground">{stats.totalCount} 笔交易</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
             <p className="text-sm text-muted-foreground">退款</p>
-            <CardTitle className="text-2xl">$450</CardTitle>
+            <CardTitle className="text-2xl">${stats.refundAmount.toFixed(2)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">8 笔退款</p>
+            <p className="text-xs text-muted-foreground">{stats.refundCount} 笔退款</p>
           </CardContent>
         </Card>
       </div>
@@ -95,30 +160,40 @@ export default function AdminPaymentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {payments.map((payment) => (
-                  <tr key={payment.id} className="border-b hover:bg-muted/50">
-                    <td className="py-3 px-4 font-mono text-sm">{payment.id}</td>
-                    <td className="py-3 px-4">{payment.user}</td>
-                    <td className="py-3 px-4">{payment.plan}</td>
-                    <td className="py-3 px-4 font-semibold">${payment.amount}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        payment.status === "成功"
-                          ? "bg-green-100 text-green-700"
-                          : payment.status === "失败"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}>
-                        {payment.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-muted-foreground">{payment.method}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{payment.time}</td>
-                    <td className="py-3 px-4 text-right">
-                      <Button variant="outline" size="sm">查看详情</Button>
+                {payments.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-muted-foreground">
+                      暂无支付记录
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  payments.map((payment) => (
+                    <tr key={payment.id} className="border-b hover:bg-muted/50">
+                      <td className="py-3 px-4 font-mono text-sm">{payment.stripePaymentIntentId || payment.id.slice(0, 14)}</td>
+                      <td className="py-3 px-4">{payment.userId}</td>
+                      <td className="py-3 px-4">{payment.metadata?.plan || "-"}</td>
+                      <td className="py-3 px-4 font-semibold">${payment.amount.toFixed(2)}</td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          payment.status === "succeeded"
+                            ? "bg-green-100 text-green-700"
+                            : payment.status === "failed"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}>
+                          {payment.status === "succeeded" ? "成功" : payment.status === "failed" ? "失败" : payment.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground">{payment.metadata?.paymentMethod || "Stripe"}</td>
+                      <td className="py-3 px-4 text-muted-foreground">
+                        {new Date(payment.createdAt).toLocaleString("zh-CN")}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Button variant="outline" size="sm">查看详情</Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -127,42 +202,3 @@ export default function AdminPaymentsPage() {
     </div>
   )
 }
-
-const payments = [
-  {
-    id: "pay_1234567890",
-    user: "john@example.com",
-    plan: "Pro",
-    amount: 9,
-    status: "成功",
-    method: "Visa •••• 4242",
-    time: "2024-01-20 14:30",
-  },
-  {
-    id: "pay_0987654321",
-    user: "jane@example.com",
-    plan: "Enterprise",
-    amount: 29,
-    status: "成功",
-    method: "Mastercard •••• 5555",
-    time: "2024-01-20 12:15",
-  },
-  {
-    id: "pay_1122334455",
-    user: "bob@example.com",
-    plan: "Pro",
-    amount: 9,
-    status: "失败",
-    method: "Visa •••• 1234",
-    time: "2024-01-20 10:45",
-  },
-  {
-    id: "pay_5544332211",
-    user: "alice@example.com",
-    plan: "Pro",
-    amount: 9,
-    status: "退款",
-    method: "Visa •••• 9876",
-    time: "2024-01-19 16:20",
-  },
-]
