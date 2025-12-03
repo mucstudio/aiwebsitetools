@@ -5,9 +5,10 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Sparkles, Heart, Eye } from "lucide-react"
+import { ArrowRight, Sparkles, Heart, Eye, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import FingerprintJS from "@fingerprintjs/fingerprintjs"
+import { useSession } from "next-auth/react"
 
 interface ToolCardProps {
   tool: {
@@ -22,10 +23,13 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
+  const { data: session } = useSession()
   const [likes, setLikes] = useState(tool.likeCount)
   const [views, setViews] = useState(tool.usageCount)
   const [hasLiked, setHasLiked] = useState(false)
+  const [isFavorited, setIsFavorited] = useState(false)
   const [isLiking, setIsLiking] = useState(false)
+  const [isFavoriting, setIsFavoriting] = useState(false)
   const [fingerprint, setFingerprint] = useState<string | null>(null)
 
   useEffect(() => {
@@ -50,7 +54,17 @@ export function ToolCard({ tool }: ToolCardProps) {
         })
         .catch(console.error)
     }
-  }, [fingerprint, tool.slug])
+
+    // Check if user has favorited
+    if (session?.user) {
+      fetch(`/api/tools/${tool.slug}/favorite`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.isFavorited) setIsFavorited(true)
+        })
+        .catch(console.error)
+    }
+  }, [fingerprint, tool.slug, session])
 
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -84,6 +98,42 @@ export function ToolCard({ tool }: ToolCardProps) {
     }
   }
 
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!session) {
+      // Redirect to login or show toast
+      window.location.href = "/login"
+      return
+    }
+
+    if (isFavoriting) return
+
+    setIsFavoriting(true)
+    // Optimistic update
+    setIsFavorited(prev => !prev)
+
+    try {
+      const res = await fetch(`/api/tools/${tool.slug}/favorite`, {
+        method: "POST",
+      })
+
+      if (!res.ok) {
+        // Revert if failed
+        setIsFavorited(prev => !prev)
+      } else {
+        const data = await res.json()
+        setIsFavorited(data.isFavorited)
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error)
+      setIsFavorited(prev => !prev)
+    } finally {
+      setIsFavoriting(false)
+    }
+  }
+
   const handleView = async () => {
     // Fire and forget view increment
     try {
@@ -98,19 +148,29 @@ export function ToolCard({ tool }: ToolCardProps) {
   }
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm flex flex-col h-full">
+    <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30 bg-card/50 backdrop-blur-sm flex flex-col h-full relative">
+      <button
+        onClick={handleFavorite}
+        className={cn(
+          "absolute top-4 right-4 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border transition-colors hover:text-yellow-500 z-10",
+          isFavorited ? "text-yellow-500 border-yellow-500/50" : "text-muted-foreground"
+        )}
+        title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+      >
+        <Star className={cn("h-4 w-4", isFavorited && "fill-current")} />
+      </button>
       <CardHeader>
         <div className="flex items-start justify-between mb-2">
           <div className="p-2 rounded-md bg-muted group-hover:bg-primary/10 transition-colors text-muted-foreground group-hover:text-primary">
             <Sparkles className="h-5 w-5" />
           </div>
           {tool.isPremium && (
-            <Badge variant="default" className="bg-gradient-to-r from-primary to-purple-600 border-0">
+            <Badge variant="default" className="bg-gradient-to-r from-primary to-purple-600 border-0 mr-8">
               PRO
             </Badge>
           )}
         </div>
-        <CardTitle className="text-xl group-hover:text-primary transition-colors">
+        <CardTitle className="text-xl group-hover:text-primary transition-colors pr-8">
           {tool.name}
         </CardTitle>
         <CardDescription className="line-clamp-2 mt-2 flex-1">
@@ -124,7 +184,7 @@ export function ToolCard({ tool }: ToolCardProps) {
               <Eye className="h-4 w-4" />
               <span>{views.toLocaleString()}</span>
             </div>
-            <button 
+            <button
               onClick={handleLike}
               disabled={hasLiked}
               className={cn(
