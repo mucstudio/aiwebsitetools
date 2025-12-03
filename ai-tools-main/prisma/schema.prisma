@@ -1,0 +1,310 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// Admin user model
+model Admin {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String    // Hashed password
+  sessions  Session[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// Admin session model (for secure session management)
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  adminId   Int
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([token])
+  @@index([adminId])
+  @@index([expiresAt])
+}
+
+// Tool category model
+model ToolCategory {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  icon      String?
+  sortOrder Int      @default(0)
+  tools     Tool[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Tool model
+model Tool {
+  id                Int          @id @default(autoincrement())
+  name              String
+  slug              String       @unique
+  description       String?
+
+  // Tool Type and Code Fields
+  toolType          String       @default("iframe")  // "iframe" | "react" | "vue"
+  code              String       @default("")        // Complete HTML/CSS/JS code (iframe mode)
+  componentCode     String?      // React/Vue component code (react/vue mode)
+  styleCode         String?      // CSS/SCSS styles
+  configJson        String?      // Tool configuration JSON
+  dependencies      String?      // NPM dependencies JSON array
+
+  // Version Control
+  version           String       @default("1.0.0")
+  isPublished       Boolean      @default(true)
+
+  icon              String?
+  categoryId        Int
+  category          ToolCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  sortOrder         Int          @default(0)
+  likes             Int          @default(0)
+  views             Int          @default(0)
+  skipSecurityCheck Boolean      @default(false)
+  requiresAuth      Boolean      @default(false)  // Require login to use
+  premiumOnly       Boolean      @default(false)  // Only for premium users
+  likesList         ToolLike[]
+  favorites         Favorite[]
+  usageLogs         UsageLog[]
+  guestUsages       GuestUsage[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+// Tool like record (IP-based to prevent duplicate likes)
+model ToolLike {
+  id        Int      @id @default(autoincrement())
+  toolId    Int
+  ip        String
+  userId    Int?     // Optional: link to user if logged in
+  createdAt DateTime @default(now())
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([toolId, ip])
+}
+
+// User model
+model User {
+  id                Int              @id @default(autoincrement())
+  email             String           @unique
+  password          String           // Hashed password
+  name              String?
+  avatar            String?
+  // Contact & Location
+  phone             String?
+  address           String?
+  city              String?
+  country           String?
+  // Social Media
+  tiktok            String?          // TikTok username or URL
+  instagram         String?          // Instagram username or URL
+  facebook          String?          // Facebook profile URL
+  twitter           String?          // Twitter/X username or URL
+  youtube           String?          // YouTube channel URL
+  linkedin          String?          // LinkedIn profile URL
+  website           String?          // Personal website URL
+  // Bio
+  bio               String?          // User bio/description
+  // Membership
+  membershipTier    String           @default("FREE")  // FREE, PREMIUM, ENTERPRISE
+  subscriptionId    Int?
+  subscription      Subscription?    @relation(fields: [subscriptionId], references: [id])
+  usageCount        Int              @default(0)  // Monthly usage count
+  usageResetDate    DateTime         @default(now())
+  emailVerified     Boolean          @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  favorites         Favorite[]
+  likes             ToolLike[]
+  usageLogs         UsageLog[]
+  paymentOrders     PaymentOrder[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+// Subscription plans
+model Subscription {
+  id              Int            @id @default(autoincrement())
+  name            String         // "Free Plan", "Premium Monthly", "Premium Yearly"
+  tier            String         // FREE, PREMIUM, ENTERPRISE
+  price           Float          // Price in USD
+  currency        String         @default("USD")
+  billingCycle    String         // MONTHLY, YEARLY, LIFETIME, FREE
+  usageLimit      Int            // Monthly usage limit (-1 for unlimited)
+  features        String         // JSON string of features
+  isActive        Boolean        @default(true)
+  users           User[]
+  paymentOrders   PaymentOrder[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+// User favorites (bookmarks)
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  toolId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, toolId])
+}
+
+// Usage logs for tracking tool usage
+model UsageLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  toolId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// Site configuration
+model SiteConfig {
+  id                Int      @id @default(autoincrement())
+  siteName          String   @default("Online Tools Platform")
+  siteUrl           String   @default("http://localhost:3000")
+  description       String?
+  logo              String?  // Logo URL or path
+  favicon           String?  // Favicon URL or path
+  // SEO Settings
+  seoTitle          String?
+  seoDescription    String?
+  seoKeywords       String?
+  ogImage           String?  // Open Graph image URL
+  // Email Settings
+  smtpHost          String?
+  smtpPort          Int?
+  smtpUser          String?
+  smtpPassword      String?  // Encrypted
+  smtpFrom          String?
+  smtpFromName      String?
+  emailVerification Boolean  @default(true)
+  // Usage Limits
+  guestUsageLimit   Int      @default(10)  // Free trial uses for guests (per device/IP)
+  guestResetDays    Int      @default(30)  // Days before guest usage resets
+  // AI Settings
+  defaultAIModelId  Int?     // Global default AI model ID
+  backupAIModelId1  Int?     // Global backup AI model 1
+  backupAIModelId2  Int?     // Global backup AI model 2
+  backupAIModelId3  Int?     // Global backup AI model 3
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Payment configuration
+model PaymentConfig {
+  id                  Int      @id @default(autoincrement())
+  provider            String   @unique // "stripe" or "paypal"
+  isEnabled           Boolean  @default(false)
+  publicKey           String?  // Stripe publishable key or PayPal client ID
+  secretKey           String?  // Encrypted: Stripe secret key or PayPal secret
+  webhookSecret       String?  // Encrypted: Webhook secret
+  testMode            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// Payment orders
+model PaymentOrder {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId    Int
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id])
+  provider          String   // "stripe" or "paypal"
+  amount            Float
+  currency          String   @default("USD")
+  status            String   @default("pending") // pending, completed, failed, refunded
+  paymentIntentId   String?  // Stripe payment intent ID or PayPal order ID
+  paymentMethod     String?  // card, paypal, etc.
+  metadata          String?  // JSON string for additional data
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+// Guest usage tracking (for non-logged-in users)
+model GuestUsage {
+  id            Int      @id @default(autoincrement())
+  fingerprint   String   // Browser fingerprint (combination of user agent, screen resolution, etc.)
+  ip            String   // IP address
+  toolId        Int
+  tool          Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  usageCount    Int      @default(1)
+  lastUsedAt    DateTime @default(now())
+  resetDate     DateTime // Date when usage count will reset
+  createdAt     DateTime @default(now())
+
+  @@unique([fingerprint, ip])
+  @@index([fingerprint])
+  @@index([ip])
+}
+
+// AI Provider configuration
+model AIProvider {
+  id          Int       @id @default(autoincrement())
+  name        String    // "OpenAI", "Gemini", "Claude", "智谱AI", "Custom"
+  type        String    // "openai", "gemini", "claude", "zhipu", "openai-compatible"
+  apiKey      String    // Encrypted API key
+  baseUrl     String?   // Custom endpoint (for OpenAI-compatible APIs)
+  enabled     Boolean   @default(true)
+  isDefault   Boolean   @default(false) // Whether this is the default provider
+  config      String?   // JSON string for extra config
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  models      AIModel[]
+}
+
+// AI Model configuration
+model AIModel {
+  id           Int        @id @default(autoincrement())
+  providerId   Int
+  provider     AIProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  modelId      String     // "gpt-4", "gemini-pro", "claude-3-opus", etc.
+  displayName  String     // Display name for the model
+  enabled      Boolean    @default(true)
+  isDefault    Boolean    @default(false) // Whether this is the default model for the provider
+  capabilities String?    // JSON string for capabilities
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([providerId, modelId])
+}
+
+// Tool Template model (for quick-start templates)
+model ToolTemplate {
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String?
+  type            String   // "basic" | "form" | "chart" | "ai-powered" | "converter" | "generator"
+  toolType        String   @default("react")  // "iframe" | "react" | "vue"
+  componentCode   String   // Template component code
+  styleCode       String?  // Template styles
+  configJson      String?  // Template configuration
+  thumbnail       String?  // Template preview image URL
+  tags            String?  // JSON array of tags
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  usageCount      Int      @default(0)  // Track how many times this template is used
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
