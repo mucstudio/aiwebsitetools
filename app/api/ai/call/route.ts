@@ -8,7 +8,7 @@ import { getClientIP } from "@/lib/usage-limits/session"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { prompt, toolId } = body
+    const { prompt, toolId: toolIdOrSlug } = body
     const fingerprint = request.headers.get("X-Device-Fingerprint")
 
     if (!prompt) {
@@ -16,6 +16,20 @@ export async function POST(request: NextRequest) {
         { error: "Prompt is required" },
         { status: 400 }
       )
+    }
+
+    // 如果提供了 toolId，尝试通过 slug 或 id 查找工具
+    let actualToolId: string | undefined
+    if (toolIdOrSlug) {
+      const tool = await prisma.tool.findFirst({
+        where: {
+          OR: [
+            { id: toolIdOrSlug },
+            { slug: toolIdOrSlug }
+          ]
+        }
+      })
+      actualToolId = tool?.id
     }
 
     // 获取 AI 配置
@@ -97,11 +111,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 记录使用情况
-    if (toolId) {
+    if (actualToolId) {
       try {
         await prisma.usageRecord.create({
           data: {
-            toolId,
+            toolId: actualToolId,
             sessionId: fingerprint || undefined,
             ipAddress: request.headers.get("x-forwarded-for") ||
                       request.headers.get("x-real-ip") ||
@@ -115,7 +129,7 @@ export async function POST(request: NextRequest) {
 
         // 更新工具使用计数
         await prisma.tool.update({
-          where: { id: toolId },
+          where: { id: actualToolId },
           data: { usageCount: { increment: 1 } }
         })
       } catch (recordError) {
