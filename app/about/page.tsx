@@ -1,10 +1,16 @@
 import { Footer } from "@/components/layout/Footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, Zap, Shield, Globe, Heart, Coffee } from "lucide-react"
+import { Sparkles, Zap, Ghost, Palette, Heart, Rocket } from "lucide-react"
+import { Metadata } from "next"
 
 // 由于 Header 和 Footer 需要访问数据库，页面需要动态渲染
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: "InspoaiBox - Viral AI Tools, Roasts & Creative Generators",
+  description: "Your daily dose of digital dopamine. InspoaiBox offers fun AI tools for everyone—from savage roasts and aura checks to creative inspiration. Try it for free!",
+}
 
 export default function AboutPage() {
   return (
@@ -19,17 +25,16 @@ export default function AboutPage() {
 
           <div className="container relative z-10 mx-auto px-4 text-center">
             <Badge variant="outline" className="mb-6 px-4 py-1 text-sm border-primary/20 bg-primary/5 text-primary">
-              Our Story
+              The Ultimate Creative AI Playground
             </Badge>
-            <h1 className="mx-auto max-w-4xl text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl mb-8">
-              Empowering Creators with <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">
-                Powerful Tools
+            <h1 className="mx-auto max-w-5xl text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl mb-8 leading-tight">
+              Your Daily Dose of <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-pink-500 animate-gradient-x">
+                Digital Dopamine
               </span>
             </h1>
             <p className="mx-auto max-w-2xl text-xl text-muted-foreground leading-relaxed">
-              We believe that essential digital tools should be accessible, fast, and privacy-focused.
-              No installations, no complications.
+              Unleash your creativity with InspoaiBox. Explore hundreds of fun AI tools: from roasting your Instagram and checking your aura to generating viral content.
             </p>
           </div>
         </section>
@@ -38,45 +43,47 @@ export default function AboutPage() {
         <section className="container py-12 px-4 mx-auto">
           <div className="grid gap-12 md:grid-cols-2 items-center max-w-6xl mx-auto">
             <div className="space-y-6">
-              <h2 className="text-3xl font-bold tracking-tight">Our Mission</h2>
+              <h2 className="text-3xl font-bold tracking-tight">Bored? Not Anymore.</h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Our mission is to provide free and accessible online tools that help people accomplish
-                their daily tasks more efficiently. We believe that powerful tools shouldn't require
-                installation or complicated setup.
+                InspoaiBox is your go-to destination for <strong>Free AI Tools</strong> and <strong>Fun Websites</strong>. We believe AI shouldn't just be about productivity—it should be about <i>creativity</i>, <i>entertainment</i>, and a little bit of chaos.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                We started this project because we were frustrated with the lack of simple, reliable
-                online tools. Many existing tools were cluttered with ads, slow to load, or required
-                unnecessary sign-ups. We wanted to create something better.
+                Whether you're looking for an <strong>Instagram Roast AI</strong> to humble your friends, a <strong>TikTok Caption Generator</strong> for your next viral hit, or just an <strong>Aura Calculator</strong> to check your vibe, we've got you covered.
               </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Badge variant="secondary">#AIPlayground</Badge>
+                <Badge variant="secondary">#ViralTools</Badge>
+                <Badge variant="secondary">#GenZ</Badge>
+                <Badge variant="secondary">#Creativity</Badge>
+              </div>
             </div>
             <div className="grid gap-6 sm:grid-cols-2">
-              <Card className="bg-muted/50 border-none shadow-none">
+              <Card className="bg-muted/50 border-none shadow-none hover:bg-muted/80 transition-colors">
                 <CardContent className="pt-6">
-                  <Zap className="h-8 w-8 text-yellow-500 mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">Fast & Reliable</h3>
-                  <p className="text-sm text-muted-foreground">Optimized for speed and performance across all devices.</p>
+                  <Sparkles className="h-8 w-8 text-yellow-500 mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Viral Content</h3>
+                  <p className="text-sm text-muted-foreground">Tools designed to help you create shareable, meme-worthy content instantly.</p>
                 </CardContent>
               </Card>
-              <Card className="bg-muted/50 border-none shadow-none">
+              <Card className="bg-muted/50 border-none shadow-none hover:bg-muted/80 transition-colors">
                 <CardContent className="pt-6">
-                  <Shield className="h-8 w-8 text-green-500 mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">Privacy First</h3>
-                  <p className="text-sm text-muted-foreground">Your data is processed securely and never stored.</p>
+                  <Ghost className="h-8 w-8 text-purple-500 mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Vibe Checks</h3>
+                  <p className="text-sm text-muted-foreground">From roasting your resume to finding your toxic trait, get ready for some fun.</p>
                 </CardContent>
               </Card>
-              <Card className="bg-muted/50 border-none shadow-none">
+              <Card className="bg-muted/50 border-none shadow-none hover:bg-muted/80 transition-colors">
                 <CardContent className="pt-6">
-                  <Globe className="h-8 w-8 text-blue-500 mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">Always Available</h3>
-                  <p className="text-sm text-muted-foreground">Access tools anytime, anywhere, on any device.</p>
+                  <Palette className="h-8 w-8 text-pink-500 mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Creative Spark</h3>
+                  <p className="text-sm text-muted-foreground">Break through creative blocks with our character sheet makers and story generators.</p>
                 </CardContent>
               </Card>
-              <Card className="bg-muted/50 border-none shadow-none">
+              <Card className="bg-muted/50 border-none shadow-none hover:bg-muted/80 transition-colors">
                 <CardContent className="pt-6">
-                  <Coffee className="h-8 w-8 text-orange-500 mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">Simple to Use</h3>
-                  <p className="text-sm text-muted-foreground">Intuitive interfaces designed for productivity.</p>
+                  <Rocket className="h-8 w-8 text-blue-500 mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">Always Free</h3>
+                  <p className="text-sm text-muted-foreground">Enjoy our collection of AI Generators without breaking the bank. Just pure fun.</p>
                 </CardContent>
               </Card>
             </div>
@@ -89,15 +96,15 @@ export default function AboutPage() {
             <div className="grid gap-8 md:grid-cols-3 text-center max-w-4xl mx-auto">
               <div className="space-y-2">
                 <div className="text-4xl font-bold text-primary">100+</div>
-                <div className="text-muted-foreground">Tools Available</div>
+                <div className="text-muted-foreground">Fun Generators</div>
               </div>
               <div className="space-y-2">
                 <div className="text-4xl font-bold text-primary">1M+</div>
-                <div className="text-muted-foreground">Monthly Users</div>
+                <div className="text-muted-foreground">Vibes Checked</div>
               </div>
               <div className="space-y-2">
-                <div className="text-4xl font-bold text-primary">99.9%</div>
-                <div className="text-muted-foreground">Uptime</div>
+                <div className="text-4xl font-bold text-primary">∞</div>
+                <div className="text-muted-foreground">Laughs Generated</div>
               </div>
             </div>
           </div>
@@ -107,15 +114,15 @@ export default function AboutPage() {
         <section className="container py-24 px-4 mx-auto text-center">
           <div className="max-w-2xl mx-auto">
             <Heart className="h-12 w-12 text-red-500 mx-auto mb-6 animate-pulse" />
-            <h2 className="text-3xl font-bold tracking-tight mb-6">We'd Love to Hear From You</h2>
+            <h2 className="text-3xl font-bold tracking-tight mb-6">Got a Crazy Idea?</h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Have questions, suggestions, or just want to say hello? We're always looking to improve.
+              We love hearing from our community. If you have an idea for the next viral AI tool, let us know!
             </p>
             <a
-              href="mailto:hello@aiwebsitetools.com"
-              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8"
+              href="mailto:hello@inspoaibox.com"
+              className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8 shadow-lg shadow-primary/25"
             >
-              Contact Support
+              Submit Your Idea
             </a>
           </div>
         </section>
