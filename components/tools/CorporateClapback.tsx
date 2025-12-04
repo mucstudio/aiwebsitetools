@@ -5,14 +5,12 @@ import { useToolAction } from '@/hooks/useToolAction'
 import { ShareResult } from './ShareResult'
 
 interface CorporateClapbackProps {
-  toolId: string
   toolName?: string
   toolDescription?: string
   toolIcon?: string | null
 }
 
 export function CorporateClapback({
-  toolId,
   toolName,
   toolDescription,
   toolIcon
@@ -23,7 +21,7 @@ export function CorporateClapback({
   const [aggressionLevel, setAggressionLevel] = useState(2)
   const [btnText, setBtnText] = useState('TRANSLATE >>')
 
-  const { execute, result, loading, error, remaining } = useToolAction<string>(toolId)
+  const { execute, result, loading, error, remaining } = useToolAction<string>('corporate-clapback')
 
   const handleSubmit = async () => {
     if (!text.trim()) return
