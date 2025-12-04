@@ -20,7 +20,7 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!token) {
-      setError("无效的重置链接")
+      setError("Invalid reset link")
     }
   }, [token])
 
@@ -29,12 +29,12 @@ function ResetPasswordForm() {
     setError("")
 
     if (password !== confirmPassword) {
-      setError("两次输入的密码不一致")
+      setError("Passwords do not match")
       return
     }
 
     if (password.length < 8) {
-      setError("密码长度至少需要 8 个字符")
+      setError("Password must be at least 8 characters long")
       return
     }
 
@@ -57,10 +57,10 @@ function ResetPasswordForm() {
           router.push("/login")
         }, 3000)
       } else {
-        setError(data.error || "重置密码失败，请重试")
+        setError(data.error || "Failed to reset password, please try again")
       }
     } catch (error) {
-      setError("重置密码失败，请重试")
+      setError("Failed to reset password, please try again")
     } finally {
       setLoading(false)
     }
@@ -71,14 +71,14 @@ function ResetPasswordForm() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-red-600">无效的链接</CardTitle>
+            <CardTitle className="text-red-600">Invalid Link</CardTitle>
             <CardDescription>
-              重置密码链接无效或已过期
+              The password reset link is invalid or has expired
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => router.push("/login")} className="w-full">
-              返回登录
+              Back to Login
             </Button>
           </CardContent>
         </Card>
@@ -93,12 +93,12 @@ function ResetPasswordForm() {
           <CardContent className="pt-6">
             <div className="text-center">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2 text-green-600">密码重置成功！</h2>
+              <h2 className="text-2xl font-bold mb-2 text-green-600">Password Reset Successful!</h2>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                您的密码已成功重置
+                Your password has been successfully reset
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-500">
-                即将跳转到登录页面...
+                Redirecting to login page...
               </p>
             </div>
           </CardContent>
@@ -111,33 +111,33 @@ function ResetPasswordForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
       <Card className="max-w-md w-full">
         <CardHeader>
-          <CardTitle>重置密码</CardTitle>
+          <CardTitle>Reset Password</CardTitle>
           <CardDescription>
-            请输入您的新密码
+            Please enter your new password
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                新密码 <span className="text-red-500">*</span>
+                New Password <span className="text-red-500">*</span>
               </label>
               <PasswordInput
                 value={password}
                 onChange={setPassword}
-                placeholder="请输入新密码"
+                placeholder="Enter new password"
                 showStrength={true}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                确认密码 <span className="text-red-500">*</span>
+                Confirm Password <span className="text-red-500">*</span>
               </label>
               <PasswordInput
                 value={confirmPassword}
                 onChange={setConfirmPassword}
-                placeholder="请再次输入密码"
+                placeholder="Confirm new password"
               />
             </div>
 
@@ -152,7 +152,7 @@ function ResetPasswordForm() {
               className="w-full"
               disabled={loading || !password || !confirmPassword}
             >
-              {loading ? "重置中..." : "重置密码"}
+              {loading ? "Resetting..." : "Reset Password"}
             </Button>
 
             <div className="text-center">
@@ -161,7 +161,7 @@ function ResetPasswordForm() {
                 variant="link"
                 onClick={() => router.push("/login")}
               >
-                返回登录
+                Back to Login
               </Button>
             </div>
           </form>
@@ -177,7 +177,7 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">加载中...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     }>

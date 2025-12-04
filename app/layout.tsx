@@ -3,6 +3,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { generateMetadata as generateSiteMetadata } from "@/lib/metadata"
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider"
+import { Sidebar } from "@/components/layout/Sidebar"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -25,7 +26,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>{children}</SessionProvider>
+          <SessionProvider>
+            <div className="flex min-h-screen bg-background flex-col md:flex-row">
+              <Sidebar />
+              <main className="flex-1 md:pl-64 flex flex-col min-h-screen transition-all duration-300 ease-in-out w-full">
+                {children}
+              </main>
+            </div>
+          </SessionProvider>
           <AnalyticsProvider />
         </ThemeProvider>
       </body>

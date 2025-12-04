@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { CorporateClapback } from "@/components/tools/CorporateClapback"
 import { prisma } from "@/lib/prisma"
@@ -18,9 +17,8 @@ export default async function CorporateClapbackPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <main className="flex-1 flex flex-col">
+    <>
+      <div className="flex-1 flex flex-col">
         {/* 顶部信息栏 */}
         <div className="container py-8 pb-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
@@ -52,8 +50,8 @@ export default async function CorporateClapbackPage() {
           toolDescription={tool.description}
           toolIcon={tool.icon}
         />
-      </main>
+      </div>
       <Footer />
-    </div>
+    </>
   )
 }

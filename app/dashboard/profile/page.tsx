@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react"
 export default function ProfilePage() {
   const { data: session, update } = useSession()
   const [loading, setLoading] = useState(false)
+  const [verifying, setVerifying] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   const [formData, setFormData] = useState({
@@ -65,6 +66,35 @@ export default function ProfilePage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleVerifyEmail = async () => {
+    if (!session?.user?.email) return
+
+    setVerifying(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: session.user.email }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage({ type: "success", text: "验证邮件已发送，请检查您的收件箱！" })
+      } else {
+        setMessage({ type: "error", text: data.error || "发送验证邮件失败" })
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "发送失败，请稍后重试" })
+    } finally {
+      setVerifying(false)
     }
   }
 
@@ -140,11 +170,31 @@ export default function ProfilePage() {
               <span className="text-muted-foreground">Role</span>
               <span className="font-medium">{session?.user?.role === "ADMIN" ? "Administrator" : "User"}</span>
             </div>
-            <div className="flex justify-between py-2 border-b">
+            <div className="flex justify-between items-center py-2 border-b">
               <span className="text-muted-foreground">Email Verification</span>
-              <span className={session?.user?.emailVerified ? "text-green-600" : "text-yellow-600"}>
-                {session?.user?.emailVerified ? "Verified" : "Not Verified"}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={session?.user?.emailVerified ? "text-green-600" : "text-yellow-600"}>
+                  {session?.user?.emailVerified ? "Verified" : "Not Verified"}
+                </span>
+                {!session?.user?.emailVerified && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleVerifyEmail}
+                    disabled={verifying}
+                    className="h-8"
+                  >
+                    {verifying ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      "Verify Email"
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="flex justify-between py-2">
               <span className="text-muted-foreground">Registration Date</span>

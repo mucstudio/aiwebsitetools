@@ -56,6 +56,16 @@ export async function POST(request: Request) {
       },
     })
 
+    // Check if email verification is required
+    const { getSecuritySettings } = await import("@/lib/settings")
+    const { sendEmailVerification } = await import("@/lib/email-verification")
+    const securitySettings = await getSecuritySettings()
+
+    if (securitySettings.requireEmailVerification) {
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+      await sendEmailVerification(email, baseUrl)
+    }
+
     // Return success response (without password)
     return NextResponse.json(
       {

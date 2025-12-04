@@ -154,33 +154,27 @@ export default function SecurityPage() {
               <div className="space-y-2">
                 <Label htmlFor="currentPassword">Current Password</Label>
                 <PasswordInput
-                  id="currentPassword"
                   value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  onChange={(value) => setPasswordData({ ...passwordData, currentPassword: value })}
                   placeholder="Enter your current password"
-                  required
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
                 <PasswordInput
-                  id="newPassword"
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  onChange={(value) => setPasswordData({ ...passwordData, newPassword: value })}
                   placeholder="Enter new password (at least 8 characters)"
-                  required
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
                 <PasswordInput
-                  id="confirmPassword"
                   value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  onChange={(value) => setPasswordData({ ...passwordData, confirmPassword: value })}
                   placeholder="Re-enter your new password"
-                  required
                 />
               </div>
 
@@ -219,14 +213,14 @@ export default function SecurityPage() {
                 <div className="flex items-center gap-2">
                   <Label htmlFor="twoFactor">Two-Factor Authentication</Label>
                   <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 border border-blue-200">
-                    即将推出
+                    Coming Soon
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Add an extra layer of security to your account
                 </p>
                 <p className="text-xs text-amber-600 mt-1">
-                  完整的双因素认证功能正在开发中，包括 TOTP 验证、二维码扫描和备用恢复代码
+                  Full 2FA functionality is under development, including TOTP verification, QR code scanning, and backup recovery codes
                 </p>
               </div>
               <Switch

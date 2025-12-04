@@ -75,7 +75,11 @@ export default function LoginPage() {
       })
 
       if (result?.error) {
-        setError("Invalid email or password")
+        if (result.error === "请先验证您的邮箱地址") {
+          setError("Please verify your email address before logging in.")
+        } else {
+          setError("Invalid email or password")
+        }
         setLoading(false)
         return
       }

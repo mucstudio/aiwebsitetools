@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const menuItems = await prisma.menuItem.findMany({
+      where: { parentId: null },
       orderBy: { order: "asc" },
       include: {
         children: {

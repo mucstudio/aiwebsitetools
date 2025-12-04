@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation"
-import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -55,9 +54,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const hasAccess = !requiresSubscription || (session?.user && session.user.role !== "USER")
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <main className="flex-1">
+    <>
+      <div className="flex-1">
         <section className="container py-12">
           {/* 工具头部 */}
           <div className="mb-8">
@@ -102,19 +100,19 @@ export default async function ToolPage({ params }: ToolPageProps) {
           {!hasAccess ? (
             <Card>
               <CardHeader>
-                <CardTitle>需要订阅</CardTitle>
+                <CardTitle>Subscription Required</CardTitle>
                 <CardDescription>
-                  此工具仅对付费订阅用户开放
+                  This tool is only available to paid subscribers
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">
-                    升级到 Pro 计划以使用此工具和所有高级功能
+                    Upgrade to Pro plan to access this tool and all premium features
                   </p>
                   <a href="/pricing">
                     <button className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-                      查看订阅计划
+                      View Pricing Plans
                     </button>
                   </a>
                 </div>
@@ -129,8 +127,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
             />
           )}
         </section>
-      </main>
+      </div>
       <Footer />
-    </div>
+    </>
   )
 }

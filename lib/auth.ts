@@ -45,7 +45,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     TwitterProvider({
       clientId: process.env.TWITTER_CLIENT_ID || "",
       clientSecret: process.env.TWITTER_CLIENT_SECRET || "",
-      version: "2.0",
     }),
     // Discord OAuth
     DiscordProvider({
@@ -75,7 +74,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const loginCheck = await checkLoginAttempt(email, ipAddress)
         if (!loginCheck.allowed) {
           await recordLoginAttempt(email, ipAddress, false)
-          throw new Error(loginCheck.error || "登录失败次数过多")
+          throw new Error(loginCheck.error || "Too many login attempts")
         }
 
         const user = await prisma.user.findUnique({
@@ -97,7 +96,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // 检查邮箱验证要求
         const settings = await getSecuritySettings()
         if (settings.requireEmailVerification && !user.emailVerified) {
-          throw new Error("请先验证您的邮箱地址")
+          throw new Error("Please verify your email address first")
         }
 
         // 记录成功的登录
@@ -108,6 +107,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           role: user.role,
+          emailVerified: user.emailVerified,
+          createdAt: user.createdAt,
         }
       },
     }),
@@ -120,12 +121,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.email = token.email as string
         session.user.image = token.picture
         session.user.role = token.role as Role
+        session.user.emailVerified = token.emailVerified as Date | null
+        session.user.createdAt = token.createdAt as Date
       }
 
       // 动态设置会话超时
       try {
         const settings = await getSecuritySettings()
         const maxAge = settings.sessionTimeout * 24 * 60 * 60 // 转换为秒
+        // @ts-ignore
         session.expires = new Date(Date.now() + maxAge * 1000).toISOString()
       } catch (error) {
         console.error("Failed to get session timeout:", error)
@@ -137,6 +141,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id
         token.role = user.role
+        token.emailVerified = user.emailVerified
+        token.createdAt = user.createdAt
         return token
       }
 
@@ -156,6 +162,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: dbUser.email,
         picture: dbUser.image,
         role: dbUser.role,
+        emailVerified: dbUser.emailVerified,
+        createdAt: dbUser.createdAt,
       }
     },
   },

@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Loader2, Plus, Pencil, Trash2, GripVertical, ArrowUp, ArrowDown } from "lucide-react"
+import { Loader2, Plus, Pencil, Trash2, GripVertical, ArrowUp, ArrowDown, CornerDownRight } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface MenuItem {
   id: string
@@ -34,6 +35,7 @@ export default function MenuManagementPage() {
     order: 0,
     isActive: true,
     openInNewTab: false,
+    parentId: "null" as string,
   })
 
   useEffect(() => {
@@ -63,10 +65,15 @@ export default function MenuManagementPage() {
         ? `/api/admin/menus/${editingItem.id}`
         : "/api/admin/menus"
 
+      const payload = {
+        ...formData,
+        parentId: formData.parentId === "null" ? null : formData.parentId
+      }
+
       const response = await fetch(url, {
         method: editingItem ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
 
       if (response.ok) {
@@ -113,7 +120,14 @@ export default function MenuManagementPage() {
       order: item.order,
       isActive: item.isActive,
       openInNewTab: item.openInNewTab,
+      parentId: item.parentId || "null",
     })
+    setDialogOpen(true)
+  }
+
+  const handleAddSubmenu = (parentId: string) => {
+    resetForm()
+    setFormData(prev => ({ ...prev, parentId }))
     setDialogOpen(true)
   }
 
@@ -173,9 +187,10 @@ export default function MenuManagementPage() {
       label: "",
       url: "",
       icon: "",
-      order: menuItems.length,
+      order: 0,
       isActive: true,
       openInNewTab: false,
+      parentId: "null",
     })
   }
 
@@ -214,6 +229,28 @@ export default function MenuManagementPage() {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="parentId">父级菜单</Label>
+                <Select
+                  value={formData.parentId}
+                  onValueChange={(value) => setFormData({ ...formData, parentId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择父级菜单（可选）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="null">无 (顶级菜单)</SelectItem>
+                    {menuItems
+                      .filter(i => i.id !== editingItem?.id)
+                      .map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="label">菜单标签 *</Label>
                 <Input
@@ -318,64 +355,119 @@ export default function MenuManagementPage() {
           ) : (
             <div className="space-y-2">
               {menuItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
+                <div key={item.id} className="space-y-2">
+                  <div
+                    className="flex items-center gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors bg-card"
+                  >
+                    <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
 
-                  {item.icon && <span className="text-xl">{item.icon}</span>}
+                    {item.icon && <span className="text-xl">{item.icon}</span>}
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{item.label}</span>
-                      {!item.isActive && (
-                        <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-600 rounded">
-                          已禁用
-                        </span>
-                      )}
-                      {item.openInNewTab && (
-                        <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
-                          新标签页
-                        </span>
-                      )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{item.label}</span>
+                        {!item.isActive && (
+                          <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-600 rounded">
+                            已禁用
+                          </span>
+                        )}
+                        {item.openInNewTab && (
+                          <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded">
+                            新标签页
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{item.url}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{item.url}</p>
+
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleAddSubmenu(item.id)}
+                        title="添加子菜单"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMoveUp(item, index)}
+                        disabled={index === 0}
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMoveDown(item, index)}
+                        disabled={index === menuItems.length - 1}
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(item)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(item.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleMoveUp(item, index)}
-                      disabled={index === 0}
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleMoveDown(item, index)}
-                      disabled={index === menuItems.length - 1}
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(item)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {/* Submenus */}
+                  {item.children && item.children.length > 0 && (
+                    <div className="ml-8 space-y-2 border-l-2 pl-4 border-muted">
+                      {item.children.map((child, childIndex) => (
+                        <div
+                          key={child.id}
+                          className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors bg-muted/20"
+                        >
+                          <CornerDownRight className="h-4 w-4 text-muted-foreground" />
+                          
+                          {child.icon && <span className="text-lg">{child.icon}</span>}
+
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{child.label}</span>
+                              {!child.isActive && (
+                                <span className="text-[10px] px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded">
+                                  已禁用
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">{child.url}</p>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(child)}
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(child.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

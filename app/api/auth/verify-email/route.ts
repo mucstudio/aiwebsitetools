@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
     if (!token) {
       return NextResponse.json(
-        { error: "验证令牌不能为空" },
+        { error: "Verification token is required" },
         { status: 400 }
       )
     }
@@ -17,19 +17,19 @@ export async function POST(request: Request) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: result.error || "验证失败" },
+        { error: result.error || "Verification failed" },
         { status: 400 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      message: "邮箱验证成功",
+      message: "Email verified successfully",
     })
   } catch (error: any) {
     console.error("Verify email error:", error)
     return NextResponse.json(
-      { error: "验证失败，请重试" },
+      { error: "Verification failed, please try again" },
       { status: 500 }
     )
   }

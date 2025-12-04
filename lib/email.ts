@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer"
 import { Resend } from "resend"
-import { getEmailSettings } from "@/lib/settings"
+import { getEmailSettings, getSiteInfo } from "@/lib/settings"
 
 /**
  * 邮件发送接口
@@ -60,6 +60,12 @@ async function sendEmailViaSMTP(
       user: settings.smtpUser,
       pass: settings.smtpPassword,
     },
+    tls: {
+      rejectUnauthorized: false, // 允许自签名证书
+    },
+    connectionTimeout: 10000, // 10秒连接超时
+    greetingTimeout: 10000,   // 10秒问候超时
+    socketTimeout: 10000,     // 10秒套接字超时
   })
 
   try {
@@ -138,21 +144,22 @@ async function sendEmailViaSendGrid(
  * 发送欢迎邮件
  */
 export async function sendWelcomeEmail(to: string, name: string): Promise<{ success: boolean; error?: string }> {
+  const siteInfo = await getSiteInfo()
   return await sendEmail({
     to,
-    subject: "欢迎使用 AI Website Tools",
+    subject: `Welcome to ${siteInfo.siteName}`,
     html: `
-      <h1>欢迎，${name}！</h1>
-      <p>感谢您注册 AI Website Tools。</p>
-      <p>我们提供各种强大的在线工具，帮助您提高工作效率。</p>
-      <p>立即开始探索我们的工具吧！</p>
+      <h1>Welcome, ${name}!</h1>
+      <p>Thank you for registering with ${siteInfo.siteName}.</p>
+      <p>${siteInfo.siteDescription}</p>
+      <p>Start exploring our tools now!</p>
     `,
-    text: `欢迎，${name}！感谢您注册 AI Website Tools。`,
+    text: `Welcome, ${name}! Thank you for registering with ${siteInfo.siteName}.`,
   })
 }
 
 /**
- * 发送密码重置邮件
+ * Send password reset email
  */
 export async function sendPasswordResetEmail(
   to: string,
@@ -160,20 +167,20 @@ export async function sendPasswordResetEmail(
 ): Promise<{ success: boolean; error?: string }> {
   return await sendEmail({
     to,
-    subject: "重置您的密码",
+    subject: "Reset Your Password",
     html: `
-      <h1>重置密码</h1>
-      <p>您请求重置密码。请点击下面的链接重置您的密码：</p>
-      <p><a href="${resetUrl}">重置密码</a></p>
-      <p>如果您没有请求重置密码，请忽略此邮件。</p>
-      <p>此链接将在 1 小时后过期。</p>
+      <h1>Reset Password</h1>
+      <p>You requested to reset your password. Please click the link below to reset your password:</p>
+      <p><a href="${resetUrl}">Reset Password</a></p>
+      <p>If you did not request a password reset, please ignore this email.</p>
+      <p>This link will expire in 1 hour.</p>
     `,
-    text: `重置密码：${resetUrl}`,
+    text: `Reset Password: ${resetUrl}`,
   })
 }
 
 /**
- * 发送邮箱验证邮件
+ * Send email verification email
  */
 export async function sendVerificationEmail(
   to: string,
@@ -181,29 +188,30 @@ export async function sendVerificationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   return await sendEmail({
     to,
-    subject: "验证您的邮箱",
+    subject: "Verify Your Email",
     html: `
-      <h1>验证邮箱</h1>
-      <p>请点击下面的链接验证您的邮箱地址：</p>
-      <p><a href="${verificationUrl}">验证邮箱</a></p>
-      <p>如果您没有注册账号，请忽略此邮件。</p>
+      <h1>Verify Email</h1>
+      <p>Please click the link below to verify your email address:</p>
+      <p><a href="${verificationUrl}">Verify Email</a></p>
+      <p>If you did not register an account, please ignore this email.</p>
     `,
-    text: `验证邮箱：${verificationUrl}`,
+    text: `Verify Email: ${verificationUrl}`,
   })
 }
 
 /**
- * 测试邮件配置
+ * Test email configuration
  */
 export async function testEmailConnection(testEmail: string): Promise<{ success: boolean; error?: string }> {
+  const siteInfo = await getSiteInfo()
   return await sendEmail({
     to: testEmail,
-    subject: "测试邮件 - AI Website Tools",
+    subject: `Test Email - ${siteInfo.siteName}`,
     html: `
-      <h1>测试邮件</h1>
-      <p>这是一封测试邮件，用于验证邮件配置是否正确。</p>
-      <p>如果您收到此邮件，说明邮件服务配置成功！</p>
+      <h1>Test Email</h1>
+      <p>This is a test email to verify that the email configuration is correct.</p>
+      <p>If you received this email, the email service is configured successfully!</p>
     `,
-    text: "这是一封测试邮件，用于验证邮件配置是否正确。",
+    text: "This is a test email to verify that the email configuration is correct.",
   })
 }

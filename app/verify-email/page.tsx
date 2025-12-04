@@ -17,7 +17,7 @@ function VerifyEmailContent() {
   useEffect(() => {
     if (!token) {
       setStatus("error")
-      setMessage("无效的验证链接")
+      setMessage("Invalid verification link")
       return
     }
 
@@ -38,19 +38,19 @@ function VerifyEmailContent() {
 
       if (response.ok) {
         setStatus("success")
-        setMessage(data.message || "邮箱验证成功！")
+        setMessage(data.message || "Email verified successfully!")
 
-        // 3秒后跳转到登录页
+        // Redirect to login page after 3 seconds
         setTimeout(() => {
           router.push("/login")
         }, 3000)
       } else {
         setStatus("error")
-        setMessage(data.error || "验证失败，请重试")
+        setMessage(data.error || "Verification failed, please try again")
       }
     } catch (error) {
       setStatus("error")
-      setMessage("验证失败，请重试")
+      setMessage("Verification failed, please try again")
     }
   }
 
@@ -62,9 +62,9 @@ function VerifyEmailContent() {
             {status === "loading" && (
               <>
                 <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
-                <h1 className="text-2xl font-bold mb-2">验证中...</h1>
+                <h1 className="text-2xl font-bold mb-2">Verifying...</h1>
                 <p className="text-gray-600 dark:text-gray-400">
-                  正在验证您的邮箱地址
+                  Verifying your email address
                 </p>
               </>
             )}
@@ -72,12 +72,12 @@ function VerifyEmailContent() {
             {status === "success" && (
               <>
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                <h1 className="text-2xl font-bold mb-2 text-green-600">验证成功！</h1>
+                <h1 className="text-2xl font-bold mb-2 text-green-600">Verification Successful!</h1>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   {message}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-500">
-                  即将跳转到登录页面...
+                  Redirecting to login page...
                 </p>
               </>
             )}
@@ -85,19 +85,19 @@ function VerifyEmailContent() {
             {status === "error" && (
               <>
                 <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                <h1 className="text-2xl font-bold mb-2 text-red-600">验证失败</h1>
+                <h1 className="text-2xl font-bold mb-2 text-red-600">Verification Failed</h1>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
                   {message}
                 </p>
                 <div className="space-y-3">
                   <Link href="/login">
                     <Button className="w-full">
-                      返回登录
+                      Back to Login
                     </Button>
                   </Link>
                   <Link href="/">
                     <Button variant="outline" className="w-full">
-                      返回首页
+                      Back to Home
                     </Button>
                   </Link>
                 </div>

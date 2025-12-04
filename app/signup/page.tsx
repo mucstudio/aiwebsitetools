@@ -93,7 +93,7 @@ export default function SignupPage() {
       }
 
       // Registration successful, redirect to login page
-      alert("Registration successful! Please log in")
+      alert("Registration successful! Please check your email to verify your account before logging in.")
       router.push("/login")
     } catch (err) {
       setError("Network error, please try again later")

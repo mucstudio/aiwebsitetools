@@ -110,7 +110,7 @@ export async function GET(
         usageCount: true,
         likeCount: true,
       },
-    })
+    }) as { id: string; usageCount: number; likeCount: number } | null
 
     if (!tool) {
       return NextResponse.json({ error: "Tool not found" }, { status: 404 })

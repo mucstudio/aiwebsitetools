@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { 
   ArrowRight, 
@@ -25,9 +24,8 @@ export const dynamic = 'force-dynamic'
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
-      <main className="flex-1">
+    <>
+      <div className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-20 pb-32 md:pt-32 md:pb-48">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -347,9 +345,9 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-      </main>
+      </div>
       <Footer />
-    </div>
+    </>
   )
 }
 

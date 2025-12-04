@@ -20,17 +20,17 @@ export default async function MaintenancePage() {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-          网站维护中
+          Under Maintenance
         </h1>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
-            {features.maintenanceMessage || "我们正在进行系统维护和升级，以提供更好的服务。"}
+            {features.maintenanceMessage || "We are currently performing system maintenance and upgrades to provide better service."}
           </p>
 
           <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              如有紧急问题，请联系我们：
+              For urgent issues, please contact us:
             </p>
             <a
               href={`mailto:${siteInfo.supportEmail}`}
@@ -47,7 +47,7 @@ export default async function MaintenancePage() {
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
           </div>
-          <span>预计很快恢复</span>
+          <span>We'll be back soon</span>
         </div>
 
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-8">

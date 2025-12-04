@@ -17,15 +17,16 @@ interface ToolCardProps {
     slug: string
     description: string
     isPremium: boolean
-    usageCount: number
-    likeCount: number
+    usageCount?: number
+    likeCount?: number
+    [key: string]: any
   }
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
   const { data: session } = useSession()
-  const [likes, setLikes] = useState(tool.likeCount)
-  const [views, setViews] = useState(tool.usageCount)
+  const [likes, setLikes] = useState(tool.likeCount || 0)
+  const [views, setViews] = useState(tool.usageCount || 0)
   const [hasLiked, setHasLiked] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [isLiking, setIsLiking] = useState(false)

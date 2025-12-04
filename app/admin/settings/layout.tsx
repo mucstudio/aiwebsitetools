@@ -62,6 +62,12 @@ const settingsNav = [
     icon: Menu,
     description: "自定义导航菜单",
   },
+  {
+    title: "社交连接",
+    href: "/admin/settings/connect",
+    icon: Globe,
+    description: "社交媒体链接配置",
+  },
 ]
 
 export default function SettingsLayout({
