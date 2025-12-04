@@ -145,6 +145,10 @@ export default function AdminToolsPage() {
               <span>组件: </span>
               <code className="text-xs bg-gray-100 px-1 rounded">{tool.componentType}</code>
             </div>
+            <div className="truncate">
+              <span>ID: </span>
+              <code className="text-xs bg-gray-100 px-1 rounded select-all">{tool.id}</code>
+            </div>
           </div>
         </div>
       </CardHeader>
