@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useToolAction } from '@/hooks/useToolAction'
+import { ShareResult } from './ShareResult'
 
 interface CorporateClapbackProps {
   toolName?: string
@@ -9,12 +10,13 @@ interface CorporateClapbackProps {
   toolIcon?: string | null
 }
 
-export function CorporateClapback({ 
-  toolName, 
+export function CorporateClapback({
+  toolName,
   toolDescription,
   toolIcon
 }: CorporateClapbackProps) {
   const [text, setText] = useState('')
+  const resultRef = useRef<HTMLDivElement>(null)
   const [mode, setMode] = useState<'rage' | 'decode'>('rage')
   const [aggressionLevel, setAggressionLevel] = useState(2)
   const [btnText, setBtnText] = useState('TRANSLATE >>')
@@ -152,17 +154,15 @@ export function CorporateClapback({
               <div className="flex gap-1 mb-[-2px] relative z-10 px-2">
                 <button
                   onClick={() => setMode('rage')}
-                  className={`win98-btn px-4 py-2 relative top-[2px] ${
-                    mode === 'rage' ? 'font-bold z-20 border-b-0 bg-[#c0c0c0]' : 'text-gray-600'
-                  }`}
+                  className={`win98-btn px-4 py-2 relative top-[2px] ${mode === 'rage' ? 'font-bold z-20 border-b-0 bg-[#c0c0c0]' : 'text-gray-600'
+                    }`}
                 >
                   Rage -&gt; Pro
                 </button>
                 <button
                   onClick={() => setMode('decode')}
-                  className={`win98-btn px-4 py-2 relative top-[2px] ${
-                    mode === 'decode' ? 'font-bold z-20 border-b-0 bg-[#c0c0c0]' : 'text-gray-600'
-                  }`}
+                  className={`win98-btn px-4 py-2 relative top-[2px] ${mode === 'decode' ? 'font-bold z-20 border-b-0 bg-[#c0c0c0]' : 'text-gray-600'
+                    }`}
                 >
                   BS Decoder
                 </button>
@@ -258,16 +258,18 @@ export function CorporateClapback({
                       <span>Message_Preview.txt</span>
                       <button className="win98-btn w-4 h-4 flex items-center justify-center text-[10px] leading-none text-black">×</button>
                     </div>
-                    <div className="bg-white border-2 border-black border-r-gray-200 border-b-gray-200 p-4 text-black text-xl font-medium leading-relaxed relative">
+                    <div ref={resultRef} className="bg-white border-2 border-black border-r-gray-200 border-b-gray-200 p-4 text-black text-xl font-medium leading-relaxed relative">
                       <div>{result}</div>
-                      <div className="mt-4 flex justify-end">
-                        <button
-                          onClick={copyToClipboard}
-                          className="win98-btn px-3 py-1 text-sm flex gap-1 items-center"
-                        >
-                          <span>📋</span> Copy to Clipboard
-                        </button>
-                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <ShareResult
+                        contentRef={resultRef}
+                        title="corporate-clapback"
+                        shareText={`Corporate Clapback: ${result.substring(0, 100)}...`}
+                        watermark="@InspoaiBox.com"
+                        className="bg-[#c0c0c0] border-black border-dashed"
+                      />
                     </div>
                   </div>
                 )}

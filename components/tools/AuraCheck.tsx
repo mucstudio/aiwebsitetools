@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useToolAction } from '@/hooks/useToolAction'
 import { marked } from 'marked'
+import { ShareResult } from './ShareResult'
 
 interface AuraCheckProps {
   toolId: string
@@ -17,6 +18,7 @@ interface AuraCheckResult {
 
 export default function AuraCheck({ toolId }: AuraCheckProps) {
   const [text, setText] = useState('')
+  const resultRef = useRef<HTMLDivElement>(null)
   const [showOutput, setShowOutput] = useState(false)
   const [btnText, setBtnText] = useState('Calculate Aura')
 
@@ -179,21 +181,30 @@ export default function AuraCheck({ toolId }: AuraCheckProps) {
 
             {showOutput && result && (
               <div className="mt-12 text-center">
-                <div className="mb-2 text-xs uppercase tracking-[0.3em] text-white/50">Total Impact</div>
+                <div ref={resultRef} className="p-6 rounded-2xl bg-black/20 border border-white/5">
+                  <div className="mb-2 text-xs uppercase tracking-[0.3em] text-white/50">Total Impact</div>
 
-                <div className={`text-6xl md:text-8xl aura-serif italic mb-6 animate-score drop-shadow-2xl ${
-                  result.score.includes('-') ? 'text-red-400' : 'text-gradient'
-                }`}>
-                  {result.score}
+                  <div className={`text-6xl md:text-8xl aura-serif italic mb-6 animate-score drop-shadow-2xl ${result.score.includes('-') ? 'text-red-400' : 'text-gradient'
+                    }`}>
+                    {result.score}
+                  </div>
+
+                  <div className="h-px w-24 bg-white/20 mx-auto mb-6"></div>
+
+                  <div
+                    className="prose prose-invert prose-p:text-xl prose-p:font-light prose-p:leading-relaxed mx-auto"
+                    dangerouslySetInnerHTML={{
+                      __html: marked.parse(result.body) as string
+                    }}
+                  />
                 </div>
 
-                <div className="h-px w-24 bg-white/20 mx-auto mb-6"></div>
-
-                <div
-                  className="prose prose-invert prose-p:text-xl prose-p:font-light prose-p:leading-relaxed mx-auto"
-                  dangerouslySetInnerHTML={{
-                    __html: marked.parse(result.body) as string
-                  }}
+                <ShareResult
+                  contentRef={resultRef}
+                  title="aura-check-result"
+                  shareText={`My Aura Score: ${result.score}\n\n${result.body.substring(0, 100)}...`}
+                  watermark="@InspoaiBox.com"
+                  className="bg-transparent border-white/10 mt-8"
                 />
 
                 <div className="mt-8">

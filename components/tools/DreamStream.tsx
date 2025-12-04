@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useToolAction } from '@/hooks/useToolAction'
 import { marked } from 'marked'
+import { ShareResult } from './ShareResult'
 
 interface DreamStreamProps {
   toolId: string
@@ -13,6 +14,7 @@ type InterpretationMode = 'mystical' | 'psych' | 'unhinged'
 
 export default function DreamStream({ toolId }: DreamStreamProps) {
   const [text, setText] = useState('')
+  const resultRef = useRef<HTMLDivElement>(null)
   const [mode, setMode] = useState<InterpretationMode>('mystical')
   const [showOutput, setShowOutput] = useState(false)
   const [btnText, setBtnText] = useState('Decode Dream')
@@ -39,7 +41,7 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
 
     try {
       // Generate lucky numbers
-      const nums = Array.from({length: 5}, () => Math.floor(Math.random() * 60) + 1).join(' - ')
+      const nums = Array.from({ length: 5 }, () => Math.floor(Math.random() * 60) + 1).join(' - ')
       setLuckyNumbers(nums + " - " + (Math.floor(Math.random() * 10) + 1))
 
       await execute({ dream: trimmed, mode })
@@ -268,22 +270,30 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
                   <div className="h-px bg-white/20 w-16"></div>
                 </div>
 
-                <div className="bg-black/20 rounded-2xl p-6 border border-white/10 shadow-inner">
+                <div ref={resultRef} className="bg-black/20 rounded-2xl p-6 border border-white/10 shadow-inner relative">
                   <div
                     className="prose prose-invert prose-p:text-fuchsia-50 prose-strong:text-fuchsia-300 max-w-none leading-relaxed"
                     dangerouslySetInnerHTML={{
                       __html: marked.parse(result) as string
                     }}
                   />
-                </div>
 
-                {/* 幸运数字 */}
-                <div className="mt-6 flex flex-col items-center">
-                  <span className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Cosmic Lucky Numbers</span>
-                  <div className="flex gap-3 font-mono text-lg font-bold text-fuchsia-300">
-                    {luckyNumbers}
+                  {/* 幸运数字 - Moved inside for screenshot */}
+                  <div className="mt-6 flex flex-col items-center border-t border-white/10 pt-4">
+                    <span className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Cosmic Lucky Numbers</span>
+                    <div className="flex gap-3 font-mono text-lg font-bold text-fuchsia-300">
+                      {luckyNumbers}
+                    </div>
                   </div>
                 </div>
+
+                <ShareResult
+                  contentRef={resultRef}
+                  title="dream-interpretation"
+                  shareText={`I just decoded my dream with Dream Stream! 🌙✨\n\nLucky Numbers: ${luckyNumbers}`}
+                  watermark="@InspoaiBox.com"
+                  className="bg-black/20 border-white/10"
+                />
 
                 <div className="mt-8 text-center">
                   <button
