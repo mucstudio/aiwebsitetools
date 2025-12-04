@@ -13,6 +13,8 @@ interface GeneralSettings {
   contact_email: string
   support_email: string
   company_name: string
+  privacy_policy: string
+  terms_of_service: string
   usage_limits: {
     guest: {
       dailyLimit: number
@@ -33,6 +35,8 @@ export default function GeneralSettingsPage() {
     contact_email: "",
     support_email: "",
     company_name: "",
+    privacy_policy: "",
+    terms_of_service: "",
     usage_limits: {
       guest: { dailyLimit: 10 },
       user: { dailyLimit: 50 }
@@ -58,6 +62,43 @@ export default function GeneralSettingsPage() {
           contact_email: data.settings.contact_email || "hello@aiwebsitetools.com",
           support_email: data.settings.support_email || "support@aiwebsitetools.com",
           company_name: data.settings.company_name || "AI Website Tools Inc.",
+          privacy_policy: data.settings.privacy_policy || `# Privacy Policy
+
+Last updated: ${new Date().toLocaleDateString()}
+
+## 1. Introduction
+Welcome to AI Website Tools. We respect your privacy and are committed to protecting your personal data.
+
+## 2. Data We Collect
+We collect data to provide better services to all our users.
+- **Personal Information**: Name, email address.
+- **Usage Data**: How you use our tools.
+
+## 3. How We Use Your Data
+- To provide and maintain our Service.
+- To notify you about changes to our Service.
+- To provide customer support.
+
+## 4. Contact Us
+If you have any questions about this Privacy Policy, please contact us at hello@aiwebsitetools.com.`,
+          terms_of_service: data.settings.terms_of_service || `# Terms of Service
+
+Last updated: ${new Date().toLocaleDateString()}
+
+## 1. Acceptance of Terms
+By accessing or using our Service, you agree to be bound by these Terms.
+
+## 2. Use of Service
+You agree to use the Service only for lawful purposes and in accordance with these Terms.
+
+## 3. Accounts
+When you create an account with us, you must provide us information that is accurate, complete, and current at all times.
+
+## 4. Intellectual Property
+The Service and its original content, features, and functionality are and will remain the exclusive property of AI Website Tools.
+
+## 5. Contact Us
+If you have any questions about these Terms, please contact us at hello@aiwebsitetools.com.`,
           usage_limits: data.settings.usage_limits || {
             guest: { dailyLimit: 10 },
             user: { dailyLimit: 50 }
@@ -294,6 +335,47 @@ export default function GeneralSettingsPage() {
               <li>• 设置为 <code className="px-1 bg-gray-200 rounded">-1</code> 表示无限制使用</li>
               <li>• 使用次数每天 UTC 0:00 自动重置</li>
             </ul>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 法律条款 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>法律条款</CardTitle>
+          <CardDescription>编辑隐私政策和服务条款内容 (支持 Markdown)</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              隐私政策 (Privacy Policy)
+            </label>
+            <textarea
+              value={settings.privacy_policy}
+              onChange={(e) => handleChange("privacy_policy", e.target.value)}
+              rows={10}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+              placeholder="# Privacy Policy..."
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              显示在 <Link href="/privacy" className="underline hover:text-primary" target="_blank">/privacy</Link> 页面
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              服务条款 (Terms of Service)
+            </label>
+            <textarea
+              value={settings.terms_of_service}
+              onChange={(e) => handleChange("terms_of_service", e.target.value)}
+              rows={10}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+              placeholder="# Terms of Service..."
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              显示在 <Link href="/terms" className="underline hover:text-primary" target="_blank">/terms</Link> 页面
+            </p>
           </div>
         </CardContent>
       </Card>
