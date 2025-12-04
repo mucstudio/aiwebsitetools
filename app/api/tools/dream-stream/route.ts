@@ -37,10 +37,7 @@ Keep it entertaining, roughly 100-150 words. Do NOT be overly medical or serious
 User's dream: ${dream}`
 
   // 调用 AI（自动处理 token 统计和成本计算）
-  const aiResult = await callAI(prompt, 'cmipzjrc60001zlcffnucc92v', {
-    temperature: 0.9,
-    maxTokens: 2000
-  })
+  const aiResult = await callAI(prompt, 'dream-stream')
 
   // 返回结构化结果
   return {
@@ -89,7 +86,7 @@ const validateDreamInput = (input: any) => {
 // ============================================
 
 export const POST = createToolHandler({
-  toolId: 'cmipzjrc60001zlcffnucc92v',
+  toolId: 'dream-stream',
   processor: dreamInterpreterProcessor,
   validateInput: validateDreamInput,
 })
