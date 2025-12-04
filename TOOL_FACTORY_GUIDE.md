@@ -314,3 +314,54 @@ const {
 - `app/api/tools/aura-check/route.ts` (后端逻辑)
 - `app/tools/corporate-clapback/page.tsx` (自定义页面模式示例)
 - `app/tools/[slug]/page.tsx` (通用页面渲染器)
+
+---
+
+## 📤 进阶：集成分享功能
+
+使用 `ShareResult` 组件，只需几行代码即可为工具添加**结果截图下载**和**社交分享**（支持 Native Share, Reddit, WhatsApp 等）。
+
+### 1. 引入组件
+
+```typescript
+import { useRef } from "react"
+import { ShareResult } from "@/components/tools/ShareResult"
+```
+
+### 2. 使用示例
+
+```typescript
+export default function YourTool({ result }: { result: string }) {
+  // 1. 创建 ref 指向结果容器
+  const resultRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <div>
+      {/* 2. 绑定 ref 到需要截图的区域 */}
+      <div ref={resultRef} className="p-6 bg-white rounded-xl border relative">
+        <h2 className="text-xl font-bold mb-4">Result</h2>
+        <div className="prose">{result}</div>
+      </div>
+
+      {/* 3. 添加 ShareResult 组件 */}
+      <ShareResult 
+        contentRef={resultRef}       // 必填：绑定 ref
+        title="my-tool-result"       // 选填：下载文件名
+        shareText={`Check out my result: ${result.substring(0, 50)}...`} // 选填：分享文案
+        watermark="@InspoaiBox.com"  // 选填：图片水印
+        className="mt-6"             // 选填：样式
+      />
+    </div>
+  )
+}
+```
+
+### 3. 核心参数
+
+| 参数 | 说明 |
+|---|---|
+| `contentRef` | 指向要截图的 DOM 元素 (必填) |
+| `watermark` | 下载图片时自动添加的底部水印文字 |
+| `shareText` | 社交分享时的预填文案 |
+
+> **提示**：`ShareResult` 会自动检测移动端环境，并优先展示原生分享按钮（调用系统分享菜单）。
