@@ -23,7 +23,7 @@ export default function AuraCheck({ toolId }: AuraCheckProps) {
   const [btnText, setBtnText] = useState('Calculate Aura')
 
   // 使用通用 Hook
-  const { execute, result, loading, error, remaining } = useToolAction<AuraCheckResult>('aura-check')
+  const { execute, result, loading, error, remaining } = useToolAction<AuraCheckResult>(toolId)
 
   const handleSubmit = async () => {
     const trimmed = text.trim()

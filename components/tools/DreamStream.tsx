@@ -20,7 +20,7 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
   const [btnText, setBtnText] = useState('Decode Dream')
   const [luckyNumbers, setLuckyNumbers] = useState('')
 
-  const { execute, result, loading, error, remaining } = useToolAction<string>('dream-stream')
+  const { execute, result, loading, error, remaining } = useToolAction<string>(toolId)
 
   const handleSubmit = async () => {
     const trimmed = text.trim()

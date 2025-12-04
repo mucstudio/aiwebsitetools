@@ -100,7 +100,7 @@ export function ToolRenderer({
       return <AuraCheck toolId={toolId} config={config} />
 
     case 'corporate-clapback':
-      return <CorporateClapback />
+      return <CorporateClapback toolId={toolId} />
 
     case 'dream-stream':
       return <DreamStream toolId={toolId} config={config} />
