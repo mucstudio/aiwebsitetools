@@ -133,6 +133,41 @@ export default function AdminUsersPage() {
     setEditForm({ name: "", email: "", role: "", emailVerified: false })
   }
 
+  // Logs functionality
+  const [viewingLogsUser, setViewingLogsUser] = useState<User | null>(null)
+  const [logs, setLogs] = useState<any[]>([])
+  const [logsLoading, setLogsLoading] = useState(false)
+  const [logsPage, setLogsPage] = useState(1)
+  const [logsTotalPages, setLogsTotalPages] = useState(1)
+
+  const loadLogs = async (userId: string, page = 1) => {
+    try {
+      setLogsLoading(true)
+      const response = await fetch(`/api/admin/users/${userId}/logs?page=${page}&limit=10`)
+      if (response.ok) {
+        const data = await response.json()
+        setLogs(data.logs)
+        setLogsTotalPages(data.pagination.totalPages)
+        setLogsPage(page)
+      }
+    } catch (error) {
+      console.error("Failed to load logs:", error)
+    } finally {
+      setLogsLoading(false)
+    }
+  }
+
+  const handleViewLogs = (user: User) => {
+    setViewingLogsUser(user)
+    setLogs([])
+    loadLogs(user.id, 1)
+  }
+
+  const closeLogs = () => {
+    setViewingLogsUser(null)
+    setLogs([])
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -205,11 +240,10 @@ export default function AdminUsersPage() {
                           <select
                             value={user.role}
                             onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                            className={`px-2 py-1 text-xs rounded-full border-0 ${
-                              user.role === "ADMIN"
+                            className={`px-2 py-1 text-xs rounded-full border-0 ${user.role === "ADMIN"
                                 ? "bg-purple-100 text-purple-700"
                                 : "bg-gray-100 text-gray-700"
-                            }`}
+                              }`}
                           >
                             <option value="USER">普通用户</option>
                             <option value="ADMIN">管理员</option>
@@ -217,13 +251,12 @@ export default function AdminUsersPage() {
                         </td>
                         <td className="py-3 px-4">
                           {user.subscription ? (
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              user.subscription.plan === "PRO"
+                            <span className={`px-2 py-1 text-xs rounded-full ${user.subscription.plan === "PRO"
                                 ? "bg-blue-100 text-blue-700"
                                 : user.subscription.plan === "ENTERPRISE"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-gray-100 text-gray-700"
-                            }`}>
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}>
                               {user.subscription.plan}
                             </span>
                           ) : (
@@ -236,11 +269,10 @@ export default function AdminUsersPage() {
                           {format(new Date(user.createdAt), "yyyy-MM-dd")}
                         </td>
                         <td className="py-3 px-4">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            user.emailVerified
+                          <span className={`px-2 py-1 text-xs rounded-full ${user.emailVerified
                               ? "bg-green-100 text-green-700"
                               : "bg-yellow-100 text-yellow-700"
-                          }`}>
+                            }`}>
                             {user.emailVerified ? "已验证" : "未验证"}
                           </span>
                         </td>
@@ -259,6 +291,13 @@ export default function AdminUsersPage() {
                               onClick={() => handleDeleteUser(user.id)}
                             >
                               删除
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewLogs(user)}
+                            >
+                              日志
                             </Button>
                           </div>
                         </td>
@@ -376,11 +415,10 @@ export default function AdminUsersPage() {
                     {editingUser.subscription && (
                       <div className="flex justify-between">
                         <span>订阅状态:</span>
-                        <span className={`font-medium ${
-                          editingUser.subscription.status === "active"
+                        <span className={`font-medium ${editingUser.subscription.status === "active"
                             ? "text-green-600"
                             : "text-gray-600"
-                        }`}>
+                          }`}>
                           {editingUser.subscription.status}
                         </span>
                       </div>
@@ -397,6 +435,96 @@ export default function AdminUsersPage() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* 用户日志对话框 */}
+      {viewingLogsUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-3xl max-h-[80vh] flex flex-col">
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>用户日志 - {viewingLogsUser.name || viewingLogsUser.email}</CardTitle>
+                <Button variant="ghost" size="sm" onClick={closeLogs}>
+                  关闭
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-auto">
+              {logsLoading ? (
+                <div className="text-center py-8">加载日志中...</div>
+              ) : logs.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  暂无日志记录
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2 px-3">时间</th>
+                          <th className="text-left py-2 px-3">动作</th>
+                          <th className="text-left py-2 px-3">资源</th>
+                          <th className="text-left py-2 px-3">详情</th>
+                          <th className="text-left py-2 px-3">IP</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {logs.map((log) => (
+                          <tr key={log.id} className="border-b hover:bg-muted/50">
+                            <td className="py-2 px-3 whitespace-nowrap">
+                              {format(new Date(log.createdAt), "MM-dd HH:mm:ss")}
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className={`px-2 py-0.5 rounded-full text-xs ${log.action === "LOGIN" ? "bg-green-100 text-green-700" :
+                                  log.action === "DELETE" ? "bg-red-100 text-red-700" :
+                                    log.action === "UPDATE" ? "bg-blue-100 text-blue-700" :
+                                      "bg-gray-100 text-gray-700"
+                                }`}>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3">{log.resource}</td>
+                            <td className="py-2 px-3 max-w-[200px] truncate" title={JSON.stringify(log.details)}>
+                              {log.details ? JSON.stringify(log.details) : "-"}
+                            </td>
+                            <td className="py-2 px-3 text-muted-foreground text-xs">
+                              {log.ipAddress}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {logsTotalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => loadLogs(viewingLogsUser.id, logsPage - 1)}
+                        disabled={logsPage === 1}
+                      >
+                        上一页
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        {logsPage} / {logsTotalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => loadLogs(viewingLogsUser.id, logsPage + 1)}
+                        disabled={logsPage === logsTotalPages}
+                      >
+                        下一页
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
