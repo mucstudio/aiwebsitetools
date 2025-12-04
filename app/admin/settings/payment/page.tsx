@@ -201,7 +201,6 @@ export default function PaymentSettingsPage() {
             </div>
           )}
 
-          <div className="pt-4 border-t">
           <div>
             <label className="block text-sm font-medium mb-2">
               Publishable Key <span className="text-red-500">*</span>
@@ -366,7 +365,6 @@ export default function PaymentSettingsPage() {
             </div>
           )}
 
-          <div className="pt-4 border-t">
           <div>
             <label className="block text-sm font-medium mb-2">
               Client ID <span className="text-red-500">*</span>
