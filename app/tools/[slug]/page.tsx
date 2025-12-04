@@ -128,7 +128,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
           )}
         </section>
       </div>
-      <Footer />
+      <Footer showLinks={false} />
     </>
   )
 }

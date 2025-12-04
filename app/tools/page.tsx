@@ -95,7 +95,7 @@ export default async function ToolsPage() {
           )}
         </section>
       </div>
-      <Footer />
+      <Footer showLinks={false} />
     </>
   )
 }

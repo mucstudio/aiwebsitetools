@@ -51,7 +51,7 @@ export default async function CorporateClapbackPage() {
           toolIcon={tool.icon}
         />
       </div>
-      <Footer />
+      <Footer showLinks={false} />
     </>
   )
 }

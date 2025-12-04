@@ -49,7 +49,7 @@ export default async function AuraCheckPage() {
           toolId={tool.id}
         />
       </div>
-      <Footer />
+      <Footer showLinks={false} />
     </>
   )
 }
