@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { unstable_noStore as noStore } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/auth-utils"
 import { UserMenu } from "./UserMenu"
@@ -11,6 +12,7 @@ import { SidebarNav } from "./SidebarNav"
 import { SidebarSearch } from "./SidebarSearch"
 
 export async function Sidebar() {
+  noStore()
   const [siteSettings, menuItems, session, connectSettings] = await Promise.all([
     prisma.siteSettings.findUnique({
       where: { key: 'site_name' }

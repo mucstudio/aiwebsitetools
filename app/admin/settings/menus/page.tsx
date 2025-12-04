@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Loader2, Plus, Pencil, Trash2, GripVertical, ArrowUp, ArrowDown, CornerDownRight } from "lucide-react"
+import * as LucideIcons from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -23,6 +25,7 @@ interface MenuItem {
 }
 
 export default function MenuManagementPage() {
+  const router = useRouter()
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -80,6 +83,7 @@ export default function MenuManagementPage() {
         await fetchMenuItems()
         setDialogOpen(false)
         resetForm()
+        router.refresh()
       } else {
         const data = await response.json()
         alert(data.error || "操作失败")
@@ -102,6 +106,7 @@ export default function MenuManagementPage() {
 
       if (response.ok) {
         await fetchMenuItems()
+        router.refresh()
       } else {
         alert("删除失败")
       }
@@ -151,6 +156,7 @@ export default function MenuManagementPage() {
       })
 
       await fetchMenuItems()
+      router.refresh()
     } catch (error) {
       console.error("Move error:", error)
     }
@@ -176,6 +182,7 @@ export default function MenuManagementPage() {
       })
 
       await fetchMenuItems()
+      router.refresh()
     } catch (error) {
       console.error("Move error:", error)
     }
@@ -361,7 +368,17 @@ export default function MenuManagementPage() {
                   >
                     <GripVertical className="h-5 w-5 text-muted-foreground cursor-move" />
 
-                    {item.icon && <span className="text-xl">{item.icon}</span>}
+                    {item.icon && (
+                      <div className="flex items-center justify-center w-8 h-8">
+                        {/* Try to render as Lucide icon first, fallback to text/emoji */}
+                        {(() => {
+                          // @ts-ignore
+                          const Icon = LucideIcons[item.icon]
+                          if (Icon) return <Icon className="h-5 w-5" />
+                          return <span className="text-xl">{item.icon}</span>
+                        })()}
+                      </div>
+                    )}
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -433,7 +450,17 @@ export default function MenuManagementPage() {
                         >
                           <CornerDownRight className="h-4 w-4 text-muted-foreground" />
                           
-                          {child.icon && <span className="text-lg">{child.icon}</span>}
+                          {child.icon && (
+                            <div className="flex items-center justify-center w-6 h-6 mr-2">
+                              {/* Try to render as Lucide icon first, fallback to text/emoji */}
+                              {(() => {
+                                // @ts-ignore
+                                const Icon = LucideIcons[child.icon]
+                                if (Icon) return <Icon className="h-4 w-4" />
+                                return <span className="text-lg">{child.icon}</span>
+                              })()}
+                            </div>
+                          )}
 
                           <div className="flex-1">
                             <div className="flex items-center gap-2">

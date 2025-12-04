@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Search, Loader2, Command } from "lucide-react"
+import * as LucideIcons from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -114,7 +115,15 @@ export function SidebarSearch() {
                 >
                   <div className="flex h-8 w-8 items-center justify-center rounded-md border bg-background text-muted-foreground group-hover:text-primary">
                     {tool.icon ? (
-                      <span className="text-lg">{tool.icon}</span>
+                      <div className="flex items-center justify-center w-full h-full">
+                        {/* Try to render as Lucide icon first, fallback to text/emoji */}
+                        {(() => {
+                          // @ts-ignore
+                          const Icon = LucideIcons[tool.icon]
+                          if (Icon) return <Icon className="h-5 w-5" />
+                          return <span className="text-lg">{tool.icon}</span>
+                        })()}
+                      </div>
                     ) : (
                       <Command className="h-4 w-4" />
                     )}

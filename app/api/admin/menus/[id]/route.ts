@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getCurrentSession } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
@@ -76,6 +77,8 @@ export async function PUT(
       data: validatedData,
     })
 
+    revalidatePath("/", "layout")
+
     return NextResponse.json({
       message: "Menu item updated successfully",
       menuItem,
@@ -115,6 +118,8 @@ export async function DELETE(
     await prisma.menuItem.delete({
       where: { id: params.id },
     })
+
+    revalidatePath("/", "layout")
 
     return NextResponse.json({
       message: "Menu item deleted successfully",

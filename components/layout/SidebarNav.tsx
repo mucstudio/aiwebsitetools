@@ -113,5 +113,18 @@ function getIcon(iconName?: string | null) {
   
   // @ts-ignore
   const Icon = LucideIcons[iconName]
-  return Icon || LucideIcons.Wrench
+  
+  if (Icon) {
+    return Icon
+  }
+
+  // If not a Lucide icon, assume it's an emoji or custom text
+  return ({ className, ...props }: any) => (
+    <span
+      className={cn("flex items-center justify-center text-base leading-none shrink-0", className)}
+      {...props}
+    >
+      {iconName}
+    </span>
+  )
 }

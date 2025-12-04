@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getCurrentSession } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
@@ -63,6 +64,8 @@ export async function POST(request: NextRequest) {
     const menuItem = await prisma.menuItem.create({
       data: validatedData,
     })
+
+    revalidatePath("/", "layout")
 
     return NextResponse.json({
       message: "Menu item created successfully",
