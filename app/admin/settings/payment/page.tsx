@@ -556,6 +556,176 @@ export default function PaymentSettingsPage() {
           {saving ? "保存中..." : "保存设置"}
         </Button>
       </div>
+
+      {/* OAuth 配置教程 */}
+      <Card className="mt-8 border-2 border-dashed">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            📚 如何配置 OAuth 连接
+          </CardTitle>
+          <CardDescription>
+            使用 OAuth 连接更安全，无需手动复制密钥。以下是配置步骤：
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Stripe Connect 配置教程 */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
+              配置 Stripe Connect OAuth
+            </h3>
+            <div className="ml-8 space-y-3 text-sm">
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <p className="font-medium">步骤 1: 创建 Stripe Connect 应用</p>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground ml-2">
+                  <li>访问 <a href="https://dashboard.stripe.com/settings/applications" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Stripe Dashboard → Settings → Connect</a></li>
+                  <li>点击 "Create application" 或查看现有应用</li>
+                  <li>复制 <code className="bg-background px-2 py-0.5 rounded">Client ID</code>（格式：ca_xxx）</li>
+                </ol>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <p className="font-medium">步骤 2: 配置环境变量</p>
+                <p className="text-muted-foreground">在服务器的 <code className="bg-background px-2 py-0.5 rounded">.env</code> 文件中添加：</p>
+                <pre className="bg-background p-3 rounded border text-xs overflow-x-auto">
+{`STRIPE_CONNECT_CLIENT_ID=ca_xxx  # 你的 Client ID`}
+                </pre>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <p className="font-medium">步骤 3: 配置回调 URL</p>
+                <p className="text-muted-foreground">在 Stripe Connect 应用设置中添加回调 URL：</p>
+                <pre className="bg-background p-3 rounded border text-xs overflow-x-auto">
+{`${typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/api/connect/stripe/callback`}
+                </pre>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <p className="font-medium">步骤 4: 重启应用并测试</p>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground ml-2">
+                  <li>重启 Node.js 应用以加载新的环境变量</li>
+                  <li>刷新此页面</li>
+                  <li>点击 "🔗 使用 OAuth 连接 Stripe" 按钮</li>
+                  <li>在 Stripe 页面登录并授权</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          {/* PayPal Commerce Platform 配置教程 */}
+          <div className="pt-6 border-t">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
+              配置 PayPal Commerce Platform OAuth
+            </h3>
+            <div className="ml-8 space-y-3 text-sm">
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <p className="font-medium">步骤 1: 注册成为 PayPal Partner</p>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground ml-2">
+                  <li>访问 <a href="https://developer.paypal.com/home" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PayPal Developer Portal</a></li>
+                  <li>申请成为 PayPal Partner（需要审核，通常1-3个工作日）</li>
+                  <li>获取 <code className="bg-background px-2 py-0.5 rounded">Partner ID</code></li>
+                </ol>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <p className="font-medium">步骤 2: 配置环境变量</p>
+                <p className="text-muted-foreground">在服务器的 <code className="bg-background px-2 py-0.5 rounded">.env</code> 文件中添加：</p>
+                <pre className="bg-background p-3 rounded border text-xs overflow-x-auto">
+{`PAYPAL_PARTNER_ID=xxx        # 你的 Partner ID
+PAYPAL_MODE=sandbox          # 测试环境用 sandbox，生产环境用 live
+PAYPAL_CLIENT_ID=xxx         # 你的 PayPal App Client ID
+PAYPAL_CLIENT_SECRET=xxx     # 你的 PayPal App Secret`}
+                </pre>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <p className="font-medium">步骤 3: 配置回调 URL</p>
+                <p className="text-muted-foreground">在 PayPal Partner 设置中添加回调 URL：</p>
+                <pre className="bg-background p-3 rounded border text-xs overflow-x-auto">
+{`${typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/api/connect/paypal/callback`}
+                </pre>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <p className="font-medium">步骤 4: 重启应用并测试</p>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground ml-2">
+                  <li>重启 Node.js 应用以加载新的环境变量</li>
+                  <li>刷新此页面</li>
+                  <li>点击 "🔗 使用 OAuth 连接 PayPal" 按钮</li>
+                  <li>在 PayPal 页面登录并授权</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          {/* 注意事项 */}
+          <div className="pt-6 border-t">
+            <h3 className="text-lg font-semibold mb-3">⚠️ 重要提示</h3>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-600 mt-0.5">•</span>
+                <p><strong>单商户场景：</strong>如果这是你自己的网站，用户支付给你，建议使用"手动配置密钥"方式，更简单直接。</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-600 mt-0.5">•</span>
+                <p><strong>多商户平台：</strong>如果你要支持多个商户各自收款（类似 Shopify、WooCommerce），才需要使用 OAuth 方式。</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-600 mt-0.5">•</span>
+                <p><strong>环境变量：</strong>修改 .env 文件后，必须重启 Node.js 应用才能生效。</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-600 mt-0.5">•</span>
+                <p><strong>测试环境：</strong>建议先在 sandbox/test 模式下测试，确认无误后再切换到生产环境。</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 快速链接 */}
+          <div className="pt-6 border-t">
+            <h3 className="text-lg font-semibold mb-3">🔗 相关文档链接</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <a
+                href="https://stripe.com/docs/connect/oauth-reference"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+              >
+                <span>📘</span>
+                <span>Stripe Connect OAuth 文档</span>
+              </a>
+              <a
+                href="https://developer.paypal.com/api/rest/partner-referrals/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+              >
+                <span>📗</span>
+                <span>PayPal Partner Referrals 文档</span>
+              </a>
+              <a
+                href="https://dashboard.stripe.com/settings/applications"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+              >
+                <span>⚙️</span>
+                <span>Stripe Connect 设置</span>
+              </a>
+              <a
+                href="https://developer.paypal.com/home"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+              >
+                <span>⚙️</span>
+                <span>PayPal Developer Portal</span>
+              </a>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
