@@ -25,6 +25,7 @@ const menuItems = [
   {
     title: "AI 模型管理",
     icon: "🤖",
+    defaultCollapsed: true,
     children: [
       {
         title: "AI 供应商",
@@ -54,7 +55,7 @@ const menuItems = [
   {
     title: "系统文档",
     icon: "📚",
-    defaultCollapsed: false,
+    defaultCollapsed: true,
     children: [
       {
         title: "🏭 工厂模式指南",

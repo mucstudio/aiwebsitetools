@@ -26,9 +26,11 @@ export default async function PricingPage() {
       <div className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-20 pb-24 md:pt-32 md:pb-40">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
           <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
-          
+          <div className="absolute right-0 top-0 -z-10 h-[400px] w-[400px] rounded-full bg-purple-500/10 opacity-30 blur-[120px] translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute left-0 bottom-0 -z-10 h-[400px] w-[400px] rounded-full bg-blue-500/10 opacity-30 blur-[120px] -translate-x-1/2 translate-y-1/2"></div>
+
           <div className="container relative z-10 mx-auto px-4 text-center">
             <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary mb-8 backdrop-blur-sm">
               <Sparkles className="mr-2 h-4 w-4" />
@@ -83,8 +85,8 @@ export default async function PricingPage() {
                     </CardContent>
                     <CardFooter>
                       <Link href={plan.price === 0 ? "/signup" : `/checkout?plan=${plan.slug}`} className="w-full">
-                        <Button 
-                          className={`w-full h-12 text-lg ${isPopular ? "shadow-lg shadow-primary/25" : ""}`} 
+                        <Button
+                          className={`w-full h-12 text-lg ${isPopular ? "shadow-lg shadow-primary/25" : ""}`}
                           variant={isPopular ? "default" : "outline"}
                         >
                           {plan.price === 0 ? "Get Started Free" : "Subscribe Now"}
@@ -104,7 +106,7 @@ export default async function PricingPage() {
             <h2 className="text-3xl font-bold tracking-tight mb-4">Frequently Asked Questions</h2>
             <p className="text-muted-foreground">Everything you need to know about our pricing and billing.</p>
           </div>
-          
+
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">
               <AccordionTrigger>Can I cancel my subscription anytime?</AccordionTrigger>

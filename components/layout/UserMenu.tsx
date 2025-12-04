@@ -22,11 +22,11 @@ export function UserMenu({ session }: UserMenuProps) {
   if (!session) {
     return (
       <>
-        <Link href="/login">
-          <Button variant="ghost">Sign In</Button>
+        <Link href="/login" className="w-full">
+          <Button variant="ghost" className="w-full justify-start">Sign In</Button>
         </Link>
-        <Link href="/signup">
-          <Button>Get Started</Button>
+        <Link href="/signup" className="w-full">
+          <Button className="w-full">Get Started</Button>
         </Link>
       </>
     )
@@ -35,9 +35,9 @@ export function UserMenu({ session }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2">
+        <Button variant="ghost" className="flex items-center gap-2 w-full justify-start">
           <User className="h-4 w-4" />
-          <span className="hidden md:inline">{session.user?.name || session.user?.email}</span>
+          <span className="truncate">{session.user?.name || session.user?.email}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

@@ -64,25 +64,29 @@ function SidebarNavItem({ item, pathname }: { item: MenuItem; pathname: string }
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="pl-4 space-y-1">
-          {item.children?.map((child) => (
-            <Link
-              key={child.id}
-              href={child.url}
-              target={child.openInNewTab ? "_blank" : undefined}
-              rel={child.openInNewTab ? "noopener noreferrer" : undefined}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "w-full justify-start gap-3 mb-1 font-normal h-9",
-                  pathname === child.url && "bg-accent/50 text-accent-foreground font-medium"
-                )}
+          {item.children?.map((child) => {
+            const ChildIcon = getIcon(child.icon)
+            return (
+              <Link
+                key={child.id}
+                href={child.url}
+                target={child.openInNewTab ? "_blank" : undefined}
+                rel={child.openInNewTab ? "noopener noreferrer" : undefined}
               >
-                {child.label}
-              </Button>
-            </Link>
-          ))}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "w-full justify-start gap-3 mb-1 font-normal h-9",
+                    pathname === child.url && "bg-accent/50 text-accent-foreground font-medium"
+                  )}
+                >
+                  <ChildIcon className="h-4 w-4" />
+                  {child.label}
+                </Button>
+              </Link>
+            )
+          })}
         </CollapsibleContent>
       </Collapsible>
     )
@@ -110,10 +114,10 @@ function SidebarNavItem({ item, pathname }: { item: MenuItem; pathname: string }
 
 function getIcon(iconName?: string | null) {
   if (!iconName) return LucideIcons.Wrench
-  
+
   // @ts-ignore
   const Icon = LucideIcons[iconName]
-  
+
   if (Icon) {
     return Icon
   }

@@ -55,8 +55,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
   return (
     <>
-      <div className="flex-1">
-        <section className="container py-12">
+      <div className="flex-1 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+        <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px] pointer-events-none"></div>
+        <div className="absolute right-0 top-0 -z-10 h-[400px] w-[400px] rounded-full bg-purple-500/10 opacity-30 blur-[120px] translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+
+        <section className="container py-12 relative z-10">
           {/* 工具头部 */}
           <div className="mb-8">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">

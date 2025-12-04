@@ -12,9 +12,11 @@ export default function AboutPage() {
       <div className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-20 pb-24 md:pt-32 md:pb-40">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
           <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
-          
+          <div className="absolute right-0 top-0 -z-10 h-[400px] w-[400px] rounded-full bg-purple-500/10 opacity-30 blur-[120px] translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute left-0 bottom-0 -z-10 h-[400px] w-[400px] rounded-full bg-blue-500/10 opacity-30 blur-[120px] -translate-x-1/2 translate-y-1/2"></div>
+
           <div className="container relative z-10 mx-auto px-4 text-center">
             <Badge variant="outline" className="mb-6 px-4 py-1 text-sm border-primary/20 bg-primary/5 text-primary">
               Our Story
@@ -26,7 +28,7 @@ export default function AboutPage() {
               </span>
             </h1>
             <p className="mx-auto max-w-2xl text-xl text-muted-foreground leading-relaxed">
-              We believe that essential digital tools should be accessible, fast, and privacy-focused. 
+              We believe that essential digital tools should be accessible, fast, and privacy-focused.
               No installations, no complications.
             </p>
           </div>
@@ -109,8 +111,8 @@ export default function AboutPage() {
             <p className="text-xl text-muted-foreground mb-8">
               Have questions, suggestions, or just want to say hello? We're always looking to improve.
             </p>
-            <a 
-              href="mailto:hello@aiwebsitetools.com" 
+            <a
+              href="mailto:hello@aiwebsitetools.com"
               className="inline-flex items-center justify-center rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-8"
             >
               Contact Support

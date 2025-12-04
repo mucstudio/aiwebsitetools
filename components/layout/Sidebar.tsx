@@ -63,7 +63,7 @@ export async function Sidebar() {
         {/* Logo & Title */}
         <div className="p-6 border-b">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-md">
               AI
             </div>
             <span className="truncate">{siteName}</span>

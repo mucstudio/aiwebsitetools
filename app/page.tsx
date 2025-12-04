@@ -4,15 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Footer } from "@/components/layout/Footer"
-import { 
-  ArrowRight, 
-  Check, 
-  Zap, 
-  Shield, 
-  Globe, 
-  Code, 
-  Image as ImageIcon, 
-  FileText, 
+import {
+  ArrowRight,
+  Check,
+  Zap,
+  Shield,
+  Globe,
+  Code,
+  Image as ImageIcon,
+  FileText,
   Sparkles,
   Cpu,
   Layers,
@@ -28,27 +28,29 @@ export default function HomePage() {
       <div className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-20 pb-32 md:pt-32 md:pb-48">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
           <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
-          
+          <div className="absolute right-0 top-0 -z-10 h-[400px] w-[400px] rounded-full bg-purple-500/10 opacity-30 blur-[120px] translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute left-0 bottom-0 -z-10 h-[400px] w-[400px] rounded-full bg-blue-500/10 opacity-30 blur-[120px] -translate-x-1/2 translate-y-1/2"></div>
+
           <div className="container relative z-10 mx-auto px-4 text-center">
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary mb-8 backdrop-blur-sm">
               <Sparkles className="mr-2 h-4 w-4" />
               <span>New AI Tools Available Now</span>
             </div>
-            
+
             <h1 className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100 ease-out mx-auto max-w-4xl text-5xl font-extrabold tracking-tight text-foreground sm:text-7xl mb-8">
               Master Your Digital <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">
                 Workflow Instantly
               </span>
             </h1>
-            
+
             <p className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200 ease-out mx-auto max-w-2xl text-xl text-muted-foreground mb-10 leading-relaxed">
               Access a comprehensive suite of premium online tools for developers, creators, and professionals.
               Secure, fast, and designed for modern productivity.
             </p>
-            
+
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 ease-out flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/tools">
                 <Button size="lg" className="h-12 px-8 text-lg rounded-full shadow-lg hover:shadow-primary/25 transition-all">
@@ -155,7 +157,7 @@ export default function HomePage() {
                 <TabsTrigger value="creative">Creative</TabsTrigger>
                 <TabsTrigger value="utilities">Utilities</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="popular" className="mt-0">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {popularTools.map((tool) => (
@@ -163,7 +165,7 @@ export default function HomePage() {
                   ))}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="developer" className="mt-0">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {popularTools.filter(t => t.category === 'developer').map((tool) => (
@@ -171,7 +173,7 @@ export default function HomePage() {
                   ))}
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="creative" className="mt-0">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {popularTools.filter(t => t.category === 'image').map((tool) => (
@@ -353,7 +355,7 @@ export default function HomePage() {
 
 function ToolCard({ tool }: { tool: any }) {
   const Icon = getIconForCategory(tool.category)
-  
+
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
       <CardHeader>

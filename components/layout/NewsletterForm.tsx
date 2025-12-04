@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export function NewsletterForm() {
   const [newsletterEmail, setNewsletterEmail] = useState("")
@@ -30,12 +31,11 @@ export function NewsletterForm() {
         Subscribe to get updates and news
       </p>
       <form onSubmit={handleNewsletterSubmit} className="space-y-2">
-        <input
+        <Input
           type="email"
           value={newsletterEmail}
           onChange={(e) => setNewsletterEmail(e.target.value)}
           placeholder="Enter your email"
-          className="w-full px-3 py-2 text-sm border rounded-md"
           required
           disabled={newsletterStatus === "loading"}
         />

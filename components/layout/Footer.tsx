@@ -24,7 +24,7 @@ export async function Footer({ showLinks = true }: FooterProps) {
   const newsletterEnabled = (newsletterFeature?.value as boolean) ?? false
 
   return (
-    <footer className="border-t bg-background">
+    <footer className="border-t bg-muted/20">
       <div className="container py-12 md:py-16">
         {showLinks && (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">

@@ -22,7 +22,7 @@ export function MobileNav({ session, siteName, menuItems }: MobileNavProps) {
   return (
     <div className="flex items-center justify-between p-4 w-full">
       <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-md">
           AI
         </div>
         <span className="truncate max-w-[150px]">{siteName}</span>
@@ -40,7 +40,7 @@ export function MobileNav({ session, siteName, menuItems }: MobileNavProps) {
           <div className="flex flex-col h-full">
             <div className="p-6 border-b">
               <Link href="/" className="flex items-center gap-2 font-bold text-xl" onClick={() => setOpen(false)}>
-                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-md">
                   AI
                 </div>
                 <span>{siteName}</span>

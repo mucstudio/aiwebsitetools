@@ -56,10 +56,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   return (
     <>
       <div className="flex-1">
-        <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-32">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <section className="relative overflow-hidden pt-16 pb-10 md:pt-24 md:pb-12">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
           <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
-          
+          <div className="absolute right-0 top-0 -z-10 h-[400px] w-[400px] rounded-full bg-purple-500/10 opacity-30 blur-[120px] translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute left-0 bottom-0 -z-10 h-[400px] w-[400px] rounded-full bg-blue-500/10 opacity-30 blur-[120px] -translate-x-1/2 translate-y-1/2"></div>
+
           <div className="container relative z-10 mx-auto px-4 text-center">
             <div className="mb-8 flex justify-center">
               <Link href="/tools" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -78,7 +80,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 {category.name}
               </h1>
             </div>
-            
+
             {category.description && (
               <p className="mx-auto max-w-2xl text-xl text-muted-foreground mb-10">
                 {category.description}
@@ -87,7 +89,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </div>
         </section>
 
-        <section className="container py-12 px-4 mx-auto">
+        <section className="container pb-12 pt-0 px-4 mx-auto">
           {category.tools.length === 0 ? (
             <div className="text-center py-20 bg-muted/30 rounded-3xl border border-dashed border-muted-foreground/25">
               <p className="text-xl text-muted-foreground mb-2">No tools available in this category yet.</p>
