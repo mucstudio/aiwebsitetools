@@ -70,6 +70,10 @@ const menuItems = [
         href: "/admin/docs/factory-enhanced",
       },
       {
+        title: "📤 分享库集成",
+        href: "/admin/docs/factory-share-library",
+      },
+      {
         title: "🤖 AI 模型系统",
         href: "/admin/docs/ai-models",
       },

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { Pencil, Trash2, Copy, Check } from "lucide-react"
+import { Pencil, Trash2, Copy, Check, Link as LinkIcon } from "lucide-react"
 
 interface CategoryRowProps {
   category: {
@@ -27,11 +27,19 @@ export function CategoryRow({ category, level }: CategoryRowProps) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const handleCopyId = async () => {
     await navigator.clipboard.writeText(category.id)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}/tools/category/${category.slug}`
+    await navigator.clipboard.writeText(url)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
   }
 
   const handleDelete = async () => {
@@ -105,6 +113,20 @@ export function CategoryRow({ category, level }: CategoryRowProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {level === 0 && (
+            <Button
+              onClick={handleCopyLink}
+              variant="ghost"
+              size="sm"
+              title="复制分类链接"
+            >
+              {linkCopied ? (
+                <Check className="h-4 w-4 text-green-600" />
+              ) : (
+                <LinkIcon className="h-4 w-4" />
+              )}
+            </Button>
+          )}
           <Link href={`/admin/categories/${category.id}/edit`}>
             <Button variant="ghost" size="sm">
               <Pencil className="h-4 w-4" />

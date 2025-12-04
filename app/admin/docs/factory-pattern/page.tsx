@@ -97,6 +97,11 @@ export default async function FactoryPatternDocPage() {
                   → AI 调用示例
                 </Link>
               </div>
+              <div>
+                <Link href="/admin/docs/factory-share-library" className="text-blue-600 hover:underline">
+                  → 分享库集成指南（截图与分享）
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

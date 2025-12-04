@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getCurrentSession } from "@/lib/auth-utils"
 import { redirect } from "next/navigation"
-import { FileText, Book, Code, Zap, Layers, Rocket, Zap as Lightning } from "lucide-react"
+import { FileText, Book, Code, Zap, Layers, Rocket, Zap as Lightning, Share2 } from "lucide-react"
 
 export default async function DocsPage() {
   const session = await getCurrentSession()
@@ -37,6 +37,13 @@ export default async function DocsPage() {
           href: "/admin/docs/factory-enhanced",
           icon: <Zap className="h-5 w-5" />,
           description: "类型安全、自定义安全配置、多种返回格式等高级功能"
+        },
+        {
+          title: "分享库集成指南",
+          href: "/admin/docs/factory-share-library",
+          icon: <Share2 className="h-5 w-5" />,
+          description: "为工具添加截图下载与社交分享功能",
+          badge: "新功能"
         }
       ]
     },
@@ -95,8 +102,8 @@ export default async function DocsPage() {
               category.highlight
                 ? "border-green-300 bg-gradient-to-br from-green-50 to-blue-50"
                 : category.deprecated
-                ? "border-gray-300 bg-gray-50"
-                : ""
+                  ? "border-gray-300 bg-gray-50"
+                  : ""
             }
           >
             <CardHeader>
@@ -126,30 +133,27 @@ export default async function DocsPage() {
                   <Link
                     key={doc.href}
                     href={doc.href}
-                    className={`flex items-start gap-3 p-4 rounded-lg border hover:bg-muted transition-colors ${
-                      category.deprecated ? 'opacity-75' : ''
-                    }`}
+                    className={`flex items-start gap-3 p-4 rounded-lg border hover:bg-muted transition-colors ${category.deprecated ? 'opacity-75' : ''
+                      }`}
                   >
-                    <div className={`p-2 rounded-md ${
-                      category.highlight
-                        ? 'bg-green-100'
-                        : category.deprecated
+                    <div className={`p-2 rounded-md ${category.highlight
+                      ? 'bg-green-100'
+                      : category.deprecated
                         ? 'bg-gray-200'
                         : 'bg-primary/10'
-                    }`}>
+                      }`}>
                       {doc.icon}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-medium">{doc.title}</h3>
                         {doc.badge && (
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                            doc.badge === '推荐'
-                              ? 'bg-green-100 text-green-700'
-                              : doc.badge === '新手友好'
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded ${doc.badge === '推荐'
+                            ? 'bg-green-100 text-green-700'
+                            : doc.badge === '新手友好'
                               ? 'bg-blue-100 text-blue-700'
                               : 'bg-gray-200 text-gray-600'
-                          }`}>
+                            }`}>
                             {doc.badge}
                           </span>
                         )}
