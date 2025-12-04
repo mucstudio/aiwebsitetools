@@ -9,7 +9,26 @@ export default async function TermsPage() {
         where: { key: "terms_of_service" },
     })
 
-    const content = (setting?.value as string) || "# Terms of Service\n\nComing soon..."
+    const defaultContent = `# Terms of Service
+
+Last updated: ${new Date().toLocaleDateString()}
+
+## 1. Acceptance of Terms
+By accessing or using our Service, you agree to be bound by these Terms.
+
+## 2. Use of Service
+You agree to use the Service only for lawful purposes and in accordance with these Terms.
+
+## 3. Accounts
+When you create an account with us, you must provide us information that is accurate, complete, and current at all times.
+
+## 4. Intellectual Property
+The Service and its original content, features, and functionality are and will remain the exclusive property of AI Website Tools.
+
+## 5. Contact Us
+If you have any questions about these Terms, please contact us at hello@aiwebsitetools.com.`
+
+    const content = (setting?.value as string) || defaultContent
 
     return (
         <div className="flex min-h-screen flex-col">
