@@ -3,7 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronDown, ChevronRight, Wrench, Home, CreditCard, Info, Heart, LayoutDashboard } from "lucide-react"
+import { ChevronDown, ChevronRight } from "lucide-react"
+import * as LucideIcons from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -108,13 +109,9 @@ function SidebarNavItem({ item, pathname }: { item: MenuItem; pathname: string }
 }
 
 function getIcon(iconName?: string | null) {
-  switch (iconName) {
-    case "Home": return Home
-    case "Wrench": return Wrench
-    case "CreditCard": return CreditCard
-    case "Info": return Info
-    case "Heart": return Heart
-    case "LayoutDashboard": return LayoutDashboard
-    default: return Wrench
-  }
+  if (!iconName) return LucideIcons.Wrench
+  
+  // @ts-ignore
+  const Icon = LucideIcons[iconName]
+  return Icon || LucideIcons.Wrench
 }

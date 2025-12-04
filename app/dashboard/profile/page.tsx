@@ -105,7 +105,7 @@ export default function ProfilePage() {
         <p className="text-muted-foreground">Manage your personal information</p>
       </div>
 
-      <div className="max-w-2xl">
+      <div className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Basic Information</CardTitle>
@@ -156,7 +156,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="mt-6">
+        <Card>
           <CardHeader>
             <CardTitle>Account Information</CardTitle>
             <CardDescription>Your account details</CardDescription>

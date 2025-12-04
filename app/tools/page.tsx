@@ -3,21 +3,23 @@ import { Footer } from "@/components/layout/Footer"
 import { prisma } from "@/lib/prisma"
 import { Sparkles, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { ToolCard } from "@/components/tools/ToolCard"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowRight } from "lucide-react"
 
 // 页面需要动态渲染以访问数据库
 export const dynamic = 'force-dynamic'
 
 export default async function ToolsPage() {
-  // Get all categories with their published tools
+  // Get all categories with their published tools count
   const categories = await prisma.category.findMany({
     include: {
-      tools: {
-        where: {
-          isPublished: true,
-        },
-        orderBy: {
-          name: "asc",
+      _count: {
+        select: {
+          tools: {
+            where: {
+              isPublished: true,
+            },
+          },
         },
       },
     },
@@ -27,7 +29,7 @@ export default async function ToolsPage() {
   })
 
   // Filter out categories with no published tools
-  const categoriesWithTools = categories.filter(cat => cat.tools.length > 0)
+  const categoriesWithTools = categories.filter(cat => cat._count.tools > 0)
 
   return (
     <>
@@ -39,10 +41,10 @@ export default async function ToolsPage() {
           
           <div className="container relative z-10 mx-auto px-4 text-center">
             <h1 className="mx-auto max-w-4xl text-4xl font-extrabold tracking-tight text-foreground sm:text-6xl mb-6">
-              Explore Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">Tool Library</span>
+              Explore Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">Tool Categories</span>
             </h1>
             <p className="mx-auto max-w-2xl text-xl text-muted-foreground mb-10">
-              A complete collection of powerful utilities designed to boost your productivity.
+              Browse our comprehensive collection of tools organized by category.
             </p>
             
             {/* Search Bar Placeholder - Functionality would need client-side logic */}
@@ -50,9 +52,9 @@ export default async function ToolsPage() {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-muted-foreground" />
               </div>
-              <Input 
-                type="text" 
-                placeholder="Search tools..." 
+              <Input
+                type="text"
+                placeholder="Search tools..."
                 className="pl-10 h-12 rounded-full border-primary/20 bg-background/50 backdrop-blur-sm focus:border-primary transition-all"
               />
             </div>
@@ -63,33 +65,37 @@ export default async function ToolsPage() {
           {categoriesWithTools.length === 0 ? (
             <div className="text-center py-20 bg-muted/30 rounded-3xl border border-dashed border-muted-foreground/25">
               <Sparkles className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
-              <p className="text-xl text-muted-foreground mb-2">No tools available at the moment.</p>
+              <p className="text-xl text-muted-foreground mb-2">No categories available at the moment.</p>
               <p className="text-sm text-muted-foreground">We are working hard to bring you new tools. Check back soon!</p>
             </div>
           ) : (
-            <div className="space-y-20">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {categoriesWithTools.map((category) => (
-                <div key={category.id} className="scroll-mt-24" id={category.slug}>
-                  <div className="flex items-center gap-4 mb-8 border-b border-border/50 pb-4">
-                    {category.icon && (
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl text-primary">
-                        {category.icon}
+                <Link key={category.id} href={`/tools/category/${category.slug}`} className="group">
+                  <Card className="h-full transition-all duration-300 hover:shadow-lg hover:border-primary/50">
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-2">
+                        {category.icon && (
+                          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                            {category.icon}
+                          </div>
+                        )}
+                        <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                       </div>
-                    )}
-                    <div>
-                      <h2 className="text-3xl font-bold tracking-tight">{category.name}</h2>
-                      {category.description && (
-                        <p className="text-muted-foreground mt-1">{category.description}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {category.tools.map((tool) => (
-                      <ToolCard key={tool.id} tool={tool} />
-                    ))}
-                  </div>
-                </div>
+                      <CardTitle className="text-2xl group-hover:text-primary transition-colors">
+                        {category.name}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-2">
+                        {category.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-sm text-muted-foreground">
+                        {category._count.tools} tools available
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}

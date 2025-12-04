@@ -42,7 +42,7 @@ export default async function SubscriptionPage() {
         <p className="text-muted-foreground">Manage your subscription and billing</p>
       </div>
 
-      <div className="max-w-4xl space-y-6">
+      <div className="grid gap-6">
         {/* Current Subscription */}
         <Card>
           <CardHeader>
@@ -129,7 +129,7 @@ export default async function SubscriptionPage() {
                 {availablePlans
                   .filter((plan) => !subscription || plan.id !== subscription.planId)
                   .map((plan) => {
-                    const features = Array.isArray(plan.features) ? plan.features : []
+                    const features = (Array.isArray(plan.features) ? plan.features : []) as string[]
                     return (
                       <Card key={plan.id}>
                         <CardHeader>
@@ -142,7 +142,7 @@ export default async function SubscriptionPage() {
                         </CardHeader>
                         <CardContent>
                           <ul className="space-y-2 mb-4">
-                            {features.slice(0, 4).map((feature: string, index: number) => (
+                            {features.slice(0, 4).map((feature, index) => (
                               <li key={index} className="flex items-start text-sm">
                                 <svg
                                   className="h-4 w-4 text-primary mr-2 mt-0.5"

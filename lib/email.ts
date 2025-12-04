@@ -18,6 +18,12 @@ export interface EmailOptions {
  */
 export async function sendEmail(options: EmailOptions): Promise<{ success: boolean; error?: string }> {
   const settings = await getEmailSettings()
+  const siteInfo = await getSiteInfo()
+
+  // 如果发件人名称为空，使用网站名称
+  if (!settings.smtpFromName) {
+    settings.smtpFromName = siteInfo.siteName
+  }
 
   if (!settings.enabled) {
     console.warn("Email is disabled in settings")
@@ -165,15 +171,19 @@ export async function sendPasswordResetEmail(
   to: string,
   resetUrl: string
 ): Promise<{ success: boolean; error?: string }> {
+  const siteInfo = await getSiteInfo()
   return await sendEmail({
     to,
-    subject: "Reset Your Password",
+    subject: `Reset Your Password - ${siteInfo.siteName}`,
     html: `
       <h1>Reset Password</h1>
-      <p>You requested to reset your password. Please click the link below to reset your password:</p>
+      <p>You requested to reset your password for your account at ${siteInfo.siteName}. Please click the link below to reset your password:</p>
       <p><a href="${resetUrl}">Reset Password</a></p>
       <p>If you did not request a password reset, please ignore this email.</p>
       <p>This link will expire in 1 hour.</p>
+      <br/>
+      <p>Best regards,</p>
+      <p>The ${siteInfo.siteName} Team</p>
     `,
     text: `Reset Password: ${resetUrl}`,
   })
@@ -186,14 +196,18 @@ export async function sendVerificationEmail(
   to: string,
   verificationUrl: string
 ): Promise<{ success: boolean; error?: string }> {
+  const siteInfo = await getSiteInfo()
   return await sendEmail({
     to,
-    subject: "Verify Your Email",
+    subject: `Verify Your Email - ${siteInfo.siteName}`,
     html: `
       <h1>Verify Email</h1>
-      <p>Please click the link below to verify your email address:</p>
+      <p>Welcome to ${siteInfo.siteName}! Please click the link below to verify your email address:</p>
       <p><a href="${verificationUrl}">Verify Email</a></p>
       <p>If you did not register an account, please ignore this email.</p>
+      <br/>
+      <p>Best regards,</p>
+      <p>The ${siteInfo.siteName} Team</p>
     `,
     text: `Verify Email: ${verificationUrl}`,
   })

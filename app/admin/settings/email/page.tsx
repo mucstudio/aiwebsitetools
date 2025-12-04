@@ -385,10 +385,10 @@ export default function EmailSettingsPage() {
                 value={settings.smtp_from_name}
                 onChange={(e) => handleChange("smtp_from_name", e.target.value)}
                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="AI Website Tools"
+                placeholder="留空则自动使用网站名称"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                显示为邮件发件人的名称
+                显示为邮件发件人的名称，留空则自动使用网站名称
               </p>
             </div>
           </div>

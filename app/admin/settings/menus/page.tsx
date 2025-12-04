@@ -279,7 +279,7 @@ export default function MenuManagementPage() {
                   id="icon"
                   value={formData.icon}
                   onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="例如: 🔧"
+                  placeholder="例如: Home, Settings, User (Lucide图标名称)"
                 />
               </div>
 
