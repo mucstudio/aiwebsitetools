@@ -37,14 +37,7 @@ export async function Footer({ showLinks = true }: FooterProps) {
               <p className="text-sm text-muted-foreground">
                 © {new Date().getFullYear()} {companyName}. All rights reserved.
               </p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <Link href="/privacy" className="hover:text-foreground transition-colors">
-                  Privacy Policy
-                </Link>
-                <Link href="/terms" className="hover:text-foreground transition-colors">
-                  Terms of Service
-                </Link>
-              </div>
+
             </div>
             <p className="text-sm text-muted-foreground">
               Contact: <a href={`mailto:${contactEmail}`} className="hover:text-foreground transition-colors">{contactEmail}</a>
