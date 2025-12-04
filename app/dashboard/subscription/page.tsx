@@ -4,6 +4,7 @@ import { getCurrentSession } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { SubscriptionActions } from "@/components/subscription/SubscriptionActions"
 
 export default async function SubscriptionPage() {
   const session = await getCurrentSession()
@@ -89,15 +90,7 @@ export default async function SubscriptionPage() {
 
                 {subscription.plan.price > 0 && (
                   <div className="flex gap-2 pt-4">
-                    {!subscription.cancelAtPeriodEnd ? (
-                      <Button variant="destructive" size="sm">
-                        Cancel Subscription
-                      </Button>
-                    ) : (
-                      <Button variant="default" size="sm">
-                        Resume Subscription
-                      </Button>
-                    )}
+                    <SubscriptionActions cancelAtPeriodEnd={subscription.cancelAtPeriodEnd} />
                     <Link href="/pricing">
                       <Button variant="outline" size="sm">
                         Change Plan

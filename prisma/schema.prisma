@@ -88,6 +88,8 @@ model Subscription {
   stripeSubscriptionId  String?  @unique
   stripePriceId         String?
 
+  paypalSubscriptionId  String?  @unique
+
   status            SubscriptionStatus @default(ACTIVE)
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime
@@ -117,6 +119,7 @@ model Plan {
   price         Float
   interval      String   // month, year
   stripePriceId String?
+  paypalPlanId  String?
 
   features      Json     // ["feature1", "feature2"]
   limits        Json     // {"dailyUsage": 100, "toolAccess": "all"}

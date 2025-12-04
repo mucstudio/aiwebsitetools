@@ -9,6 +9,9 @@ interface PaymentSettings {
   stripe_publishable_key: string
   stripe_secret_key: string
   stripe_webhook_secret: string
+  paypal_client_id: string
+  paypal_client_secret: string
+  paypal_webhook_id: string
   payment_currency: string
   payment_enabled: boolean
   test_mode: boolean
@@ -19,10 +22,14 @@ export default function PaymentSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [showSecretKey, setShowSecretKey] = useState(false)
   const [showWebhookSecret, setShowWebhookSecret] = useState(false)
+  const [showPayPalSecret, setShowPayPalSecret] = useState(false)
   const [settings, setSettings] = useState<PaymentSettings>({
     stripe_publishable_key: "",
     stripe_secret_key: "",
     stripe_webhook_secret: "",
+    paypal_client_id: "",
+    paypal_client_secret: "",
+    paypal_webhook_id: "",
     payment_currency: "USD",
     payment_enabled: true,
     test_mode: false,
@@ -43,6 +50,9 @@ export default function PaymentSettingsPage() {
           stripe_publishable_key: data.settings.stripe_publishable_key || "",
           stripe_secret_key: data.settings.stripe_secret_key || "",
           stripe_webhook_secret: data.settings.stripe_webhook_secret || "",
+          paypal_client_id: data.settings.paypal_client_id || "",
+          paypal_client_secret: data.settings.paypal_client_secret || "",
+          paypal_webhook_id: data.settings.paypal_webhook_id || "",
           payment_currency: data.settings.payment_currency || "USD",
           payment_enabled: data.settings.payment_enabled !== false,
           test_mode: data.settings.test_mode === true,
@@ -188,6 +198,89 @@ export default function PaymentSettingsPage() {
               </code>
               <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
                 需要监听的事件：checkout.session.completed, customer.subscription.updated, customer.subscription.deleted
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* PayPal 配置 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>PayPal 配置</CardTitle>
+          <CardDescription>配置 PayPal 支付集成</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Client ID <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={settings.paypal_client_id}
+              onChange={(e) => handleChange("paypal_client_id", e.target.value)}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+              placeholder="AXxxx..."
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              PayPal Client ID（公开密钥）
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Client Secret <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showPayPalSecret ? "text" : "password"}
+                value={settings.paypal_client_secret}
+                onChange={(e) => handleChange("paypal_client_secret", e.target.value)}
+                className="w-full px-4 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+                placeholder="EXxxx..."
+              />
+              <button
+                type="button"
+                onClick={() => setShowPayPalSecret(!showPayPalSecret)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPayPalSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              PayPal Client Secret（保密）
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Webhook ID
+            </label>
+            <input
+              type="text"
+              value={settings.paypal_webhook_id}
+              onChange={(e) => handleChange("paypal_webhook_id", e.target.value)}
+              className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+              placeholder="WH-xxx..."
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              PayPal Webhook ID（用于验证webhook签名）
+            </p>
+          </div>
+
+          <div className="pt-4 border-t">
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                配置 Webhook
+              </h4>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                在 PayPal Developer Dashboard 中配置 Webhook 端点：
+              </p>
+              <code className="block bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-2 rounded text-xs font-mono">
+                {typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/api/webhooks/paypal
+              </code>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+                需要监听的事件：BILLING.SUBSCRIPTION.CREATED, BILLING.SUBSCRIPTION.UPDATED, BILLING.SUBSCRIPTION.CANCELLED, PAYMENT.SALE.COMPLETED
               </p>
             </div>
           </div>
