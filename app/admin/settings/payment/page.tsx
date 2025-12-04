@@ -9,9 +9,13 @@ interface PaymentSettings {
   stripe_publishable_key: string
   stripe_secret_key: string
   stripe_webhook_secret: string
+  stripe_connection_status?: string
+  stripe_connected_at?: string
   paypal_client_id: string
   paypal_client_secret: string
   paypal_webhook_id: string
+  paypal_connection_status?: string
+  paypal_connected_at?: string
   payment_currency: string
   payment_enabled: boolean
   test_mode: boolean
@@ -23,6 +27,8 @@ export default function PaymentSettingsPage() {
   const [showSecretKey, setShowSecretKey] = useState(false)
   const [showWebhookSecret, setShowWebhookSecret] = useState(false)
   const [showPayPalSecret, setShowPayPalSecret] = useState(false)
+  const [connectingStripe, setConnectingStripe] = useState(false)
+  const [connectingPayPal, setConnectingPayPal] = useState(false)
   const [settings, setSettings] = useState<PaymentSettings>({
     stripe_publishable_key: "",
     stripe_secret_key: "",
@@ -50,9 +56,13 @@ export default function PaymentSettingsPage() {
           stripe_publishable_key: data.settings.stripe_publishable_key || "",
           stripe_secret_key: data.settings.stripe_secret_key || "",
           stripe_webhook_secret: data.settings.stripe_webhook_secret || "",
+          stripe_connection_status: data.settings.stripe_connection_status || "disconnected",
+          stripe_connected_at: data.settings.stripe_connected_at || "",
           paypal_client_id: data.settings.paypal_client_id || "",
           paypal_client_secret: data.settings.paypal_client_secret || "",
           paypal_webhook_id: data.settings.paypal_webhook_id || "",
+          paypal_connection_status: data.settings.paypal_connection_status || "disconnected",
+          paypal_connected_at: data.settings.paypal_connected_at || "",
           payment_currency: data.settings.payment_currency || "USD",
           payment_enabled: data.settings.payment_enabled !== false,
           test_mode: data.settings.test_mode === true,
@@ -116,9 +126,82 @@ export default function PaymentSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Stripe 配置</CardTitle>
-          <CardDescription>配置 Stripe 支付集成</CardDescription>
+          <CardDescription>使用 OAuth 安全连接或手动配置 Stripe</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* OAuth Connection Status */}
+          {settings.stripe_connection_status === "connected" ? (
+            <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-green-900 dark:text-green-100 mb-1">
+                    ✓ Stripe 已连接
+                  </h4>
+                  <p className="text-xs text-green-700 dark:text-green-300">
+                    连接时间: {settings.stripe_connected_at ? new Date(settings.stripe_connected_at).toLocaleString("zh-CN") : "未知"}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (!confirm("确定要断开 Stripe 连接吗？")) return
+                    try {
+                      const response = await fetch("/api/connect/stripe/disconnect", {
+                        method: "POST"
+                      })
+                      if (response.ok) {
+                        alert("Stripe 已断开连接")
+                        loadSettings()
+                      } else {
+                        alert("断开连接失败")
+                      }
+                    } catch (error) {
+                      alert("断开连接失败")
+                    }
+                  }}
+                >
+                  断开连接
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                推荐：使用 OAuth 安全连接
+              </h4>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
+                通过 OAuth 连接更安全，无需手动复制密钥，支持一键授权和撤销
+              </p>
+              <Button
+                onClick={async () => {
+                  setConnectingStripe(true)
+                  try {
+                    const response = await fetch("/api/connect/stripe")
+                    const data = await response.json()
+                    if (data.url) {
+                      window.location.href = data.url
+                    } else {
+                      alert("获取连接URL失败")
+                    }
+                  } catch (error) {
+                    alert("连接失败，请稍后重试")
+                  } finally {
+                    setConnectingStripe(false)
+                  }
+                }}
+                disabled={connectingStripe}
+                className="w-full"
+              >
+                {connectingStripe ? "连接中..." : "🔗 使用 OAuth 连接 Stripe"}
+              </Button>
+              <div className="mt-3 text-center">
+                <p className="text-xs text-muted-foreground">或者手动配置密钥（不推荐）</p>
+              </div>
+            </div>
+          )}
+
+          <div className="pt-4 border-t">
           <div>
             <label className="block text-sm font-medium mb-2">
               Publishable Key <span className="text-red-500">*</span>
@@ -208,9 +291,82 @@ export default function PaymentSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>PayPal 配置</CardTitle>
-          <CardDescription>配置 PayPal 支付集成</CardDescription>
+          <CardDescription>使用 OAuth 安全连接或手动配置 PayPal</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* OAuth Connection Status */}
+          {settings.paypal_connection_status === "connected" ? (
+            <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-green-900 dark:text-green-100 mb-1">
+                    ✓ PayPal 已连接
+                  </h4>
+                  <p className="text-xs text-green-700 dark:text-green-300">
+                    连接时间: {settings.paypal_connected_at ? new Date(settings.paypal_connected_at).toLocaleString("zh-CN") : "未知"}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (!confirm("确定要断开 PayPal 连接吗？")) return
+                    try {
+                      const response = await fetch("/api/connect/paypal/disconnect", {
+                        method: "POST"
+                      })
+                      if (response.ok) {
+                        alert("PayPal 已断开连接")
+                        loadSettings()
+                      } else {
+                        alert("断开连接失败")
+                      }
+                    } catch (error) {
+                      alert("断开连接失败")
+                    }
+                  }}
+                >
+                  断开连接
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                推荐：使用 OAuth 安全连接
+              </h4>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
+                通过 PayPal Commerce Platform 连接更安全，自动配置 webhook
+              </p>
+              <Button
+                onClick={async () => {
+                  setConnectingPayPal(true)
+                  try {
+                    const response = await fetch("/api/connect/paypal")
+                    const data = await response.json()
+                    if (data.url) {
+                      window.location.href = data.url
+                    } else {
+                      alert("获取连接URL失败")
+                    }
+                  } catch (error) {
+                    alert("连接失败，请稍后重试")
+                  } finally {
+                    setConnectingPayPal(false)
+                  }
+                }}
+                disabled={connectingPayPal}
+                className="w-full bg-[#0070ba] hover:bg-[#005ea6]"
+              >
+                {connectingPayPal ? "连接中..." : "🔗 使用 OAuth 连接 PayPal"}
+              </Button>
+              <div className="mt-3 text-center">
+                <p className="text-xs text-muted-foreground">或者手动配置密钥（不推荐）</p>
+              </div>
+            </div>
+          )}
+
+          <div className="pt-4 border-t">
           <div>
             <label className="block text-sm font-medium mb-2">
               Client ID <span className="text-red-500">*</span>
