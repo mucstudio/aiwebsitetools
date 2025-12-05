@@ -176,3 +176,37 @@ export async function getSiteInfo() {
     companyName: settings.company_name || "AI Website Tools Inc.",
   }
 }
+/**
+ * 获取 OAuth 设置
+ */
+export async function getOAuthSettings() {
+  const settings = await getSettings()
+
+  return {
+    google: {
+      enabled: settings.oauth_google_enabled === "true",
+      clientId: settings.oauth_google_client_id || process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: settings.oauth_google_client_secret || process.env.GOOGLE_CLIENT_SECRET || "",
+    },
+    github: {
+      enabled: settings.oauth_github_enabled === "true",
+      clientId: settings.oauth_github_client_id || process.env.GITHUB_CLIENT_ID || "",
+      clientSecret: settings.oauth_github_client_secret || process.env.GITHUB_CLIENT_SECRET || "",
+    },
+    facebook: {
+      enabled: settings.oauth_facebook_enabled === "true",
+      clientId: settings.oauth_facebook_client_id || process.env.FACEBOOK_CLIENT_ID || "",
+      clientSecret: settings.oauth_facebook_client_secret || process.env.FACEBOOK_CLIENT_SECRET || "",
+    },
+    twitter: {
+      enabled: settings.oauth_twitter_enabled === "true",
+      clientId: settings.oauth_twitter_client_id || process.env.TWITTER_CLIENT_ID || "",
+      clientSecret: settings.oauth_twitter_client_secret || process.env.TWITTER_CLIENT_SECRET || "",
+    },
+    discord: {
+      enabled: settings.oauth_discord_enabled === "true",
+      clientId: settings.oauth_discord_client_id || process.env.DISCORD_CLIENT_ID || "",
+      clientSecret: settings.oauth_discord_client_secret || process.env.DISCORD_CLIENT_SECRET || "",
+    },
+  }
+}

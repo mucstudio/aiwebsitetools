@@ -26,7 +26,7 @@ export default function SignupPage() {
   useEffect(() => {
     async function checkSettings() {
       try {
-        const response = await fetch("/api/admin/settings")
+        const response = await fetch("/api/settings/public")
         if (response.ok) {
           const data = await response.json()
           const settings = data.settings || {}
@@ -36,10 +36,7 @@ export default function SignupPage() {
           // 检查每个 OAuth 提供商是否启用
           const providers = ["google", "github", "facebook", "discord", "twitter"]
           const enabled = providers.filter((provider) => {
-            const isEnabled = settings[`oauth_${provider}_enabled`] === "true"
-            const hasClientId = settings[`oauth_${provider}_client_id`]
-            const hasClientSecret = settings[`oauth_${provider}_client_secret`]
-            return isEnabled && hasClientId && hasClientSecret
+            return settings[`oauth_${provider}_enabled`] === true
           })
           setEnabledProviders(enabled)
         }

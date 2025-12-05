@@ -10,8 +10,49 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import type { Adapter } from "next-auth/adapters"
 import { Role } from "@prisma/client"
-import { getSecuritySettings } from "@/lib/settings"
+import { getSecuritySettings, getOAuthSettings } from "@/lib/settings"
 import { checkLoginAttempt, recordLoginAttempt } from "@/lib/login-protection"
+
+// 尝试在初始化时获取 OAuth 设置
+// 注意：这使用了 Top-level await，Next.js 支持
+let oauthSettings = {
+  google: { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET },
+  github: { clientId: process.env.GITHUB_CLIENT_ID, clientSecret: process.env.GITHUB_CLIENT_SECRET },
+  facebook: { clientId: process.env.FACEBOOK_CLIENT_ID, clientSecret: process.env.FACEBOOK_CLIENT_SECRET },
+  twitter: { clientId: process.env.TWITTER_CLIENT_ID, clientSecret: process.env.TWITTER_CLIENT_SECRET },
+  discord: { clientId: process.env.DISCORD_CLIENT_ID, clientSecret: process.env.DISCORD_CLIENT_SECRET },
+}
+
+try {
+  // 在构建时可能会失败，所以需要 try-catch
+  if (process.env.NODE_ENV !== 'test') {
+    const settings = await getOAuthSettings()
+    oauthSettings = {
+      google: {
+        clientId: settings.google.clientId || process.env.GOOGLE_CLIENT_ID,
+        clientSecret: settings.google.clientSecret || process.env.GOOGLE_CLIENT_SECRET
+      },
+      github: {
+        clientId: settings.github.clientId || process.env.GITHUB_CLIENT_ID,
+        clientSecret: settings.github.clientSecret || process.env.GITHUB_CLIENT_SECRET
+      },
+      facebook: {
+        clientId: settings.facebook.clientId || process.env.FACEBOOK_CLIENT_ID,
+        clientSecret: settings.facebook.clientSecret || process.env.FACEBOOK_CLIENT_SECRET
+      },
+      twitter: {
+        clientId: settings.twitter.clientId || process.env.TWITTER_CLIENT_ID,
+        clientSecret: settings.twitter.clientSecret || process.env.TWITTER_CLIENT_SECRET
+      },
+      discord: {
+        clientId: settings.discord.clientId || process.env.DISCORD_CLIENT_ID,
+        clientSecret: settings.discord.clientSecret || process.env.DISCORD_CLIENT_SECRET
+      },
+    }
+  }
+} catch (error) {
+  console.warn("Failed to load OAuth settings from database, falling back to env vars:", error)
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma) as Adapter,
@@ -28,28 +69,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     // Google OAuth
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: oauthSettings.google.clientId || "",
+      clientSecret: oauthSettings.google.clientSecret || "",
+      allowDangerousEmailAccountLinking: true,
+      async profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          role: "USER", // Default role
+          emailVerified: profile.email_verified ? new Date() : null,
+          createdAt: new Date(),
+        }
+      },
     }),
     // GitHub OAuth
     GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID || "",
-      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+      clientId: oauthSettings.github.clientId || "",
+      clientSecret: oauthSettings.github.clientSecret || "",
+      allowDangerousEmailAccountLinking: true,
     }),
     // Facebook OAuth
     FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID || "",
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "",
+      clientId: oauthSettings.facebook.clientId || "",
+      clientSecret: oauthSettings.facebook.clientSecret || "",
+      allowDangerousEmailAccountLinking: true,
     }),
     // Twitter OAuth
     TwitterProvider({
-      clientId: process.env.TWITTER_CLIENT_ID || "",
-      clientSecret: process.env.TWITTER_CLIENT_SECRET || "",
+      clientId: oauthSettings.twitter.clientId || "",
+      clientSecret: oauthSettings.twitter.clientSecret || "",
+      allowDangerousEmailAccountLinking: true,
     }),
     // Discord OAuth
     DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID || "",
-      clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
+      clientId: oauthSettings.discord.clientId || "",
+      clientSecret: oauthSettings.discord.clientSecret || "",
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: "credentials",
@@ -67,8 +124,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // 获取 IP 地址
         const ipAddress = req?.headers?.get("x-forwarded-for") ||
-                         req?.headers?.get("x-real-ip") ||
-                         "unknown"
+          req?.headers?.get("x-real-ip") ||
+          "unknown"
 
         // 检查登录保护
         const loginCheck = await checkLoginAttempt(email, ipAddress)
