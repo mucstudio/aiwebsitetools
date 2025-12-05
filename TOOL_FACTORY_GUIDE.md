@@ -350,6 +350,10 @@ export default function YourTool({ result }: { result: string }) {
         shareText={`Check out my result: ${result.substring(0, 50)}...`} // 选填：分享文案
         watermark="@InspoaiBox.com"  // 选填：图片水印
         className="mt-6"             // 选填：样式
+        screenshotStyle={{           // 选填：截图时的自定义样式
+          padding: '20px',
+          backgroundColor: '#ffffff'
+        }}
       />
     </div>
   )
@@ -363,5 +367,6 @@ export default function YourTool({ result }: { result: string }) {
 | `contentRef` | 指向要截图的 DOM 元素 (必填) |
 | `watermark` | 下载图片时自动添加的底部水印文字 |
 | `shareText` | 社交分享时的预填文案 |
+| `screenshotStyle` | 截图时应用的自定义样式 (React.CSSProperties)，用于修复背景丢失问题 |
 
 > **提示**：`ShareResult` 会自动检测移动端环境，并优先展示原生分享按钮（调用系统分享菜单）。

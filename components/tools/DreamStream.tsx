@@ -293,6 +293,13 @@ export default function DreamStream({ toolId }: DreamStreamProps) {
                   shareText={`I just decoded my dream with Dream Stream! 🌙✨\n\nLucky Numbers: ${luckyNumbers}`}
                   watermark="@InspoaiBox.com"
                   className="bg-black/20 border-white/10"
+                  screenshotStyle={{
+                    background: 'linear-gradient(180deg, #2e0249 0%, #570a57 50%, #a91079 100%)',
+                    padding: '40px',
+                    borderRadius: '24px',
+                    color: '#f3e8ff',
+                    fontFamily: "'Quicksand', sans-serif"
+                  }}
                 />
 
                 <div className="mt-8 text-center">

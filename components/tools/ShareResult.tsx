@@ -41,6 +41,11 @@ interface ShareResultProps {
      * Additional class names
      */
     className?: string
+    /**
+     * Custom styles to apply to the element during screenshot capture
+     * Useful for adding backgrounds that are otherwise on parent elements
+     */
+    screenshotStyle?: React.CSSProperties
 }
 
 export function ShareResult({
@@ -49,7 +54,8 @@ export function ShareResult({
     shareText = "Check out this amazing result I generated with InspoaiBox!",
     shareUrl,
     watermark,
-    className
+    className,
+    screenshotStyle
 }: ShareResultProps) {
     const [isDownloading, setIsDownloading] = useState(false)
     const [isCopied, setIsCopied] = useState(false)
@@ -88,6 +94,13 @@ export function ShareResult({
                 onclone: (clonedDoc) => {
                     const targetId = originalId || uniqueId
                     const clonedElement = clonedDoc.getElementById(targetId)
+
+                    if (clonedElement) {
+                        // Apply custom screenshot styles if provided
+                        if (screenshotStyle) {
+                            Object.assign(clonedElement.style, screenshotStyle)
+                        }
+                    }
 
                     if (clonedElement && watermark) {
                         const watermarkDiv = clonedDoc.createElement("div")

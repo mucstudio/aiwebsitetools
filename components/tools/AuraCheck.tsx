@@ -205,6 +205,14 @@ export default function AuraCheck({ toolId }: AuraCheckProps) {
                   shareText={`My Aura Score: ${result.score}\n\n${result.body.substring(0, 100)}...`}
                   watermark="@InspoaiBox.com"
                   className="bg-transparent border-white/10 mt-8"
+                  screenshotStyle={{
+                    backgroundColor: '#0f0f0f',
+                    backgroundImage: 'radial-gradient(circle at 50% 50%, #2a2a4e 0%, #000000 100%)',
+                    padding: '40px',
+                    borderRadius: '24px',
+                    color: 'white',
+                    fontFamily: "'Inter', sans-serif"
+                  }}
                 />
 
                 <div className="mt-8">

@@ -254,12 +254,14 @@ export function CorporateClapback({
                 {/* 输出区域 */}
                 {result && (
                   <div className="mt-6">
-                    <div className="win98-title-bar text-sm mb-1">
-                      <span>Message_Preview.txt</span>
-                      <button className="win98-btn w-4 h-4 flex items-center justify-center text-[10px] leading-none text-black">×</button>
-                    </div>
-                    <div ref={resultRef} className="bg-white border-2 border-black border-r-gray-200 border-b-gray-200 p-4 text-black text-xl font-medium leading-relaxed relative">
-                      <div>{result}</div>
+                    <div ref={resultRef}>
+                      <div className="win98-title-bar text-sm mb-1">
+                        <span>Message_Preview.txt</span>
+                        <button className="win98-btn w-4 h-4 flex items-center justify-center text-[10px] leading-none text-black">×</button>
+                      </div>
+                      <div className="bg-white border-2 border-black border-r-gray-200 border-b-gray-200 p-4 text-black text-xl font-medium leading-relaxed relative">
+                        <div>{result}</div>
+                      </div>
                     </div>
 
                     <div className="mt-4">
@@ -269,6 +271,16 @@ export function CorporateClapback({
                         shareText={`Corporate Clapback: ${result.substring(0, 100)}...`}
                         watermark="@InspoaiBox.com"
                         className="bg-[#c0c0c0] border-black border-dashed"
+                        screenshotStyle={{
+                          backgroundColor: '#c0c0c0',
+                          padding: '4px',
+                          borderTop: '2px solid #dfdfdf',
+                          borderLeft: '2px solid #dfdfdf',
+                          borderRight: '2px solid #000000',
+                          borderBottom: '2px solid #000000',
+                          boxShadow: '4px 4px 0px rgba(0,0,0,0.5)',
+                          fontFamily: "'VT323', monospace"
+                        }}
                       />
                     </div>
                   </div>
