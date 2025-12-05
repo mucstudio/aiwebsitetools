@@ -3,11 +3,20 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ImageUpload } from "@/components/ui/image-upload"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 interface GeneralSettings {
   site_name: string
   site_description: string
   site_url: string
+  site_logo: string
+  site_favicon: string
+  show_logo: boolean
+  logo_type: "image" | "css"
   contact_email: string
   support_email: string
   company_name: string
@@ -28,6 +37,10 @@ export default function GeneralSettingsPage() {
     site_name: "",
     site_description: "",
     site_url: "",
+    site_logo: "",
+    site_favicon: "",
+    show_logo: true,
+    logo_type: "image",
     contact_email: "",
     support_email: "",
     company_name: "",
@@ -53,6 +66,10 @@ export default function GeneralSettingsPage() {
           site_name: data.settings.site_name || "AI Website Tools",
           site_description: data.settings.site_description || "Powerful online tools for everyone",
           site_url: data.settings.site_url || "https://aiwebsitetools.com",
+          site_logo: data.settings.site_logo || "",
+          site_favicon: data.settings.site_favicon || "",
+          show_logo: data.settings.show_logo === "true" || data.settings.show_logo === true, // handle string or boolean
+          logo_type: (data.settings.logo_type as "image" | "css") || "image",
           contact_email: data.settings.contact_email || "hello@aiwebsitetools.com",
           support_email: data.settings.support_email || "support@aiwebsitetools.com",
           company_name: data.settings.company_name || "AI Website Tools Inc.",
@@ -95,7 +112,7 @@ export default function GeneralSettingsPage() {
     }
   }
 
-  const handleChange = (key: keyof GeneralSettings, value: string) => {
+  const handleChange = (key: keyof GeneralSettings, value: any) => {
     setSettings((prev) => ({
       ...prev,
       [key]: value,
@@ -187,6 +204,78 @@ export default function GeneralSettingsPage() {
                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="AI Website Tools Inc."
               />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 品牌设置 (Logo & Favicon) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>品牌设置</CardTitle>
+          <CardDescription>配置网站 Logo 和图标</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-base">显示 Logo</Label>
+              <p className="text-sm text-muted-foreground">
+                在导航栏和页脚显示网站 Logo
+              </p>
+            </div>
+            <Switch
+              checked={settings.show_logo}
+              onCheckedChange={(checked) => handleChange("show_logo", checked)}
+            />
+          </div>
+
+          {settings.show_logo && (
+            <div className="space-y-4">
+              <Label className="text-base">Logo 类型</Label>
+              <RadioGroup
+                value={settings.logo_type}
+                onValueChange={(value) => handleChange("logo_type", value)}
+                className="flex flex-col space-y-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="image" id="logo-type-image" />
+                  <Label htmlFor="logo-type-image">图片 Logo</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="css" id="logo-type-css" />
+                  <Label htmlFor="logo-type-css">CSS 动画 Logo (inspoaibox)</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+
+          <div className="grid gap-8 md:grid-cols-2">
+            {settings.show_logo && settings.logo_type === "image" && (
+              <div>
+                <Label className="block text-sm font-medium mb-4">网站 Logo</Label>
+                <ImageUpload
+                  value={settings.site_logo}
+                  onChange={(url) => handleChange("site_logo", url)}
+                  onRemove={() => handleChange("site_logo", "")}
+                  label="上传 Logo"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  建议尺寸: 200x50px 或正方形图标。支持 PNG, SVG, JPG。
+                </p>
+              </div>
+            )}
+
+            <div>
+              <Label className="block text-sm font-medium mb-4">网站 Favicon</Label>
+              <ImageUpload
+                value={settings.site_favicon}
+                onChange={(url) => handleChange("site_favicon", url)}
+                onRemove={() => handleChange("site_favicon", "")}
+                label="上传 Favicon"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                浏览器标签页图标。建议尺寸: 32x32px 或 64x64px。支持 ICO, PNG。
+              </p>
             </div>
           </div>
         </CardContent>

@@ -1,21 +1,27 @@
 import Link from "next/link"
+import Image from "next/image"
 import { unstable_noStore as noStore } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getCurrentSession } from "@/lib/auth-utils"
 import { UserMenu } from "./UserMenu"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Input } from "@/components/ui/input"
-import { Search, Home, Wrench, CreditCard, Info, Heart, LayoutDashboard, Twitter, Github, Mail, Facebook, Youtube, Instagram, Linkedin } from "lucide-react"
+import { Search, Home, Wrench, CreditCard, Info, Heart, LayoutDashboard, Twitter, Github, Mail, Facebook, Youtube, Instagram, Linkedin, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MobileNav } from "./MobileNav"
 import { SidebarNav } from "./SidebarNav"
 import { SidebarSearch } from "./SidebarSearch"
+import { AnimatedLogo } from "@/components/ui/animated-logo"
 
 export async function Sidebar() {
   noStore()
   const [siteSettings, menuItems, session, connectSettings] = await Promise.all([
-    prisma.siteSettings.findUnique({
-      where: { key: 'site_name' }
+    prisma.siteSettings.findMany({
+      where: {
+        key: {
+          in: ['site_name', 'site_logo', 'show_logo', 'logo_type']
+        }
+      }
     }),
     prisma.menuItem.findMany({
       where: {
@@ -36,9 +42,17 @@ export async function Sidebar() {
     })
   ])
 
+  const settingsMap = siteSettings.reduce((acc, s) => {
+    acc[s.key] = s.value
+    return acc
+  }, {} as Record<string, any>)
+
   const connect = (connectSettings?.value as any) || { showConnect: false }
 
-  const siteName = (siteSettings?.value as string) || 'AI Website Tools'
+  const siteName = (settingsMap.site_name as string) || 'AI Website Tools'
+  const siteLogo = (settingsMap.site_logo as string) || ''
+  const showLogo = settingsMap.show_logo === undefined ? true : (settingsMap.show_logo === true || settingsMap.show_logo === 'true')
+  const logoType = (settingsMap.logo_type as string) || 'image'
 
   // Default menu items if database is empty or for core navigation
   // Only use these if no menus are defined in the database
@@ -52,21 +66,66 @@ export async function Sidebar() {
   if (menuItems.length === 0 && session?.user) {
     defaultNavItems.push({ id: "favorites", label: "Favorites", url: "/dashboard/favorites", icon: "Heart", openInNewTab: false })
     defaultNavItems.push({ id: "dashboard", label: "Dashboard", url: "/dashboard", icon: "LayoutDashboard", openInNewTab: false })
+    defaultNavItems.push({ id: "settings", label: "Settings", url: "/dashboard/security", icon: "Settings", openInNewTab: false })
+  }
+
+  const Logo = () => {
+    if (!showLogo) {
+      return (
+        <>
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-md">
+            AI
+          </div>
+          <span className="truncate">{siteName}</span>
+        </>
+      )
+    }
+
+    if (logoType === 'css') {
+      return <AnimatedLogo text="inspoaibox" />
+    }
+
+    if (siteLogo) {
+      return (
+        <div className="relative h-8 w-auto min-w-[32px] aspect-[3/1]">
+          <Image
+            src={siteLogo}
+            alt={siteName}
+            fill
+            className="object-contain object-left"
+          />
+        </div>
+      )
+    }
+
+    // Fallback if showLogo is true but no image and type is image
+    return (
+      <>
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-md">
+          AI
+        </div>
+        <span className="truncate">{siteName}</span>
+      </>
+    )
   }
 
   return (
     <>
       <div className="md:hidden sticky top-0 z-50 bg-background border-b">
-        <MobileNav session={session} siteName={siteName} menuItems={menuItems.length > 0 ? menuItems : defaultNavItems} />
+        <MobileNav
+          session={session}
+          siteName={siteName}
+          menuItems={menuItems.length > 0 ? menuItems : defaultNavItems}
+          siteLogo={siteLogo}
+          showLogo={showLogo}
+          logoType={logoType}
+        />
       </div>
       <aside className="hidden md:flex h-screen w-64 flex-col fixed left-0 top-0 border-r bg-background z-50">
         {/* Logo & Title */}
-        <div className="p-6 border-b">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-primary-foreground shadow-md">
-              AI
-            </div>
-            <span className="truncate">{siteName}</span>
+        <div className="p-6 border-b flex items-center justify-center">
+          <Link href="/" className="flex items-center gap-2 font-bold text-xl w-full">
+            <Logo />
           </Link>
         </div>
 

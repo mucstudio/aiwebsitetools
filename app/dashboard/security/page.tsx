@@ -9,12 +9,16 @@ import { Switch } from "@/components/ui/switch"
 import { Loader2, Shield, Key, Bell } from "lucide-react"
 import { PasswordInput } from "@/components/auth/PasswordInput"
 
+import { signIn } from "next-auth/react"
+
 export default function SecurityPage() {
   const [loading, setLoading] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [settingsLoading, setSettingsLoading] = useState(true)
+  const [accountsLoading, setAccountsLoading] = useState(true)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [passwordMessage, setPasswordMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [connectedAccounts, setConnectedAccounts] = useState<any[]>([])
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -28,7 +32,7 @@ export default function SecurityPage() {
     loginAlerts: true,
   })
 
-  // 加载用户安全设置
+  // 加载用户安全设置和连接账号
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -48,8 +52,59 @@ export default function SecurityPage() {
       }
     }
 
+    const loadConnectedAccounts = async () => {
+      try {
+        const response = await fetch("/api/user/connections")
+        if (response.ok) {
+          const data = await response.json()
+          setConnectedAccounts(data.providers)
+        }
+      } catch (error) {
+        console.error("Failed to load connected accounts:", error)
+      } finally {
+        setAccountsLoading(false)
+      }
+    }
+
     loadSettings()
+    loadConnectedAccounts()
   }, [])
+
+  const handleConnect = (providerId: string) => {
+    signIn(providerId, { callbackUrl: "/dashboard/security" })
+  }
+
+  const handleDisconnect = async (providerId: string) => {
+    if (!confirm("Are you sure you want to disconnect this account?")) return
+
+    try {
+      const response = await fetch("/api/user/connections", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ provider: providerId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to disconnect account")
+      }
+
+      // Refresh list
+      setConnectedAccounts(prev => prev.map(acc =>
+        acc.id === providerId ? { ...acc, connected: false } : acc
+      ))
+
+      setMessage({ type: "success", text: "Account disconnected successfully" })
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to disconnect account",
+      })
+    }
+  }
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -135,7 +190,7 @@ export default function SecurityPage() {
   return (
     <section className="container py-12">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Security Center</h1>
+        <h1 className="text-4xl font-bold mb-2">Settings</h1>
         <p className="text-muted-foreground">Manage your account security settings</p>
       </div>
 
@@ -180,11 +235,10 @@ export default function SecurityPage() {
 
               {passwordMessage && (
                 <div
-                  className={`p-4 rounded-lg ${
-                    passwordMessage.type === "success"
-                      ? "bg-green-50 text-green-800 border border-green-200"
-                      : "bg-red-50 text-red-800 border border-red-200"
-                  }`}
+                  className={`p-4 rounded-lg ${passwordMessage.type === "success"
+                    ? "bg-green-50 text-green-800 border border-green-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                    }`}
                 >
                   {passwordMessage.text}
                 </div>
@@ -195,6 +249,61 @@ export default function SecurityPage() {
                 Update Password
               </Button>
             </form>
+
+
+          </CardContent>
+        </Card>
+
+        {/* Connected Accounts */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              <CardTitle>Connected Accounts</CardTitle>
+            </div>
+            <CardDescription>Manage your connected social accounts for easier login</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {accountsLoading ? (
+              <div className="text-center py-4 text-muted-foreground">Loading...</div>
+            ) : connectedAccounts.length > 0 ? (
+              <div className="space-y-4">
+                {connectedAccounts.map((account) => (
+                  <div key={account.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="capitalize font-medium">{account.name}</div>
+                      {account.connected && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                          Connected
+                        </span>
+                      )}
+                    </div>
+                    {account.connected ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDisconnect(account.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        Disconnect
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleConnect(account.id)}
+                      >
+                        Connect
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                No social login providers are currently enabled.
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -267,11 +376,10 @@ export default function SecurityPage() {
 
             {message && (
               <div
-                className={`p-4 rounded-lg ${
-                  message.type === "success"
-                    ? "bg-green-50 text-green-800 border border-green-200"
-                    : "bg-red-50 text-red-800 border border-red-200"
-                }`}
+                className={`p-4 rounded-lg ${message.type === "success"
+                  ? "bg-green-50 text-green-800 border border-green-200"
+                  : "bg-red-50 text-red-800 border border-red-200"
+                  }`}
               >
                 {message.text}
               </div>
@@ -299,7 +407,7 @@ export default function SecurityPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </section>
+      </div >
+    </section >
   )
 }

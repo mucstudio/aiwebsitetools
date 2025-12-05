@@ -25,7 +25,7 @@ export async function generateMetadata(options?: {
   const metadata: Metadata = {
     title,
     description,
-    keywords: keywords.split(",").map((k) => k.trim()),
+    keywords: keywords.split(",").map((k: string) => k.trim()),
     authors: [{ name: siteInfo.companyName }],
     creator: siteInfo.companyName,
     publisher: siteInfo.companyName,
@@ -65,6 +65,11 @@ export async function generateMetadata(options?: {
         follow: !options?.noIndex,
       },
     },
+    icons: siteInfo.siteFavicon ? {
+      icon: siteInfo.siteFavicon,
+      shortcut: siteInfo.siteFavicon,
+      apple: siteInfo.siteFavicon,
+    } : undefined,
   }
 
   // 添加 Google Site Verification

@@ -52,6 +52,9 @@ export function UserMenu({ session }: UserMenuProps) {
         <DropdownMenuItem asChild>
           <Link href="/dashboard/subscription">Subscription</Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard/security">Settings</Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="text-red-600 cursor-pointer"

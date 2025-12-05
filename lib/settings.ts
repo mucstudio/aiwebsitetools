@@ -67,6 +67,7 @@ export async function getSEOSettings() {
     twitterCreator: settings.twitter_creator || "",
     googleAnalyticsId: settings.google_analytics_id || "",
     googleSiteVerification: settings.google_site_verification || "",
+    robotsTxt: settings.robots_txt || "",
   }
 }
 
@@ -175,6 +176,10 @@ export async function getSiteInfo() {
     siteName: settings.site_name || "AI Website Tools",
     siteDescription: settings.site_description || "Powerful online tools for everyone",
     siteUrl: settings.site_url || process.env.NEXT_PUBLIC_APP_URL || "https://aiwebsitetools.com",
+    siteLogo: settings.site_logo || "",
+    siteFavicon: settings.site_favicon || "",
+    showLogo: settings.show_logo === "true" || settings.show_logo === true,
+    logoType: settings.logo_type || "image",
     contactEmail: settings.contact_email || "hello@aiwebsitetools.com",
     supportEmail: settings.support_email || "support@aiwebsitetools.com",
     companyName: settings.company_name || "AI Website Tools Inc.",
