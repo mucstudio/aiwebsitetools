@@ -24,18 +24,26 @@ import {
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-  const tools = await prisma.tool.findMany({
-    where: {
-      isPublished: true,
-    },
-    include: {
-      category: true,
-    },
-    orderBy: {
-      usageCount: 'desc',
-    },
-    take: 12, // Limit to top 12 tools
-  })
+  const [tools, categories] = await Promise.all([
+    prisma.tool.findMany({
+      where: {
+        isPublished: true,
+      },
+      include: {
+        category: true,
+      },
+      orderBy: {
+        usageCount: 'desc',
+      },
+      take: 12, // Limit to top 12 tools
+    }),
+    prisma.category.findMany({
+      orderBy: {
+        order: 'asc',
+      },
+      take: 8, // Limit to top 8 categories for the homepage
+    }),
+  ])
 
   return (
     <>
@@ -165,11 +173,13 @@ export default async function HomePage() {
             </div>
 
             <Tabs defaultValue="popular" className="w-full">
-              <TabsList className="flex w-full overflow-x-auto pb-2 md:grid md:w-auto md:grid-cols-4 md:pb-0 mb-8 no-scrollbar">
+              <TabsList className="flex w-full overflow-x-auto pb-2 md:grid md:w-auto md:grid-cols-4 md:pb-0 mb-8 no-scrollbar h-auto">
                 <TabsTrigger value="popular" className="flex-shrink-0">Popular</TabsTrigger>
-                <TabsTrigger value="developer" className="flex-shrink-0">Developer</TabsTrigger>
-                <TabsTrigger value="creative" className="flex-shrink-0">Creative</TabsTrigger>
-                <TabsTrigger value="utilities" className="flex-shrink-0">Utilities</TabsTrigger>
+                {categories.map((category) => (
+                  <TabsTrigger key={category.id} value={category.slug} className="flex-shrink-0">
+                    {category.name}
+                  </TabsTrigger>
+                ))}
               </TabsList>
 
               <TabsContent value="popular" className="mt-0">
@@ -186,29 +196,21 @@ export default async function HomePage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="developer" className="mt-0">
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {tools.filter(t => t.category.slug === 'developer' || t.category.slug === 'code').map((tool) => (
-                    <ToolCard key={tool.slug} tool={tool} />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="creative" className="mt-0">
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {tools.filter(t => t.category.slug === 'image' || t.category.slug === 'creative').map((tool) => (
-                    <ToolCard key={tool.slug} tool={tool} />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="utilities" className="mt-0">
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {tools.filter(t => t.category.slug === 'utilities' || t.category.slug === 'text').map((tool) => (
-                    <ToolCard key={tool.slug} tool={tool} />
-                  ))}
-                </div>
-              </TabsContent>
+              {categories.map((category) => (
+                <TabsContent key={category.id} value={category.slug} className="mt-0">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {tools.filter(t => t.categoryId === category.id).length > 0 ? (
+                      tools.filter(t => t.categoryId === category.id).map((tool) => (
+                        <ToolCard key={tool.slug} tool={tool} />
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-12 text-muted-foreground">
+                        No tools in this category yet.
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              ))}
             </Tabs>
           </div>
         </section>
