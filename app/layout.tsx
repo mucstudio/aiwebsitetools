@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { generateMetadata as generateSiteMetadata } from "@/lib/metadata"
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider"
 import { Sidebar } from "@/components/layout/Sidebar"
+import { CookieConsent } from "@/components/layout/CookieConsent"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -35,6 +36,7 @@ export default function RootLayout({
             </div>
           </SessionProvider>
           <AnalyticsProvider />
+          <CookieConsent />
         </ThemeProvider>
       </body>
     </html>
