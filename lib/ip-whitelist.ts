@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getSecuritySettings } from "@/lib/settings"
 
 /**
  * 获取客户端真实 IP 地址
@@ -31,8 +32,9 @@ export async function getClientIP(): Promise<string> {
 /**
  * 检查 IP 是否在白名单中
  */
-export function isIPWhitelisted(ip: string): boolean {
-  const whitelist = process.env.ADMIN_IP_WHITELIST
+export async function isIPWhitelisted(ip: string): Promise<boolean> {
+  const settings = await getSecuritySettings()
+  const whitelist = settings.adminIpWhitelist
 
   // 如果没有配置白名单，允许所有 IP
   if (!whitelist || whitelist.trim() === "") {
@@ -53,7 +55,7 @@ export function isIPWhitelisted(ip: string): boolean {
 export async function checkAdminIPWhitelist() {
   const clientIP = await getClientIP()
 
-  if (!isIPWhitelisted(clientIP)) {
+  if (!(await isIPWhitelisted(clientIP))) {
     console.warn(`Admin access denied for IP: ${clientIP}`)
     redirect("/unauthorized?reason=ip")
   }
@@ -76,8 +78,9 @@ export function isValidIP(ip: string): boolean {
 /**
  * 获取白名单配置
  */
-export function getWhitelistConfig() {
-  const whitelist = process.env.ADMIN_IP_WHITELIST
+export async function getWhitelistConfig() {
+  const settings = await getSecuritySettings()
+  const whitelist = settings.adminIpWhitelist
 
   if (!whitelist || whitelist.trim() === "") {
     return {

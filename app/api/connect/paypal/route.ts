@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const trackingId = randomBytes(16).toString("hex")
 
     // Get PayPal Partner Referral URL
-    const connectURL = getPayPalConnectURL(trackingId)
+    const connectURL = await getPayPalConnectURL(trackingId)
 
     return NextResponse.json({ url: connectURL })
   } catch (error: any) {

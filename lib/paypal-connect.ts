@@ -4,6 +4,7 @@
  */
 
 import { prisma } from "@/lib/prisma"
+import { getPaymentSettings, getSiteInfo } from "@/lib/settings"
 
 interface PayPalOAuthTokenResponse {
   access_token: string
@@ -22,9 +23,12 @@ interface PayPalMerchantInfo {
 /**
  * Generate PayPal Partner Referral URL
  */
-export function getPayPalConnectURL(trackingId: string): string {
-  const partnerId = process.env.PAYPAL_PARTNER_ID
-  const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/connect/paypal/callback`
+export async function getPayPalConnectURL(trackingId: string): Promise<string> {
+  const settings = await getPaymentSettings()
+  const siteInfo = await getSiteInfo()
+
+  const partnerId = settings.paypalPartnerId
+  const returnUrl = `${siteInfo.siteUrl}/api/connect/paypal/callback`
 
   if (!partnerId) {
     throw new Error("PAYPAL_PARTNER_ID not configured")
@@ -32,7 +36,7 @@ export function getPayPalConnectURL(trackingId: string): string {
 
   const params = new URLSearchParams({
     partnerId,
-    partnerLogoUrl: `${process.env.NEXT_PUBLIC_APP_URL}/logo.png`,
+    partnerLogoUrl: `${siteInfo.siteUrl}/logo.png`,
     returnToPartnerUrl: returnUrl,
     product: "PPCP", // PayPal Commerce Platform
     secondaryProducts: "payment_methods",
@@ -42,7 +46,7 @@ export function getPayPalConnectURL(trackingId: string): string {
     trackingId,
   })
 
-  const baseURL = process.env.PAYPAL_MODE === "live"
+  const baseURL = settings.paypalMode === "live"
     ? "https://www.paypal.com"
     : "https://www.sandbox.paypal.com"
 
@@ -53,14 +57,15 @@ export function getPayPalConnectURL(trackingId: string): string {
  * Get PayPal access token using client credentials
  */
 async function getPayPalClientToken(): Promise<string> {
-  const clientId = process.env.PAYPAL_CLIENT_ID
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET
+  const settings = await getPaymentSettings()
+  const clientId = settings.paypalClientId
+  const clientSecret = settings.paypalClientSecret
 
   if (!clientId || !clientSecret) {
     throw new Error("PayPal credentials not configured")
   }
 
-  const baseURL = process.env.PAYPAL_MODE === "live"
+  const baseURL = settings.paypalMode === "live"
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com"
 
@@ -91,13 +96,14 @@ export async function getPayPalMerchantCredentials(
   sharedId: string
 ): Promise<PayPalMerchantInfo> {
   const clientToken = await getPayPalClientToken()
+  const settings = await getPaymentSettings()
 
-  const baseURL = process.env.PAYPAL_MODE === "live"
+  const baseURL = settings.paypalMode === "live"
     ? "https://api-m.paypal.com"
     : "https://api-m.sandbox.paypal.com"
 
   const response = await fetch(
-    `${baseURL}/v1/customer/partners/${process.env.PAYPAL_PARTNER_ID}/merchant-integrations/${sharedId}`,
+    `${baseURL}/v1/customer/partners/${settings.paypalPartnerId}/merchant-integrations/${sharedId}`,
     {
       headers: {
         "Authorization": `Bearer ${clientToken}`,
@@ -125,7 +131,7 @@ export async function getPayPalMerchantCredentials(
  * Save PayPal connection to database
  */
 export async function savePayPalConnection(merchantInfo: PayPalMerchantInfo) {
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "paypal_merchant_id" },
     create: {
       key: "paypal_merchant_id",
@@ -136,7 +142,7 @@ export async function savePayPalConnection(merchantInfo: PayPalMerchantInfo) {
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "paypal_connected_at" },
     create: {
       key: "paypal_connected_at",
@@ -147,7 +153,7 @@ export async function savePayPalConnection(merchantInfo: PayPalMerchantInfo) {
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "paypal_connection_status" },
     create: {
       key: "paypal_connection_status",
@@ -168,7 +174,7 @@ export async function disconnectPayPal() {
     "paypal_connected_at",
   ]
 
-  await prisma.setting.deleteMany({
+  await prisma.siteSettings.deleteMany({
     where: {
       key: {
         in: keysToDelete,
@@ -176,7 +182,7 @@ export async function disconnectPayPal() {
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "paypal_connection_status" },
     create: {
       key: "paypal_connection_status",
@@ -192,7 +198,7 @@ export async function disconnectPayPal() {
  * Check if PayPal is connected
  */
 export async function isPayPalConnected(): Promise<boolean> {
-  const status = await prisma.setting.findUnique({
+  const status = await prisma.siteSettings.findUnique({
     where: { key: "paypal_connection_status" },
   })
 
@@ -203,9 +209,9 @@ export async function isPayPalConnected(): Promise<boolean> {
  * Get PayPal merchant ID
  */
 export async function getPayPalMerchantId(): Promise<string | null> {
-  const setting = await prisma.setting.findUnique({
+  const setting = await prisma.siteSettings.findUnique({
     where: { key: "paypal_merchant_id" },
   })
 
-  return setting?.value || null
+  return (setting?.value as string) || null
 }

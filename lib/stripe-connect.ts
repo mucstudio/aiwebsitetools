@@ -4,6 +4,7 @@
  */
 
 import { prisma } from "@/lib/prisma"
+import { getPaymentSettings, getSiteInfo } from "@/lib/settings"
 
 interface StripeOAuthTokenResponse {
   access_token: string
@@ -18,9 +19,12 @@ interface StripeOAuthTokenResponse {
 /**
  * Generate Stripe Connect OAuth URL
  */
-export function getStripeConnectURL(state: string): string {
-  const clientId = process.env.STRIPE_CONNECT_CLIENT_ID
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/connect/stripe/callback`
+export async function getStripeConnectURL(state: string): Promise<string> {
+  const settings = await getPaymentSettings()
+  const siteInfo = await getSiteInfo()
+
+  const clientId = settings.stripeConnectClientId
+  const redirectUri = `${siteInfo.siteUrl}/api/connect/stripe/callback`
 
   if (!clientId) {
     throw new Error("STRIPE_CONNECT_CLIENT_ID not configured")
@@ -43,7 +47,8 @@ export function getStripeConnectURL(state: string): string {
  * Exchange authorization code for access token
  */
 export async function exchangeStripeCode(code: string): Promise<StripeOAuthTokenResponse> {
-  const clientSecret = process.env.STRIPE_SECRET_KEY
+  const settings = await getPaymentSettings()
+  const clientSecret = settings.stripeSecretKey
 
   if (!clientSecret) {
     throw new Error("STRIPE_SECRET_KEY not configured")
@@ -73,7 +78,8 @@ export async function exchangeStripeCode(code: string): Promise<StripeOAuthToken
  * Refresh Stripe access token
  */
 export async function refreshStripeToken(refreshToken: string): Promise<StripeOAuthTokenResponse> {
-  const clientSecret = process.env.STRIPE_SECRET_KEY
+  const settings = await getPaymentSettings()
+  const clientSecret = settings.stripeSecretKey
 
   if (!clientSecret) {
     throw new Error("STRIPE_SECRET_KEY not configured")
@@ -105,7 +111,7 @@ export async function refreshStripeToken(refreshToken: string): Promise<StripeOA
 export async function saveStripeConnection(tokenData: StripeOAuthTokenResponse) {
   const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "stripe_connected_account_id" },
     create: {
       key: "stripe_connected_account_id",
@@ -116,7 +122,7 @@ export async function saveStripeConnection(tokenData: StripeOAuthTokenResponse) 
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "stripe_access_token" },
     create: {
       key: "stripe_access_token",
@@ -127,7 +133,7 @@ export async function saveStripeConnection(tokenData: StripeOAuthTokenResponse) 
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "stripe_refresh_token" },
     create: {
       key: "stripe_refresh_token",
@@ -138,7 +144,7 @@ export async function saveStripeConnection(tokenData: StripeOAuthTokenResponse) 
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "stripe_publishable_key" },
     create: {
       key: "stripe_publishable_key",
@@ -149,7 +155,7 @@ export async function saveStripeConnection(tokenData: StripeOAuthTokenResponse) 
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "stripe_token_expires_at" },
     create: {
       key: "stripe_token_expires_at",
@@ -160,7 +166,7 @@ export async function saveStripeConnection(tokenData: StripeOAuthTokenResponse) 
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "stripe_connected_at" },
     create: {
       key: "stripe_connected_at",
@@ -171,7 +177,7 @@ export async function saveStripeConnection(tokenData: StripeOAuthTokenResponse) 
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "stripe_connection_status" },
     create: {
       key: "stripe_connection_status",
@@ -187,7 +193,7 @@ export async function saveStripeConnection(tokenData: StripeOAuthTokenResponse) 
  * Get Stripe access token (refresh if needed)
  */
 export async function getStripeAccessToken(): Promise<string | null> {
-  const settings = await prisma.setting.findMany({
+  const settings = await prisma.siteSettings.findMany({
     where: {
       key: {
         in: ["stripe_access_token", "stripe_refresh_token", "stripe_token_expires_at"],
@@ -196,7 +202,7 @@ export async function getStripeAccessToken(): Promise<string | null> {
   })
 
   const settingsMap = settings.reduce((acc, s) => {
-    acc[s.key] = s.value
+    acc[s.key] = s.value as string
     return acc
   }, {} as Record<string, string>)
 
@@ -241,7 +247,7 @@ export async function disconnectStripe() {
     "stripe_connected_at",
   ]
 
-  await prisma.setting.deleteMany({
+  await prisma.siteSettings.deleteMany({
     where: {
       key: {
         in: keysToDelete,
@@ -249,7 +255,7 @@ export async function disconnectStripe() {
     },
   })
 
-  await prisma.setting.upsert({
+  await prisma.siteSettings.upsert({
     where: { key: "stripe_connection_status" },
     create: {
       key: "stripe_connection_status",
@@ -265,7 +271,7 @@ export async function disconnectStripe() {
  * Check if Stripe is connected
  */
 export async function isStripeConnected(): Promise<boolean> {
-  const status = await prisma.setting.findUnique({
+  const status = await prisma.siteSettings.findUnique({
     where: { key: "stripe_connection_status" },
   })
 

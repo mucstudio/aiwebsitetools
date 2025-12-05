@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // Store state in session or database for verification
     // For simplicity, we'll encode it in the URL
-    const connectURL = getStripeConnectURL(state)
+    const connectURL = await getStripeConnectURL(state)
 
     return NextResponse.json({ url: connectURL })
   } catch (error: any) {

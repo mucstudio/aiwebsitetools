@@ -38,7 +38,7 @@ export async function getSettings(): Promise<Record<string, any>> {
  */
 export async function getSetting<T = any>(key: string, defaultValue?: T): Promise<T> {
   const settings = await getSettings()
-  return settings[key] !== undefined ? settings[key] : defaultValue
+  return (settings[key] !== undefined ? settings[key] : defaultValue) as T
 }
 
 /**
@@ -80,9 +80,12 @@ export async function getPaymentSettings() {
     stripePublishableKey: settings.stripe_publishable_key || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
     stripeSecretKey: settings.stripe_secret_key || process.env.STRIPE_SECRET_KEY || "",
     stripeWebhookSecret: settings.stripe_webhook_secret || process.env.STRIPE_WEBHOOK_SECRET || "",
+    stripeConnectClientId: settings.stripe_connect_client_id || process.env.STRIPE_CONNECT_CLIENT_ID || "",
     paypalClientId: settings.paypal_client_id || process.env.PAYPAL_CLIENT_ID || "",
     paypalClientSecret: settings.paypal_client_secret || process.env.PAYPAL_CLIENT_SECRET || "",
     paypalWebhookId: settings.paypal_webhook_id || process.env.PAYPAL_WEBHOOK_ID || "",
+    paypalPartnerId: settings.paypal_partner_id || process.env.PAYPAL_PARTNER_ID || "",
+    paypalMode: settings.paypal_mode || process.env.PAYPAL_MODE || "sandbox",
     currency: settings.payment_currency || "USD",
     enabled: settings.payment_enabled !== false,
     testMode: settings.test_mode === true,
@@ -132,6 +135,7 @@ export async function getSecuritySettings() {
     enableCaptcha: settings.enable_captcha === true,
     captchaSiteKey: settings.captcha_site_key || "",
     captchaSecretKey: settings.captcha_secret_key || "",
+    adminIpWhitelist: settings.admin_ip_whitelist || process.env.ADMIN_IP_WHITELIST || "",
   }
 }
 
