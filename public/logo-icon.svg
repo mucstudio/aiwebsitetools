@@ -1,0 +1,33 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="20" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bg-gradient)" />
+  
+  <!-- Inner stroke for depth -->
+  <rect x="48" y="48" width="416" height="416" rx="80" stroke="white" stroke-opacity="0.2" stroke-width="8" fill="none" />
+
+  <!-- Box Icon (Center) -->
+  <g transform="translate(128, 128) scale(1)">
+    <path d="M128 32 L224 80 V176 L128 224 L32 176 V80 Z" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M32 80 L128 128 L224 80" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M128 224 V128" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- Sparkle Icon (Top Right) -->
+  <g transform="translate(340, 60) scale(0.6)">
+    <path d="M80 0 L98 62 L160 80 L98 98 L80 160 L62 98 L0 80 L62 62 Z" fill="#67e8f9">
+      <animate attributeName="opacity" values="1;0.5;1" duration="2s" repeatCount="indefinite" />
+      <animateTransform attributeName="transform" type="scale" values="1;1.1;1" duration="2s" repeatCount="indefinite" />
+    </path>
+  </g>
+</svg>

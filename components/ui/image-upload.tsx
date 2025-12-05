@@ -64,6 +64,7 @@ export function ImageUpload({
                             alt="Uploaded image"
                             fill
                             className="object-contain"
+                            unoptimized
                         />
                         <button
                             onClick={onRemove}
