@@ -38,6 +38,9 @@ export default async function HomePage() {
       take: 12, // Limit to top 12 tools
     }),
     prisma.category.findMany({
+      where: {
+        parentId: null, // Only fetch top-level categories
+      },
       orderBy: {
         order: 'asc',
       },
@@ -173,10 +176,10 @@ export default async function HomePage() {
             </div>
 
             <Tabs defaultValue="popular" className="w-full">
-              <TabsList className="flex w-full overflow-x-auto pb-2 md:grid md:w-auto md:grid-cols-4 md:pb-0 mb-8 no-scrollbar h-auto bg-transparent p-0 gap-4">
+              <TabsList className="flex flex-wrap justify-center gap-3 h-auto bg-transparent p-0 mb-8">
                 <TabsTrigger
                   value="popular"
-                  className="flex-shrink-0 rounded-full border border-muted bg-background hover:bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all h-10"
+                  className="rounded-full border border-muted bg-background px-6 py-2 hover:bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
                 >
                   Popular
                 </TabsTrigger>
@@ -184,7 +187,7 @@ export default async function HomePage() {
                   <TabsTrigger
                     key={category.id}
                     value={category.slug}
-                    className="flex-shrink-0 rounded-full border border-muted bg-background hover:bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all h-10"
+                    className="rounded-full border border-muted bg-background px-6 py-2 hover:bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
                   >
                     {category.name}
                   </TabsTrigger>
