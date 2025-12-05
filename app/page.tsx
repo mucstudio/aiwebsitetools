@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Footer } from "@/components/layout/Footer"
+import { prisma } from "@/lib/prisma"
 import {
   ArrowRight,
   Check,
@@ -22,7 +23,20 @@ import {
 // Since Header and Footer might access the database, we force dynamic rendering
 export const dynamic = 'force-dynamic'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const tools = await prisma.tool.findMany({
+    where: {
+      isPublished: true,
+    },
+    include: {
+      category: true,
+    },
+    orderBy: {
+      usageCount: 'desc',
+    },
+    take: 12, // Limit to top 12 tools
+  })
+
   return (
     <>
       <div className="flex-1">
@@ -134,7 +148,7 @@ export default function HomePage() {
         {/* Tools Showcase with Tabs */}
         <section className="py-24">
           <div className="container px-4 mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
               <div className="max-w-2xl">
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
                   Explore Our Toolkit
@@ -151,24 +165,30 @@ export default function HomePage() {
             </div>
 
             <Tabs defaultValue="popular" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid md:grid-cols-4 mb-8">
-                <TabsTrigger value="popular">Popular</TabsTrigger>
-                <TabsTrigger value="developer">Developer</TabsTrigger>
-                <TabsTrigger value="creative">Creative</TabsTrigger>
-                <TabsTrigger value="utilities">Utilities</TabsTrigger>
+              <TabsList className="flex w-full overflow-x-auto pb-2 md:grid md:w-auto md:grid-cols-4 md:pb-0 mb-8 no-scrollbar">
+                <TabsTrigger value="popular" className="flex-shrink-0">Popular</TabsTrigger>
+                <TabsTrigger value="developer" className="flex-shrink-0">Developer</TabsTrigger>
+                <TabsTrigger value="creative" className="flex-shrink-0">Creative</TabsTrigger>
+                <TabsTrigger value="utilities" className="flex-shrink-0">Utilities</TabsTrigger>
               </TabsList>
 
               <TabsContent value="popular" className="mt-0">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {popularTools.map((tool) => (
-                    <ToolCard key={tool.slug} tool={tool} />
-                  ))}
+                  {tools.length > 0 ? (
+                    tools.map((tool) => (
+                      <ToolCard key={tool.slug} tool={tool} />
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12 text-muted-foreground">
+                      No tools available yet. Check back soon!
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
               <TabsContent value="developer" className="mt-0">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {popularTools.filter(t => t.category === 'developer').map((tool) => (
+                  {tools.filter(t => t.category.slug === 'developer' || t.category.slug === 'code').map((tool) => (
                     <ToolCard key={tool.slug} tool={tool} />
                   ))}
                 </div>
@@ -176,7 +196,7 @@ export default function HomePage() {
 
               <TabsContent value="creative" className="mt-0">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {popularTools.filter(t => t.category === 'image').map((tool) => (
+                  {tools.filter(t => t.category.slug === 'image' || t.category.slug === 'creative').map((tool) => (
                     <ToolCard key={tool.slug} tool={tool} />
                   ))}
                 </div>
@@ -184,7 +204,7 @@ export default function HomePage() {
 
               <TabsContent value="utilities" className="mt-0">
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {popularTools.filter(t => t.category === 'utilities' || t.category === 'text').map((tool) => (
+                  {tools.filter(t => t.category.slug === 'utilities' || t.category.slug === 'text').map((tool) => (
                     <ToolCard key={tool.slug} tool={tool} />
                   ))}
                 </div>
@@ -354,7 +374,7 @@ export default function HomePage() {
 }
 
 function ToolCard({ tool }: { tool: any }) {
-  const Icon = getIconForCategory(tool.category)
+  const Icon = getIconForCategory(tool.category.slug)
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10 hover:border-primary/30">
@@ -364,7 +384,7 @@ function ToolCard({ tool }: { tool: any }) {
             <Icon className="h-5 w-5" />
           </div>
           <Badge variant="secondary" className="text-xs font-normal">
-            {tool.category}
+            {tool.category.name}
           </Badge>
         </div>
         <CardTitle className="text-lg group-hover:text-primary transition-colors">
@@ -375,7 +395,7 @@ function ToolCard({ tool }: { tool: any }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Link href={`/tools/${tool.category}/${tool.slug}`}>
+        <Link href={`/tools/${tool.category.slug}/${tool.slug}`}>
           <Button variant="outline" className="w-full group-hover:border-primary/50 group-hover:text-primary transition-all">
             Launch Tool
           </Button>
@@ -394,42 +414,3 @@ function getIconForCategory(category: string) {
     default: return Sparkles
   }
 }
-
-const popularTools = [
-  {
-    name: "Word Counter",
-    slug: "word-counter",
-    category: "text",
-    description: "Advanced text analysis with word, character, and sentence counts.",
-  },
-  {
-    name: "Image Compressor",
-    slug: "image-compressor",
-    category: "image",
-    description: "Smart compression that reduces file size while maintaining quality.",
-  },
-  {
-    name: "JSON Formatter",
-    slug: "json-formatter",
-    category: "developer",
-    description: "Beautify and validate your JSON data with error highlighting.",
-  },
-  {
-    name: "Base64 Converter",
-    slug: "base64-encoder",
-    category: "developer",
-    description: "Fast and secure Base64 encoding and decoding for any string.",
-  },
-  {
-    name: "QR Code Generator",
-    slug: "qr-code-generator",
-    category: "utilities",
-    description: "Create custom QR codes for links, text, wifi, and more.",
-  },
-  {
-    name: "Color Converter",
-    slug: "color-converter",
-    category: "utilities",
-    description: "Convert colors between HEX, RGB, HSL, and CMYK formats.",
-  },
-]
