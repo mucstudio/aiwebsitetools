@@ -72,6 +72,12 @@ export default function YourTool({ result }: { result: string }) {
         title="my-awesome-result"    // 选填：下载文件名
         shareText="I just generated this amazing content with InspoaiBox!" // 选填：分享文案
         watermark="@InspoaiBox.com"  // 选填：自动添加底部水印
+        screenshotStyle={{           // 选填：截图时的自定义样式
+          padding: '20px',
+          background: 'linear-gradient(to right, #ff00cc, #333399)',
+          color: 'white',
+          borderRadius: '12px'
+        }}
       />
     </div>
   )
@@ -90,6 +96,39 @@ export default function YourTool({ result }: { result: string }) {
 | \`shareUrl\` | \`string\` | ❌ 否 | 当前页面 URL | 分享的链接地址 |
 | \`watermark\` | \`string\` | ❌ 否 | - | 下载图片时自动添加的底部水印文字 |
 | \`className\` | \`string\` | ❌ 否 | - | 自定义组件外层样式 |
+| \`screenshotStyle\` | \`CSSProperties\` | ❌ 否 | - | **关键属性**：截图时注入的内联样式，用于修复背景丢失或美化截图 |
+
+---
+
+## 🎨 截图样式定制 (screenshotStyle)
+
+\`html2canvas\` 截图时默认不会捕获父级元素的背景。使用 \`screenshotStyle\` 可以强制为截图添加背景、内边距或圆角，使其更美观。
+
+**常见用法：**
+
+1.  **修复背景丢失**：
+    \`\`\`typescript
+    screenshotStyle={{ backgroundColor: '#ffffff' }}
+    \`\`\`
+
+2.  **添加渐变和内边距 (DreamStream 风格)**：
+    \`\`\`typescript
+    screenshotStyle={{
+      background: 'linear-gradient(180deg, #2e0249 0%, #570a57 100%)',
+      padding: '40px',
+      borderRadius: '24px',
+      color: 'white'
+    }}
+    \`\`\`
+
+3.  **模拟窗口效果 (Corporate Clapback 风格)**：
+    \`\`\`typescript
+    screenshotStyle={{
+      backgroundColor: '#c0c0c0',
+      border: '2px solid black',
+      boxShadow: '4px 4px 0px rgba(0,0,0,0.5)'
+    }}
+    \`\`\`
 
 ---
 

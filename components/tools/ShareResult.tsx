@@ -10,6 +10,7 @@ import {
     Twitter,
     Facebook,
     Linkedin,
+    Instagram,
     Check,
     Loader2
 } from "lucide-react"
@@ -164,7 +165,7 @@ export function ShareResult({
         }
     }
 
-    const handleSocialShare = (platform: 'twitter' | 'facebook' | 'linkedin' | 'reddit' | 'whatsapp') => {
+    const handleSocialShare = (platform: 'twitter' | 'facebook' | 'linkedin' | 'reddit' | 'whatsapp' | 'instagram') => {
         const url = encodeURIComponent(getShareUrl())
         const text = encodeURIComponent(shareText)
         let shareLink = ""
@@ -184,6 +185,12 @@ export function ShareResult({
                 break
             case 'whatsapp':
                 shareLink = `https://wa.me/?text=${text}%20${url}`
+                break
+            case 'instagram':
+                // Instagram doesn't support direct web sharing via URL.
+                // We'll copy the link and open Instagram.
+                handleCopyLink()
+                shareLink = `https://www.instagram.com/`
                 break
         }
 
@@ -289,6 +296,17 @@ export function ShareResult({
                                 title="Share on LinkedIn"
                             >
                                 <Linkedin className="h-5 w-5 text-[#0077b5] fill-current" />
+                            </Button>
+
+                            {/* Instagram */}
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-10 w-10 rounded-full bg-white hover:bg-pink-50 border-0 shadow-sm transition-transform hover:scale-110"
+                                onClick={() => handleSocialShare('instagram')}
+                                title="Share on Instagram"
+                            >
+                                <Instagram className="h-5 w-5 text-[#E1306C] fill-current" />
                             </Button>
 
                             {/* Reddit */}
