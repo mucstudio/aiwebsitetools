@@ -18,6 +18,8 @@ export default function NewToolPage() {
   const [error, setError] = useState("")
   const [categories, setCategories] = useState<any[]>([])
   const [tagInput, setTagInput] = useState("")
+  const [seoTitleModified, setSeoTitleModified] = useState(false)
+  const [seoDescriptionModified, setSeoDescriptionModified] = useState(false)
 
   const defaultComponentCode = `"use client"
 
@@ -263,306 +265,324 @@ export default function MyTool({ toolId, config }: ToolProps) {
         {/* 左侧表单 */}
         <form onSubmit={handleSubmit} className="lg:col-span-2">
           <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>基本信息</CardTitle>
-              <CardDescription>工具的基本信息</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">工具名称 *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="例如: Word Counter"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="slug">URL 标识 *</Label>
-                <Input
-                  id="slug"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                  placeholder="例如: word-counter"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">用于 URL，只能包含小写字母、数字和连字符</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">描述 *</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="例如: Count words, characters, sentences, and paragraphs in your text"
-                  rows={3}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="categoryId">分类 *</Label>
-                <select
-                  id="categoryId"
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                >
-                  <option value="">选择分类</option>
-                  {categories
-                    .filter((cat) => !cat.parentId)
-                    .map((parentCategory) => [
-                      <option key={parentCategory.id} value={parentCategory.id}>
-                        {parentCategory.name}
-                      </option>,
-                      ...categories
-                        .filter((cat) => cat.parentId === parentCategory.id)
-                        .map((childCategory) => (
-                          <option key={childCategory.id} value={childCategory.id}>
-                            &nbsp;&nbsp;└─ {childCategory.name}
-                          </option>
-                        ))
-                    ])}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="componentType">组件类型 *</Label>
-                <Input
-                  id="componentType"
-                  value={formData.componentType}
-                  onChange={(e) => setFormData({ ...formData, componentType: e.target.value })}
-                  placeholder="例如: word-counter"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">用于加载对应的工具组件</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="icon">图标 (Emoji)</Label>
-                <EmojiPicker
-                  value={formData.icon}
-                  onChange={(emoji) => setFormData({ ...formData, icon: emoji })}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>SEO 设置</CardTitle>
-              <CardDescription>搜索引擎优化设置</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="seoTitle">SEO 标题</Label>
-                <Input
-                  id="seoTitle"
-                  value={formData.seoTitle}
-                  onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
-                  placeholder="例如: Free Word Counter - Count Words & Characters Online"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="seoDescription">SEO 描述</Label>
-                <Textarea
-                  id="seoDescription"
-                  value={formData.seoDescription}
-                  onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
-                  placeholder="例如: Free online word counter tool. Count words, characters, sentences, and paragraphs instantly."
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tags">标签</Label>
-                <div className="flex gap-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>基本信息</CardTitle>
+                <CardDescription>工具的基本信息</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">工具名称 *</Label>
                   <Input
-                    id="tags"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault()
-                        addTag()
-                      }
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => {
+                      const newName = e.target.value
+                      setFormData(prev => ({
+                        ...prev,
+                        name: newName,
+                        seoTitle: seoTitleModified ? prev.seoTitle : newName
+                      }))
                     }}
-                    placeholder="输入标签后按回车"
+                    placeholder="例如: Word Counter"
+                    required
                   />
-                  <Button type="button" onClick={addTag} variant="outline">
-                    添加
-                  </Button>
                 </div>
-                {formData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-gray-100 rounded-md"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="text-gray-500 hover:text-gray-700"
+
+                <div className="space-y-2">
+                  <Label htmlFor="slug">URL 标识 *</Label>
+                  <Input
+                    id="slug"
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                    placeholder="例如: word-counter"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">用于 URL，只能包含小写字母、数字和连字符</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">描述 *</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => {
+                      const newDesc = e.target.value
+                      setFormData(prev => ({
+                        ...prev,
+                        description: newDesc,
+                        seoDescription: seoDescriptionModified ? prev.seoDescription : newDesc
+                      }))
+                    }}
+                    placeholder="例如: Count words, characters, sentences, and paragraphs in your text"
+                    rows={3}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="categoryId">分类 *</Label>
+                  <select
+                    id="categoryId"
+                    value={formData.categoryId}
+                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                  >
+                    <option value="">选择分类</option>
+                    {categories
+                      .filter((cat) => !cat.parentId)
+                      .map((parentCategory) => [
+                        <option key={parentCategory.id} value={parentCategory.id}>
+                          {parentCategory.name}
+                        </option>,
+                        ...categories
+                          .filter((cat) => cat.parentId === parentCategory.id)
+                          .map((childCategory) => (
+                            <option key={childCategory.id} value={childCategory.id}>
+                              &nbsp;&nbsp;└─ {childCategory.name}
+                            </option>
+                          ))
+                      ])}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="componentType">组件类型 *</Label>
+                  <Input
+                    id="componentType"
+                    value={formData.componentType}
+                    onChange={(e) => setFormData({ ...formData, componentType: e.target.value })}
+                    placeholder="例如: word-counter"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">用于加载对应的工具组件</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="icon">图标 (Emoji)</Label>
+                  <EmojiPicker
+                    value={formData.icon}
+                    onChange={(emoji) => setFormData({ ...formData, icon: emoji })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>SEO 设置</CardTitle>
+                <CardDescription>搜索引擎优化设置</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="seoTitle">SEO 标题</Label>
+                  <Input
+                    id="seoTitle"
+                    value={formData.seoTitle}
+                    onChange={(e) => {
+                      setFormData({ ...formData, seoTitle: e.target.value })
+                      setSeoTitleModified(true)
+                    }}
+                    placeholder="例如: Free Word Counter - Count Words & Characters Online"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="seoDescription">SEO 描述</Label>
+                  <Textarea
+                    id="seoDescription"
+                    value={formData.seoDescription}
+                    onChange={(e) => {
+                      setFormData({ ...formData, seoDescription: e.target.value })
+                      setSeoDescriptionModified(true)
+                    }}
+                    placeholder="例如: Free online word counter tool. Count words, characters, sentences, and paragraphs instantly."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tags">标签</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="tags"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          addTag()
+                        }
+                      }}
+                      placeholder="输入标签后按回车"
+                    />
+                    <Button type="button" onClick={addTag} variant="outline">
+                      添加
+                    </Button>
+                  </div>
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-gray-100 rounded-md"
                         >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="text-gray-500 hover:text-gray-700"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>工具代码 *</CardTitle>
+                <CardDescription>选择代码模式并编写工具代码，系统会自动保存到文件</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* 代码模式切换标签页 */}
+                <div className="flex gap-2 border-b">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCodeMode('react')
+                      setFormData({ ...formData, codeMode: 'react' })
+                    }}
+                    className={`px-4 py-2 font-medium transition-colors ${codeMode === 'react'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                  >
+                    React 组件模式
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCodeMode('html')
+                      setFormData({ ...formData, codeMode: 'html' })
+                    }}
+                    className={`px-4 py-2 font-medium transition-colors ${codeMode === 'html'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                  >
+                    HTML 模式
+                  </button>
+                </div>
+
+                {/* React 组件模式 */}
+                {codeMode === 'react' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="componentCode">React 组件代码</Label>
+                    <Textarea
+                      id="componentCode"
+                      value={formData.componentCode}
+                      onChange={(e) => setFormData({ ...formData, componentCode: e.target.value })}
+                      placeholder="输入 React 组件代码..."
+                      rows={20}
+                      className="font-mono text-sm"
+                      required={codeMode === 'react'}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      💡 提示：组件必须导出为 default，接收 toolId 和 config 参数。已提供默认模板，可以直接修改使用。
+                    </p>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>工具代码 *</CardTitle>
-              <CardDescription>选择代码模式并编写工具代码，系统会自动保存到文件</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* 代码模式切换标签页 */}
-              <div className="flex gap-2 border-b">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCodeMode('react')
-                    setFormData({ ...formData, codeMode: 'react' })
-                  }}
-                  className={`px-4 py-2 font-medium transition-colors ${
-                    codeMode === 'react'
-                      ? 'border-b-2 border-blue-600 text-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  React 组件模式
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCodeMode('html')
-                    setFormData({ ...formData, codeMode: 'html' })
-                  }}
-                  className={`px-4 py-2 font-medium transition-colors ${
-                    codeMode === 'html'
-                      ? 'border-b-2 border-blue-600 text-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  HTML 模式
-                </button>
-              </div>
-
-              {/* React 组件模式 */}
-              {codeMode === 'react' && (
-                <div className="space-y-2">
-                  <Label htmlFor="componentCode">React 组件代码</Label>
-                  <Textarea
-                    id="componentCode"
-                    value={formData.componentCode}
-                    onChange={(e) => setFormData({ ...formData, componentCode: e.target.value })}
-                    placeholder="输入 React 组件代码..."
-                    rows={20}
-                    className="font-mono text-sm"
-                    required={codeMode === 'react'}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    💡 提示：组件必须导出为 default，接收 toolId 和 config 参数。已提供默认模板，可以直接修改使用。
-                  </p>
-                </div>
-              )}
-
-              {/* HTML 模式 */}
-              {codeMode === 'html' && (
-                <div className="space-y-2">
-                  <Label htmlFor="htmlCode">HTML 代码</Label>
-                  <Textarea
-                    id="htmlCode"
-                    value={formData.htmlCode}
-                    onChange={(e) => setFormData({ ...formData, htmlCode: e.target.value })}
-                    placeholder="输入完整的 HTML 代码..."
-                    rows={20}
-                    className="font-mono text-sm"
-                    required={codeMode === 'html'}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    💡 提示：输入完整的 HTML 文档，包括 &lt;html&gt;、&lt;head&gt;、&lt;body&gt; 标签。支持内联 CSS 和 JavaScript。
-                  </p>
-                  <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
-                    <p className="font-medium text-blue-900 mb-1">HTML 模式特点：</p>
-                    <ul className="text-blue-800 space-y-1 ml-4">
-                      <li>• 适合简单的工具，无需 React 框架</li>
-                      <li>• 代码会保存为 .html 文件</li>
-                      <li>• 通过 iframe 隔离渲染，保证安全</li>
-                      <li>• 支持所有原生 HTML/CSS/JavaScript 功能</li>
-                    </ul>
+                {/* HTML 模式 */}
+                {codeMode === 'html' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="htmlCode">HTML 代码</Label>
+                    <Textarea
+                      id="htmlCode"
+                      value={formData.htmlCode}
+                      onChange={(e) => setFormData({ ...formData, htmlCode: e.target.value })}
+                      placeholder="输入完整的 HTML 代码..."
+                      rows={20}
+                      className="font-mono text-sm"
+                      required={codeMode === 'html'}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      💡 提示：输入完整的 HTML 文档，包括 &lt;html&gt;、&lt;head&gt;、&lt;body&gt; 标签。支持内联 CSS 和 JavaScript。
+                    </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
+                      <p className="font-medium text-blue-900 mb-1">HTML 模式特点：</p>
+                      <ul className="text-blue-800 space-y-1 ml-4">
+                        <li>• 适合简单的工具，无需 React 框架</li>
+                        <li>• 代码会保存为 .html 文件</li>
+                        <li>• 通过 iframe 隔离渲染，保证安全</li>
+                        <li>• 支持所有原生 HTML/CSS/JavaScript 功能</li>
+                      </ul>
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>发布设置</CardTitle>
-              <CardDescription>工具的发布和访问设置</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="isPremium">付费工具</Label>
-                  <p className="text-xs text-muted-foreground">需要付费订阅才能使用</p>
+            <Card>
+              <CardHeader>
+                <CardTitle>发布设置</CardTitle>
+                <CardDescription>工具的发布和访问设置</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="isPremium">付费工具</Label>
+                    <p className="text-xs text-muted-foreground">需要付费订阅才能使用</p>
+                  </div>
+                  <Switch
+                    id="isPremium"
+                    checked={formData.isPremium}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isPremium: checked })}
+                  />
                 </div>
-                <Switch
-                  id="isPremium"
-                  checked={formData.isPremium}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isPremium: checked })}
-                />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="isPublished">发布工具</Label>
+                    <p className="text-xs text-muted-foreground">在前端显示此工具</p>
+                  </div>
+                  <Switch
+                    id="isPublished"
+                    checked={formData.isPublished}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {error && (
+              <div className="p-4 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+                {error}
               </div>
+            )}
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="isPublished">发布工具</Label>
-                  <p className="text-xs text-muted-foreground">在前端显示此工具</p>
-                </div>
-                <Switch
-                  id="isPublished"
-                  checked={formData.isPublished}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {error && (
-            <div className="p-4 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
-              {error}
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              创建工具
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                const previewWindow = window.open('', '_blank', 'width=1200,height=800')
-                if (previewWindow) {
-                  if (codeMode === 'html') {
-                    previewWindow.document.write(formData.htmlCode)
-                    previewWindow.document.close()
-                  } else {
-                    previewWindow.document.write(`
+            <div className="flex gap-2">
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                创建工具
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  const previewWindow = window.open('', '_blank', 'width=1200,height=800')
+                  if (previewWindow) {
+                    if (codeMode === 'html') {
+                      previewWindow.document.write(formData.htmlCode)
+                      previewWindow.document.close()
+                    } else {
+                      previewWindow.document.write(`
                       <!DOCTYPE html>
                       <html>
                         <head>
@@ -593,21 +613,21 @@ ${formData.componentCode}
                         </body>
                       </html>
                     `)
-                    previewWindow.document.close()
+                      previewWindow.document.close()
+                    }
                   }
-                }
-              }}
-            >
-              预览
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/admin/tools")}
-            >
-              取消
-            </Button>
-          </div>
+                }}
+              >
+                预览
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/admin/tools")}
+              >
+                取消
+              </Button>
+            </div>
           </div>
         </form>
 

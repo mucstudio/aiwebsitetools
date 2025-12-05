@@ -173,10 +173,19 @@ export default async function HomePage() {
             </div>
 
             <Tabs defaultValue="popular" className="w-full">
-              <TabsList className="flex w-full overflow-x-auto pb-2 md:grid md:w-auto md:grid-cols-4 md:pb-0 mb-8 no-scrollbar h-auto">
-                <TabsTrigger value="popular" className="flex-shrink-0">Popular</TabsTrigger>
+              <TabsList className="flex w-full overflow-x-auto pb-2 md:grid md:w-auto md:grid-cols-4 md:pb-0 mb-8 no-scrollbar h-auto bg-transparent p-0 gap-4">
+                <TabsTrigger
+                  value="popular"
+                  className="flex-shrink-0 rounded-full border border-muted bg-background hover:bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all h-10"
+                >
+                  Popular
+                </TabsTrigger>
                 {categories.map((category) => (
-                  <TabsTrigger key={category.id} value={category.slug} className="flex-shrink-0">
+                  <TabsTrigger
+                    key={category.id}
+                    value={category.slug}
+                    className="flex-shrink-0 rounded-full border border-muted bg-background hover:bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all h-10"
+                  >
                     {category.name}
                   </TabsTrigger>
                 ))}

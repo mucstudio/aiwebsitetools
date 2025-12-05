@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Lite - Smart Compressor</title>
+<style>
+  :root {
+    /* Color Palette: Airy Sky Blue Theme (Light Mode) */
+    --primary: #0ea5e9; /* Sky Blue */
+    --primary-hover: #0284c7;
+    --text: #0f172a; /* Darker text for better contrast */
+    --text-light: #475569;
+    --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --border: #bae6fd;
+    --input-bg: #ffffff; /* Pure white input background */
+    --input-border: #cbd5e1;
+  }
+
+  /* Dark Mode Support (High Contrast Fix) */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-gradient: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+      --card-bg: #1e293b; /* Solid dark background */
+      --text: #f8fafc; /* Bright white text */
+      --text-light: #cbd5e1;
+      --border: #334155;
+      --input-bg: #0f172a; /* Dark input background */
+      --input-border: #475569;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 960px;
+  }
+
+  /* --- 1. Header Section --- */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0 0 12px 0;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .icon-bg {
+    background: var(--primary);
+    color: white;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 10px 20px rgba(14, 165, 233, 0.2);
+  }
+
+  p.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* --- 2. Main Tool Card --- */
+  .app-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 40px;
+    margin-bottom: 50px;
+  }
+
+  @media (max-width: 768px) {
+    .app-card { grid-template-columns: 1fr; padding: 24px; gap: 30px; }
+  }
+
+  /* Upload Area */
+  .upload-area {
+    grid-column: 1 / -1;
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    background: rgba(14, 165, 233, 0.03);
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .upload-area:hover {
+    border-color: var(--primary);
+    background: rgba(14, 165, 233, 0.08);
+    transform: translateY(-2px);
+  }
+  
+  .upload-icon {
+    font-size: 40px;
+    color: var(--primary);
+    margin-bottom: 10px;
+    display: block;
+  }
+  
+  .upload-hint { font-weight: 700; font-size: 1.2rem; display: block; margin-bottom: 6px; color: var(--text); }
+  .upload-sub { font-size: 0.95rem; color: var(--text-light); }
+
+  /* Left Column: Controls */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .control-group label {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--primary);
+    height: 6px;
+    cursor: pointer;
+  }
+
+  input[type=number], select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    font-size: 1rem;
+    color: var(--text); 
+    background: var(--input-bg);
+    outline: none;
+    transition: 0.2s;
+    font-weight: 500;
+  }
+  
+  input[type=number]::placeholder { color: var(--text-light); opacity: 0.6; }
+
+  input[type=number]:focus, select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+  }
+
+  /* Buttons */
+  .btn-download {
+    margin-top: auto;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    opacity: 0.5;
+    pointer-events: none;
+    box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.2);
+  }
+  
+  .btn-download.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .btn-download:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3);
+  }
+
+  /* Right Column: Preview */
+  .preview-box {
+    background: var(--input-bg); 
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 340px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  img#preview {
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    display: none;
+  }
+
+  .empty-state {
+    color: var(--text-light);
+    font-size: 1rem;
+    text-align: center;
+    padding: 20px;
+    line-height: 1.6;
+  }
+
+  .stats-bar {
+    margin-top: 15px;
+    background: var(--card-bg);
+    padding: 12px 20px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+  }
+
+  /* --- 3. Tutorial Section --- */
+  .tutorial {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 35px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+  }
+
+  .tutorial h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    color: var(--text);
+    border-left: 5px solid var(--primary);
+    padding-left: 15px;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .step-num {
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 1.5rem;
+    opacity: 0.4;
+  }
+
+  .step-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text);
+  }
+
+  .step-desc {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    line-height: 1.6;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <div class="icon-bg">🖼️</div>
+      Image Lite
+    </h1>
+    <p class="subtitle">
+      Professional image compressor & resizer. Reduce file size for homework uploads or emails without losing quality. 100% Client-side privacy.
+    </p>
+  </div>
+
+  <!-- Main Tool -->
+  <div class="app-card">
+    
+    <!-- Upload -->
+    <div class="upload-area" id="dropArea" onclick="document.getElementById('fileIn').click()">
+      <span class="upload-icon">☁️</span>
+      <span class="upload-hint">Click to Upload Image</span>
+      <span class="upload-sub">or Drag & Drop (JPG, PNG, WEBP)</span>
+      <input type="file" id="fileIn" accept="image/*" hidden>
+    </div>
+
+    <!-- Controls (Left) -->
+    <div class="controls">
+      <div class="control-group">
+        <label>
+          Quality Level
+          <span id="qualityVal" style="color:var(--primary)">80%</span>
+        </label>
+        <input type="range" id="quality" min="10" max="100" value="80" oninput="process()">
+        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-light); margin-top:5px;">
+          <span>Smaller Size</span>
+          <span>Better Quality</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Max Width (px)</label>
+        <!-- Removed default value, added placeholder -->
+        <input type="number" id="width" placeholder="Original width" onchange="process()">
+      </div>
+
+      <div class="control-group">
+        <label>Format</label>
+        <select id="format" onchange="process()">
+          <option value="image/jpeg">JPG (Best for photos)</option>
+          <option value="image/png">PNG (Best for text/screenshots)</option>
+          <option value="image/webp">WEBP (Smallest size)</option>
+        </select>
+      </div>
+
+      <button id="dlBtn" class="btn-download" onclick="download()">Download Optimized Image</button>
+    </div>
+
+    <!-- Preview (Right) -->
+    <div class="preview-box">
+      <div id="emptyState" class="empty-state">
+        Preview will appear here<br>after you upload an image.
+      </div>
+      <img id="preview">
+      
+      <div class="stats-bar" id="statsBar" style="display:none">
+        <div>Original: <strong id="origSize">--</strong></div>
+        <div>New: <strong id="newSize" style="color:var(--primary)">--</strong></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tutorial -->
+  <div class="tutorial">
+    <h3>📝 How to use</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Upload</div>
+        <div class="step-desc">Click the upload box or drag your image file into it.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Adjust</div>
+        <div class="step-desc">Use the "Quality" slider to reduce file size. Lower quality = smaller file.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Resize</div>
+        <div class="step-desc">Set a "Max Width" to shrink dimensions. (Defaults to original width)</div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-title">Save</div>
+        <div class="step-desc">Check the preview and file size, then click "Download".</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const fileIn = document.getElementById('fileIn');
+const dropArea = document.getElementById('dropArea');
+const dlBtn = document.getElementById('dlBtn');
+let currentFile = null;
+
+// Drag & Drop Logic
+dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.style.borderColor = 'var(--primary)'; dropArea.style.background = 'rgba(14, 165, 233, 0.1)'; });
+dropArea.addEventListener('dragleave', () => { dropArea.style.borderColor = ''; dropArea.style.background = ''; });
+dropArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropArea.style.borderColor = ''; dropArea.style.background = '';
+  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+fileIn.addEventListener('change', (e) => {
+  if(e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  if(!file.type.startsWith('image/')) return alert('Please upload an image file.');
+  currentFile = file;
+  
+  // Update Original Size
+  document.getElementById('origSize').innerText = formatBytes(file.size);
+  
+  // Show Preview UI
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('preview').style.display = 'block';
+  document.getElementById('statsBar').style.display = 'flex';
+  
+  // --- KEY FIX: Get original dimensions first, then process ---
+  const img = new Image();
+  img.onload = () => {
+    // Set the input value to the image's natural width
+    document.getElementById('width').value = img.width;
+    // Free memory
+    URL.revokeObjectURL(img.src);
+    // Run compression
+    process();
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+function process() {
+  if(!currentFile) return;
+
+  const quality = parseInt(document.getElementById('quality').value) / 100;
+  const widthInput = document.getElementById('width');
+  
+  // Use input value if set, otherwise fallback (though handleFile sets it)
+  // Ensure we have a valid number for max width
+  let maxWidth = parseInt(widthInput.value);
+  if (isNaN(maxWidth) || maxWidth <= 0) {
+      maxWidth = 1920; // fallback just in case
+  }
+
+  const format = document.getElementById('format').value;
+  
+  document.getElementById('qualityVal').innerText = Math.round(quality * 100) + '%';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      // 1. Resize Calculation
+      const canvas = document.createElement('canvas');
+      let w = img.width;
+      let h = img.height;
+
+      // Only resize if width is actually smaller than original
+      if(w > maxWidth) {
+        h = Math.round(h * (maxWidth / w));
+        w = maxWidth;
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+      
+      // 2. Draw to Canvas
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // 3. Compress / Export
+      const newDataUrl = canvas.toDataURL(format, quality);
+      
+      // 4. Update UI
+      document.getElementById('preview').src = newDataUrl;
+      
+      // Estimate size
+      const head = 'data:' + format + ';base64,';
+      const size = Math.round((newDataUrl.length - head.length) * 3/4);
+      const sizeEl = document.getElementById('newSize');
+      sizeEl.innerText = formatBytes(size);
+      
+      // Color code the size (Green if smaller, Red if larger)
+      if(size < currentFile.size) sizeEl.style.color = '#10b981'; // Green
+      else sizeEl.style.color = '#f43f5e'; // Red (can happen with PNG->JPG)
+
+      // 5. Activate Button
+      dlBtn.classList.add('active');
+      dlBtn.onclick = () => {
+        const link = document.createElement('a');
+        const ext = format.split('/')[1].replace('jpeg', 'jpg');
+        const name = currentFile.name.substring(0, currentFile.name.lastIndexOf('.')) || 'image';
+        link.download = `${name}_lite.${ext}`;
+        link.href = newDataUrl;
+        link.click();
+      };
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(currentFile);
+}
+
+function formatBytes(bytes, decimals = 1) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+}
+</script>
+</body>
+</html>
