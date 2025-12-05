@@ -59,12 +59,10 @@ export function ImageUpload({
             <div className="flex items-center gap-4">
                 {value ? (
                     <div className="relative w-40 h-40 border rounded-md overflow-hidden bg-muted/50 flex items-center justify-center">
-                        <Image
+                        <img
                             src={value}
                             alt="Uploaded image"
-                            fill
-                            className="object-contain"
-                            unoptimized
+                            className="w-full h-full object-contain"
                         />
                         <button
                             onClick={onRemove}

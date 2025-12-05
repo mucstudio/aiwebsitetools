@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`
 
         // Ensure uploads directory exists
-        const uploadDir = path.join(process.cwd(), "public/uploads")
+        const uploadDir = "D:\\website\\aiwebsitetools\\public\\uploads"
         try {
             await mkdir(uploadDir, { recursive: true })
         } catch (error) {
