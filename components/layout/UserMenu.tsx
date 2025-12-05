@@ -53,7 +53,7 @@ export function UserMenu({ session }: UserMenuProps) {
           <Link href="/dashboard/subscription">Subscription</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/security">Settings</Link>
+          <Link href="/dashboard/settings">Settings</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

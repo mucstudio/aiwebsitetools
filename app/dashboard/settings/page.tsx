@@ -71,7 +71,7 @@ export default function SecurityPage() {
   }, [])
 
   const handleConnect = (providerId: string) => {
-    signIn(providerId, { callbackUrl: "/dashboard/security" })
+    signIn(providerId, { callbackUrl: "/dashboard/settings" })
   }
 
   const handleDisconnect = async (providerId: string) => {

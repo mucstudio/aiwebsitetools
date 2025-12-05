@@ -66,7 +66,7 @@ export async function Sidebar() {
   if (menuItems.length === 0 && session?.user) {
     defaultNavItems.push({ id: "favorites", label: "Favorites", url: "/dashboard/favorites", icon: "Heart", openInNewTab: false })
     defaultNavItems.push({ id: "dashboard", label: "Dashboard", url: "/dashboard", icon: "LayoutDashboard", openInNewTab: false })
-    defaultNavItems.push({ id: "settings", label: "Settings", url: "/dashboard/security", icon: "Settings", openInNewTab: false })
+    defaultNavItems.push({ id: "settings", label: "Settings", url: "/dashboard/settings", icon: "Settings", openInNewTab: false })
   }
 
   const Logo = () => {
